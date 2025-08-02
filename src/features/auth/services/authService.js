@@ -1,69 +1,124 @@
-// Servicio de autenticación - maneja el login de usuarios
+import api from './api';
+
+// Función para hacer login
 export const loginUser = async (email, password) => {
   try {
-    // Por ahora simulamos una API call - en el futuro aquí iría tu endpoint real
-    // Como no tenemos backend, creamos usuarios falsos para probar
+    const response = await api.post('/auth/login', {
+      email,
+      password
+    });
     
-    // Simulamos un pequeño delay como si fuera una petición real
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Usuarios de prueba - en producción esto vendría de tu base de datos
-    const mockUsers = [
-      {
-        id: '1',
-        email: 'usuario@test.com',
-        password: '123456',
-        name: 'Usuario Demo',
-        role: 'user'
-      },
-      {
-        id: '2',
-        email: 'admin@test.com',
-        password: 'admin123',
-        name: 'Administrador',
-        role: 'admin'
-      }
-    ];
-    
-    // Buscamos si existe un usuario con ese email y password
-    const user = mockUsers.find(
-      u => u.email === email && u.password === password
-    );
-    
-    if (!user) {
-      throw new Error('Credenciales incorrectas');
-    }
-    
-    // Si el usuario existe, devolvemos los datos (sin la password por seguridad)
-    return {
-      user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
-        role: user.role
-      },
-      token: `mock_token_${user.id}` // Token falso para pruebas
-    };
-    
+    return response.data;
   } catch (error) {
-    throw new Error(error.message || 'Error al iniciar sesión');
+    // Extraer el mensaje de error del servidor
+    const message = error.response?.data?.message || 'Error de conexión';
+    throw new Error(message);
   }
 };
 
-// Función para verificar si el usuario está logueado
-export const isAuthenticated = () => {
-  const token = localStorage.getItem('authToken');
-  return !!token;
+// Función para registrar un nuevo usuario
+export const registerUser = async (userData) => {
+  try {
+    const response = await api.post('/auth/register', userData);
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.message || 'Error de conexión';
+    throw new Error(message);
+  }
+};
+
+// Función para hacer logout
+export const logoutUser = async () => {
+  try {
+    await api.post('/auth/logout');
+    // Limpiar datos locales
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+  } catch (error) {
+    // Incluso si falla el logout en el servidor, limpiamos datos locales
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
+    console.error('Error durante logout:', error);
+  }
 };
 
 // Función para obtener los datos del usuario actual
-export const getCurrentUser = () => {
-  const userData = localStorage.getItem('user');
-  return userData ? JSON.parse(userData) : null;
+export const getCurrentUser = async () => {
+  try {
+    const response = await api.get('/auth/me');
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.message || 'Error de conexión';
+    throw new Error(message);
+  }
 };
 
-// Función para cerrar sesión
-export const logout = () => {
-  localStorage.removeItem('authToken');
-  localStorage.removeItem('user');
+// Función para refrescar el token
+export const refreshToken = async () => {
+  try {
+    const response = await api.post('/auth/refresh');
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.message || 'Error de conexión';
+    throw new Error(message);
+  }
+};
+
+// Función para verificar si el usuario está autenticado
+export const isAuthenticated = () => {
+  const token = localStorage.getItem('authToken');
+  const user = localStorage.getItem('user');
+  return !!(token && user);
+};
+
+// Función para obtener el usuario desde localStorage
+export const getStoredUser = () => {
+  try {
+    const user = localStorage.getItem('user');
+    return user ? JSON.parse(user) : null;
+  } catch (error) {
+    console.error('Error parsing stored user:', error);
+    return null;
+  }
+};
+
+// Función para cambiar contraseña
+export const changePassword = async (currentPassword, newPassword) => {
+  try {
+    const response = await api.put('/auth/change-password', {
+      currentPassword,
+      newPassword
+    });
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.message || 'Error de conexión';
+    throw new Error(message);
+  }
+};
+
+// Función para solicitar recuperación de contraseña
+export const forgotPassword = async (email) => {
+  try {
+    const response = await api.post('/auth/forgot-password', { email });
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.message || 'Error de conexión';
+    throw new Error(message);
+  }
+};
+
+// Función para resetear contraseña
+export const resetPassword = async (token, newPassword) => {
+  try {
+    const response = await api.post('/auth/reset-password', {
+      token,
+      newPassword
+    });
+    return response.data;
+  } catch (error) {
+    const message = error.response?.data?.message || 'Error de conexión';
+    throw new Error(message);
+  }
 };

@@ -1,57 +1,69 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FaBars } from "react-icons/fa";
+import { useNavigate } from "react-router-dom";
 import Menu from "../components/Menu";
 import { CardEstadisticasAdmin } from "../components";
+import { getUsers, toggleUserStatus, getUserStats } from "../../../services/userService";
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('admin-dashboard');
   const [usuarios, setUsuarios] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalUsers: 0,
+    limit: 10
+  });
+  const [searchTerm, setSearchTerm] = useState('');
 
-  // Datos de ejemplo
-  const usuariosEjemplo = [
-    { id: 1, nombre: 'Juan Pérez', email: 'juan@example.com', rol: 'Admin', estado: 'Activo', fechaRegistro: '2024-01-15' },
-    { id: 2, nombre: 'María García', email: 'maria@example.com', rol: 'Tendero', estado: 'Activo', fechaRegistro: '2024-01-20' },
-    { id: 3, nombre: 'Carlos López', email: 'carlos@example.com', rol: 'Tendero', estado: 'Inactivo', fechaRegistro: '2024-02-01' },
-    { id: 4, nombre: 'Ana Martínez', email: 'ana@example.com', rol: 'Tendero', estado: 'Activo', fechaRegistro: '2024-02-10' },
-    { id: 5, nombre: 'Pedro Ruiz', email: 'pedro@example.com', rol: 'Tendero', estado: 'Activo', fechaRegistro: '2024-02-15' }
-  ];
+  // Debounce para búsqueda
+  const debounceSearch = useCallback((searchValue) => {
+    const timer = setTimeout(() => {
+      setSearchTerm(searchValue);
+      setPagination(prev => ({ ...prev, currentPage: 1 }));
+    }, 300);
+    
+    return () => clearTimeout(timer);
+  }, []);
 
   // TODO: Conectar con API/Base de datos
   useEffect(() => {
     fetchUsuarios();
-  }, []);
+  }, [pagination.currentPage, searchTerm]);
 
   const fetchUsuarios = async () => {
     try {
       setLoading(true);
-      // TODO: Reemplazar con API real
-      // const response = await fetch('/api/admin/usuarios', {
-      //   headers: {
-      //     'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-      //     'Content-Type': 'application/json'
-      //   }
-      // });
-      // const data = await response.json();
-      // setUsuarios(data);
+      setError(null);
       
-      setTimeout(() => {
-        setUsuarios(usuariosEjemplo);
-        setLoading(false);
-      }, 1000);
-
+      const response = await getUsers(pagination.currentPage, pagination.limit, searchTerm);
+      
+      if (response.success) {
+        setUsuarios(response.data.users || []);
+        setPagination(prev => ({
+          ...prev,
+          totalPages: response.data.pagination.totalPages || 1,
+          totalUsers: response.data.pagination.totalUsers || 0
+        }));
+      } else {
+        setError(response.message || 'Error al cargar usuarios');
+      }
+      
     } catch (error) {
       console.error('Error al obtener usuarios:', error);
-      setError('Error al cargar usuarios');
+      setError(error.message || 'Error al cargar usuarios');
+    } finally {
       setLoading(false);
     }
   };
 
   const crearUsuario = async () => {
-    // TODO: Implementar en features/admin/services/adminService.js
-    alert('Función crear usuario - Pendiente implementar');
+    // Navegar a la página de crear usuario
+    navigate('/admin/create-user');
   };
 
   const actualizarUsuario = async (id) => {
@@ -59,24 +71,29 @@ const AdminDashboard = () => {
     alert(`Actualizar usuario ID: ${id} - Pendiente implementar`);
   };
 
-  const eliminarUsuario = async (id) => {
-    if (!confirm('¿Estás seguro de que quieres eliminar este usuario?')) return;
+  const toggleUsuarioStatus = async (usuario) => {
+    const action = usuario.isActive ? 'desactivar' : 'activar';
+    const confirmMessage = `¿Estás seguro de que quieres ${action} este usuario?`;
     
-    // TODO: Conectar con API
-    // try {
-    //   await fetch(`/api/admin/usuarios/${id}`, {
-    //     method: 'DELETE',
-    //     headers: {
-    //       'Authorization': `Bearer ${localStorage.getItem('authToken')}`,
-    //       'Content-Type': 'application/json'
-    //     }
-    //   });
-    //   setUsuarios(usuarios.filter(u => u.id !== id));
-    // } catch (error) {
-    //   console.error('Error al eliminar usuario:', error);
-    // }
+    if (!confirm(confirmMessage)) return;
     
-    setUsuarios(usuarios.filter(u => u.id !== id));
+    try {
+      setLoading(true);
+      const response = await toggleUserStatus(usuario.id, !usuario.isActive);
+      
+      if (response.success) {
+        // Recargar la lista de usuarios después de cambiar el estado
+        await fetchUsuarios();
+        alert(`Usuario ${action}do exitosamente`);
+      } else {
+        setError(response.message || `Error al ${action} usuario`);
+      }
+    } catch (error) {
+      console.error(`Error al ${action} usuario:`, error);
+      setError(error.message || `Error al ${action} usuario`);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -144,6 +161,16 @@ const AdminDashboard = () => {
                   </button>
                 </div>
               </div>
+
+              {/* Campo de búsqueda */}
+              <div className="mt-4">
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre o email..."
+                  onChange={(e) => debounceSearch(e.target.value)}
+                  className="w-full md:w-96 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
             </div>
 
             {/* Contenido de la tabla */}
@@ -175,19 +202,23 @@ const AdminDashboard = () => {
                       <tbody className="bg-white divide-y divide-gray-200">
                         {usuarios.map((usuario) => (
                           <tr key={usuario.id} className="hover:bg-gray-50">
-                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{usuario.nombre}</td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{usuario.name}</td>
                             <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{usuario.email}</td>
-                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{usuario.rol}</td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                              <span className="capitalize">{usuario.rol}</span>
+                            </td>
                             <td className="px-4 py-4 whitespace-nowrap">
                               <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                                usuario.estado === 'Activo' 
+                                usuario.isActive 
                                   ? 'bg-green-100 text-green-800' 
                                   : 'bg-red-100 text-red-800'
                               }`}>
-                                {usuario.estado}
+                                {usuario.isActive ? 'Activo' : 'Inactivo'}
                               </span>
                             </td>
-                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">{usuario.fechaRegistro}</td>
+                            <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {new Date(usuario.createdAt).toLocaleDateString('es-ES')}
+                            </td>
                             <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                               <div className="flex space-x-2">
                                 <button 
@@ -197,10 +228,14 @@ const AdminDashboard = () => {
                                   Editar
                                 </button>
                                 <button 
-                                  onClick={() => eliminarUsuario(usuario.id)}
-                                  className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-xs transition-colors"
+                                  onClick={() => toggleUsuarioStatus(usuario)}
+                                  className={`${
+                                    usuario.isActive 
+                                      ? 'bg-red-500 hover:bg-red-600' 
+                                      : 'bg-green-500 hover:bg-green-600'
+                                  } text-white px-3 py-1 rounded text-xs transition-colors`}
                                 >
-                                  Eliminar
+                                  {usuario.isActive ? 'Desactivar' : 'Activar'}
                                 </button>
                               </div>
                             </td>
@@ -210,32 +245,58 @@ const AdminDashboard = () => {
                     </table>
                   </div>
 
+                  {/* Controles de paginación para vista de tabla */}
+                  <div className="hidden md:flex justify-between items-center mt-6 px-4">
+                    <div className="text-sm text-gray-700">
+                      Mostrando {((pagination.currentPage - 1) * pagination.limit) + 1} a {Math.min(pagination.currentPage * pagination.limit, pagination.totalUsers)} de {pagination.totalUsers} usuarios
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
+                        disabled={pagination.currentPage <= 1}
+                        className="px-3 py-1 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      >
+                        Anterior
+                      </button>
+                      <span className="px-3 py-1 text-sm">
+                        Página {pagination.currentPage} de {pagination.totalPages}
+                      </span>
+                      <button
+                        onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
+                        disabled={pagination.currentPage >= pagination.totalPages}
+                        className="px-3 py-1 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      >
+                        Siguiente
+                      </button>
+                    </div>
+                  </div>
+
                   {/* Vista de cards para pantallas pequeñas */}
                   <div className="md:hidden space-y-4">
                     {usuarios.map((usuario) => (
                       <div key={usuario.id} className="bg-gray-50 rounded-lg p-4 space-y-3">
                         <div className="flex justify-between items-start">
                           <div>
-                            <h3 className="font-medium text-gray-900">{usuario.nombre}</h3>
+                            <h3 className="font-medium text-gray-900">{usuario.name}</h3>
                             <p className="text-sm text-gray-600">{usuario.email}</p>
                           </div>
                           <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                            usuario.estado === 'Activo' 
+                            usuario.isActive 
                               ? 'bg-green-100 text-green-800' 
                               : 'bg-red-100 text-red-800'
                           }`}>
-                            {usuario.estado}
+                            {usuario.isActive ? 'Activo' : 'Inactivo'}
                           </span>
                         </div>
                         
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div>
                             <span className="text-gray-500">Rol:</span>
-                            <span className="ml-1 font-medium">{usuario.rol}</span>
+                            <span className="ml-1 font-medium capitalize">{usuario.rol}</span>
                           </div>
                           <div>
                             <span className="text-gray-500">Fecha:</span>
-                            <span className="ml-1 font-medium">{usuario.fechaRegistro}</span>
+                            <span className="ml-1 font-medium">{new Date(usuario.createdAt).toLocaleDateString('es-ES')}</span>
                           </div>
                         </div>
                         
@@ -247,14 +308,41 @@ const AdminDashboard = () => {
                             Editar
                           </button>
                           <button 
-                            onClick={() => eliminarUsuario(usuario.id)}
-                            className="flex-1 bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded text-sm transition-colors"
+                            onClick={() => toggleUsuarioStatus(usuario)}
+                            className={`flex-1 ${
+                              usuario.isActive 
+                                ? 'bg-red-500 hover:bg-red-600' 
+                                : 'bg-green-500 hover:bg-green-600'
+                            } text-white px-3 py-2 rounded text-sm transition-colors`}
                           >
-                            Eliminar
+                            {usuario.isActive ? 'Desactivar' : 'Activar'}
                           </button>
                         </div>
                       </div>
                     ))}
+                  </div>
+
+                  {/* Controles de paginación para vista de cards móvil */}
+                  <div className="md:hidden flex flex-col space-y-4 mt-6">
+                    <div className="text-sm text-gray-700 text-center">
+                      Página {pagination.currentPage} de {pagination.totalPages} ({pagination.totalUsers} usuarios)
+                    </div>
+                    <div className="flex justify-center space-x-3">
+                      <button
+                        onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage - 1 }))}
+                        disabled={pagination.currentPage <= 1}
+                        className="px-4 py-2 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      >
+                        Anterior
+                      </button>
+                      <button
+                        onClick={() => setPagination(prev => ({ ...prev, currentPage: prev.currentPage + 1 }))}
+                        disabled={pagination.currentPage >= pagination.totalPages}
+                        className="px-4 py-2 text-sm border rounded-md disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                      >
+                        Siguiente
+                      </button>
+                    </div>
                   </div>
                 </>
               )}

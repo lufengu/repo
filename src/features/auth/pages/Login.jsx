@@ -6,7 +6,7 @@ import tendebotInicio from '../../../assets/tendebotInicio.png';
 function Login() {
   return (
     <div className="flex flex-col lg:flex-row w-full h-screen">
-      <div className="relative w-full flex flex-col items-center justify-center lg:w-1/2 z-10">
+      <div className="relative w-full flex flex-col items-center justify-center lg:w-1/2 z-10 px-8 py-12">
         {/* Elemento con animación */}
         <div className="absolute -top-16 -left-20 w-40 h-40 bg-orange-500 rotate-[55deg] animate-spin-slow z-0"></div>
         <img

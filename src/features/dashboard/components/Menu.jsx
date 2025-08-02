@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   FaHome, FaChartLine, FaBoxOpen, FaClipboardList, 
-  FaRegBuilding, FaBullhorn, FaCogs, FaDoorClosed
+  FaRegBuilding, FaBullhorn, FaCogs, FaDoorClosed, FaSpinner
 } from 'react-icons/fa';
+import { useAuth } from '../../auth/context/AuthContext';
+import { logoutUser } from '../../auth/services/authService';
 import logo from '../../../assets/logoCompleto.png';
 
 const Menu = ({ 
@@ -13,13 +15,25 @@ const Menu = ({
   setActiveSection 
 }) => {
   const navigate = useNavigate();
+  const { logout } = useAuth();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  const handleLogout = () => {
-    // Limpiar datos de localStorage
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('user');
-    // Navegar de vuelta al login
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    
+    // Logout optimista - limpiar UI inmediatamente
+    logout();
     navigate('/login');
+    
+    // Intentar logout en el servidor en segundo plano
+    try {
+      await logoutUser();
+    } catch (error) {
+      // Si falla el logout del servidor, no importa porque ya limpiamos el frontend
+      console.warn('Error en logout del servidor:', error);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   const navItems = [
@@ -70,11 +84,19 @@ const Menu = ({
         <div className='px-4 pb-4'>
           <div className='border-t border-gray-200 pt-4'>
             <div
-              className="flex items-center space-x-3 p-3 rounded-lg hover:bg-red-500 hover:text-white transition-all cursor-pointer text-gray-700"
-              onClick={handleLogout}
+              className={`flex items-center space-x-3 p-3 rounded-lg transition-all cursor-pointer ${
+                isLoggingOut 
+                  ? 'bg-red-400 text-white cursor-not-allowed opacity-75' 
+                  : 'hover:bg-red-500 hover:text-white text-gray-700'
+              }`}
+              onClick={isLoggingOut ? undefined : handleLogout}
             >
-              <div className="text-lg"><FaDoorClosed /></div>
-              <div className="text-sm font-medium">Cerrar Sesión</div>
+              <div className="text-lg">
+                {isLoggingOut ? <FaSpinner className="animate-spin" /> : <FaDoorClosed />}
+              </div>
+              <div className="text-sm font-medium">
+                {isLoggingOut ? 'Cerrando sesión...' : 'Cerrar Sesión'}
+              </div>
             </div>
           </div>
         </div>

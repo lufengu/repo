@@ -3,8 +3,8 @@ import { Users, UserCheck, Store } from "lucide-react";
 const CardEstadisticasAdmin = ({ usuarios }) => {
   // Cálculos de estadísticas
   const totalUsuarios = usuarios.length;
-  const administradores = usuarios.filter(u => u.rol === 'Admin').length;
-  const tenderos = usuarios.filter(u => u.rol === 'Tendero').length;
+  const administradores = usuarios.filter(u => u.rol === 'administrador').length;
+  const tenderos = usuarios.filter(u => u.rol === 'usuario').length;
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4 lg:gap-6 mt-4 md:mt-6 lg:mt-8">
