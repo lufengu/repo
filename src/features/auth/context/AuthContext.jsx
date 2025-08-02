@@ -33,6 +33,7 @@ export const AuthProvider = ({ children }) => {
     // Limpiar estado inmediatamente para respuesta rápida
     setUser(null);
     setIsLoggedIn(false);
+    alert('Sesión cerrada correctamente');
     
     // Limpiar localStorage
     localStorage.removeItem('accessToken');
