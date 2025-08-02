@@ -1,59 +1,86 @@
 import React, { useState } from 'react';
-import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { loginUser } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
 
 export const LoginForm = () => {
-  // Hook para navegar entre páginas y contexto de autenticación
   const navigate = useNavigate();
   const { login } = useAuth();
   
-  // Estados para mostrar/ocultar la contraseña
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Datos del formulario de usuario
   const [formData, setFormData] = useState({
     email: '',
     password: '',
-    remember: false,
   });
 
-  // Función que se ejecuta cuando escribes en los campos del formulario
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setError(''); // Limpiar errores al escribir
+    const { name, value } = e.target;
+    setError('');
     setFormData((prev) => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: value,
     }));
   };
 
-  // Cuando envías el formulario de usuario
+  // Función para acceso directo con usuarios de prueba
+  const handleTestUserLogin = (userType) => {
+    setIsLoading(true);
+    setError('');
+    
+    try {
+      const testUsers = {
+        admin: {
+          id: 1,
+          nombre: 'Administrador de Prueba',
+          email: 'admin@techderos.com',
+          rol: 'administrador'
+        },
+        user: {
+          id: 2,
+          nombre: 'Usuario de Prueba',
+          email: 'usuario@techderos.com',
+          rol: 'usuario'
+        }
+      };
+
+      const userData = testUsers[userType];
+      const mockToken = `test-token-${userType}-${Date.now()}`;
+      
+      // Simular delay de login
+      setTimeout(() => {
+        login(userData, mockToken);
+        
+        const redirectPath = userType === 'admin' ? '/admin' : '/dashboard';
+        navigate(redirectPath);
+        setIsLoading(false);
+      }, 1000);
+      
+    } catch (err) {
+      setError('Error al acceder con usuario de prueba');
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
     
     try {
-      // Validaciones básicas del frontend
       if (!formData.email || !formData.password) {
         throw new Error('Por favor completa todos los campos');
       }
 
-      // Llamamos al servicio para validar el usuario en el servidor
       const response = await loginUser(formData.email, formData.password);
-      
-      // Ahora la respuesta tiene estructura: {success, message, user, tokens}
       const userData = response.user;
       const accessToken = response.tokens.accessToken;
       
-      // Usar el contexto para manejar el login
       login(userData, accessToken);
       
-      // Redirigir según el rol
       const userRole = userData.rol || userData.role;
       const redirectPath = (userRole === 'admin' || userRole === 'administrador') ? '/admin' : '/dashboard';
       navigate(redirectPath);
@@ -66,24 +93,57 @@ export const LoginForm = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Mostrar errores si los hay */}
+    <div className="w-full">
+      {/* Sección de Usuarios de Prueba - REMOVER EN PRODUCCIÓN */}
+      <div className="mb-6 p-4 bg-gradient-to-r from-yellow-50 to-orange-50 border border-yellow-300 rounded-lg">
+        <div className="flex items-center mb-3">
+          <span className="text-lg">🧪</span>
+          <h3 className="ml-2 text-sm font-semibold text-yellow-800">
+            Usuarios de Prueba - Solo Desarrollo
+          </h3>
+        </div>
+        <p className="text-xs text-yellow-700 mb-4">
+          Usa estos botones para acceder directamente sin credenciales del backend
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => handleTestUserLogin('admin')}
+            disabled={isLoading}
+            className="flex items-center justify-center px-4 py-3 bg-red-500 text-white rounded-lg text-sm font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className="mr-2">👑</span>
+            Acceso Admin
+          </button>
+          <button
+            type="button"
+            onClick={() => handleTestUserLogin('user')}
+            disabled={isLoading}
+            className="flex items-center justify-center px-4 py-3 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <span className="mr-2">👤</span>
+            Acceso Usuario
+          </button>
+        </div>
+        <div className="mt-3 pt-3 border-t border-yellow-200">
+          <p className="text-xs text-yellow-600">
+            <strong>Admin:</strong> Acceso completo al panel administrativo <br/>
+            <strong>Usuario:</strong> Acceso al dashboard normal
+          </p>
+        </div>
+      </div>
+
       {error && (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded max-w-lg mx-auto">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           {error}
         </div>
       )}
 
-      {/* Formulario de Login */}
-      <form
-        onSubmit={handleSubmit}
-        className="space-y-6 bg-white rounded-lg p-10 shadow-custom max-w-lg mx-auto"
-      >
-        <h1 className="text-2xl font-bold text-center text-gray-700">Iniciar Sesión</h1>
-
-        {/* Campo de email con icono bonito */}
-        <div className="relative">
-          <Mail className="absolute left-3 top-3 text-gray-600" />
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Correo Electrónico <span className="text-brand-orange">*</span>
+          </label>
           <input
             type="email"
             name="email"
@@ -91,64 +151,49 @@ export const LoginForm = () => {
             disabled={isLoading}
             value={formData.email}
             onChange={handleChange}
-            placeholder="Correo electrónico"
-            className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-red "
+            placeholder="Ingresa tu correo"
+            className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-blue"
           />
         </div>
 
-        {/* Campo de contraseña con botón para mostrar/ocultar */}
-        <div className="relative">
-          <Lock className="absolute left-3 top-3 text-gray-600" />
-          <input
-            type={showPassword ? 'text' : 'password'}
-            name="password"
-            required
-            disabled={isLoading}
-            value={formData.password}
-            onChange={handleChange}
-            placeholder="Contraseña"
-            className="w-full pl-10 pr-10 py-2.5 rounded-lg bg-blue-50 disabled:opacity-50"
-          />
-          {/* Botón del ojito para mostrar/ocultar password */}
-          <button
-            type="button"
-            disabled={isLoading}
-            onClick={() => setShowPassword(!showPassword)}
-            className="absolute right-3 top-3 disabled:opacity-50"
-          >
-            {showPassword ? <EyeOff /> : <Eye />}
-          </button>
-        </div>
-        {/* Checkbox de recordarme y link de forgot password */}
-        <div className="flex items-center justify-between text-sm pt-2 w-full" style={{width: '100%', padding: '0 16px'}}>
-          <label className="flex items-center space-x-4" style={{minWidth: '140px'}}>
-            <input
-              type="checkbox"
-              name="remember"
-              checked={formData.remember}
-              onChange={handleChange}
-              disabled={isLoading}
-              className="w-4 h-4 text-[#007AFF] border-2 border-gray-300 rounded focus:ring-[#007AFF] focus:ring-2 disabled:opacity-50"
-              style={{marginRight: '12px'}}
-            />
-            <span className="text-gray-700 select-none">Recuérdame</span>
+        <div>
+           <label className="block text-sm font-medium text-gray-700 mb-1">
+            Contraseña <span className="text-brand-orange">*</span>
           </label>
-          <a href="#" className="text-[#007AFF] hover:underline" style={{marginLeft: 'auto'}}>¿Olvidaste tu contraseña?</a>
+          <div className="relative">
+            <input
+              type={showPassword ? 'text' : 'password'}
+              name="password"
+              required
+              disabled={isLoading}
+              value={formData.password}
+              onChange={handleChange}
+              placeholder="Ingresa tu contraseña"
+              className="w-full px-4 py-2.5 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-brand-blue"
+            />
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+            >
+              {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+            </button>
+          </div>
         </div>
-
-        {/* Botón de enviar con indicador de carga */}
+        
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full bg-gradient-to-r from-[#007AFF] to-[#0056CC] text-white py-2.5 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          className="w-full bg-brand-blue text-white py-3 rounded-lg font-semibold hover:bg-opacity-90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
         >
           {isLoading ? (
             <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-              Iniciando...
+              <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+              Iniciando Sesión...
             </>
           ) : (
-            'Iniciar →'
+            'Iniciar Sesión'
           )}
         </button>
       </form>

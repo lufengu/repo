@@ -5,8 +5,18 @@ export default {
     "./src/**/*.{js,ts,jsx,tsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        'brand-blue': '#007AFF',
+        'brand-orange': '#FF6600',
+        'ios-blue': '#007AFF',
+        'brand-orange-light': '#FFE6DAFF',
+        'ios-blue-pastel': '#CCE4FF',
+      },
+      animation: {
+        'spin-slow': 'spin 10s linear infinite',
+      }
+    },
   },
   plugins: [],
 }
-

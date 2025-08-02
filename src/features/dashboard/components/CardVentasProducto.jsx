@@ -11,29 +11,6 @@ const CardVentasProducto = () => {
     { producto: 'Webcam HD', ventas: 12, color: '#8B5CF6' }
   ];
 
-  // TODO: Conectar con API de ventas
-  // const { data: ventasData, loading, error } = useVentas();
-  // 
-  // const fetchVentasProductos = async () => {
-  //   try {
-  //     const response = await fetch('/api/ventas/productos');
-  //     const ventasReales = await response.json();
-  //     // Transformar datos de la API al formato del gráfico
-  //     const dataTransformada = ventasReales.map(item => ({
-  //       producto: item.nombre_producto,
-  //       ventas: item.cantidad_vendida,
-  //       color: item.color || '#3B82F6'
-  //     }));
-  //     setData(dataTransformada);
-  //   } catch (error) {
-  //     console.error('Error al obtener ventas por producto:', error);
-  //   }
-  // };
-  //
-  // useEffect(() => {
-  //   fetchVentasProductos();
-  // }, []);
-
   // Tooltip personalizado
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {

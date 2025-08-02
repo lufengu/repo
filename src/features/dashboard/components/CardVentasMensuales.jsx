@@ -14,29 +14,6 @@ const CardVentasMensuales = () => {
     { mes: 'Ago', ventas: 154200, ventasUnidades: 182 }
   ];
 
-  // TODO: Conectar con API de ventas mensuales
-  // const { data: ventasMensualesData, loading, error } = useVentasMensuales();
-  // 
-  // const fetchVentasMensuales = async () => {
-  //   try {
-  //     const response = await fetch('/api/ventas/mensuales');
-  //     const ventasReales = await response.json();
-  //     // Transformar datos de la API al formato del gráfico
-  //     const dataTransformada = ventasReales.map(item => ({
-  //       mes: item.mes,
-  //       ventas: item.total_ventas,
-  //       ventasUnidades: item.total_unidades
-  //     }));
-  //     setData(dataTransformada);
-  //   } catch (error) {
-  //     console.error('Error al obtener ventas mensuales:', error);
-  //   }
-  // };
-  //
-  // useEffect(() => {
-  //   fetchVentasMensuales();
-  // }, []);
-
   // Tooltip personalizado
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {

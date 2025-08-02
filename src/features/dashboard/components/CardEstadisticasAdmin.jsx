@@ -20,7 +20,7 @@ const CardEstadisticasAdmin = ({ usuarios }) => {
       </div>
 
       {/* Card Administradores */}
-      <div className="bg-white bg-opacity-90 p-4 md:p-5 lg:p-6 rounded-lg text-center border-2 border-blue-400 shadow-sm hover:shadow-md transition-shadow">
+      <div className="bg-white bg-opacity-90 p-4 md:p-5 lg:p-6 rounded-lg text-center border-2 shadow-sm hover:shadow-md transition-shadow">
         <div className="flex items-center justify-center mb-2">
           <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-2">
             <UserCheck className="w-4 h-4 text-blue-600" />
