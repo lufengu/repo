@@ -7,6 +7,8 @@ import CreateUser from './features/dashboard/pages/CreateUser'
 import { AuthProvider } from './features/auth/context/AuthContext'
 import { ProtectedRoute, PublicRoute } from './features/auth/components/ProtectedRoute'
 import './App.css'
+import Inventario from './features/inventario/pages/inventario'
+import Ventas from './features/ventas/pages/Ventas'
 
 function App() {
   return (
@@ -63,6 +65,26 @@ function App() {
               element={
                 <ProtectedRoute requiredRole="administrador">
                   <CreateUser />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Ruta para inventario - requiere autenticación */}
+            <Route 
+              path="/inventario" 
+              element={
+                <ProtectedRoute>
+                  <Inventario />
+                </ProtectedRoute>
+              } 
+            />
+            
+            {/* Ruta para ventas - requiere autenticación */}
+            <Route 
+              path="/ventas" 
+              element={
+                <ProtectedRoute>
+                  <Ventas />
                 </ProtectedRoute>
               } 
             />

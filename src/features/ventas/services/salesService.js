@@ -64,22 +64,6 @@ export const salesAPI = {
     }
   },
 
-  // Obtener reporte de ventas
-  getSalesReport: async (startDate, endDate) => {
-    try {
-      const params = new URLSearchParams({
-        startDate,
-        endDate
-      });
-      
-      const response = await api.get(`/sales/report?${params}`);
-      return response.data;
-    } catch (error) {
-      const message = error.response?.data?.message || 'Error al obtener reporte de ventas';
-      throw new Error(message);
-    }
-  },
-
   // Obtener estadísticas de ventas
   getSalesStats: async (startDate, endDate) => {
     try {

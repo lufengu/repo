@@ -1,24 +1,15 @@
-// Dashboard.jsx
-import { useState, useEffect } from "react";
+import { useState, useEffect } from 'react';
 import { FaBars } from "react-icons/fa";
-import Menu from "../components/Menu";
-import { useProductos } from "../../../hooks/useProductos"; // Importar el hook
-import {
-  CardVentasDia,
-  CardProductosBajos,
-  CardUltimosPedidos,
-  CardAlertas,
-  CardVentasProducto,
-  CardVentasMensuales,
-} from "../components";
+import Menu from "../../dashboard/components/Menu";
+import SalesRegisterForm from '../components/SalesRegisterForm';
+import SalesHistory from '../components/SalesHistory';
+import SalesReports from '../components/SalesReports';
 
-const Dashboard = () => {
+const Ventas = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeSection, setActiveSection] = useState('dashboard');
+  const [activeSection, setActiveSection] = useState('ventas');
+  const [view, setView] = useState('register');
   const [userName, setUserName] = useState('Usuario');
-  
-  // Usar el hook de productos
-  const { productos } = useProductos();
 
   useEffect(() => {
     // Obtener información del usuario desde localStorage
@@ -26,7 +17,6 @@ const Dashboard = () => {
     if (userData) {
       try {
         const user = JSON.parse(userData);
-        // Intentar obtener el nombre de diferentes posibles campos
         const name = user.name || user.nombre || user.firstName || user.username || 'Usuario';
         setUserName(name);
       } catch (error) {
@@ -74,28 +64,54 @@ const Dashboard = () => {
           </div>
         </header>
 
-        {/* Contenido del dashboard */}
+        {/* Contenido del dashboard de ventas */}
         <main className="flex-1 p-6 overflow-y-auto">
-          {/* Título principal */}
           <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Inicio del Dashboard</h1>
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">Gestión de Ventas</h1>
             <p className="text-gray-600">
-              Bienvenido a la página principal de tu tienda digital. Aquí encontrarás un resumen de tus métricas clave.
+              Registra ventas, consulta el historial y genera reportes detallados.
             </p>
           </div>
 
-          {/* Primera fila - 3 cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <CardVentasDia />
-            <CardProductosBajos productos={productos} />
-            <CardUltimosPedidos />
+          {/* Navegación de pestañas */}
+          <div className="flex space-x-4 mb-6">  
+            <button 
+              onClick={() => setView('register')} 
+              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                view === 'register' 
+                  ? 'bg-orange-500 text-white' 
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Registrar Venta
+            </button>
+            <button 
+              onClick={() => setView('history')} 
+              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                view === 'history' 
+                  ? 'bg-orange-500 text-white' 
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Historial
+            </button>
+            <button 
+              onClick={() => setView('report')} 
+              className={`px-6 py-2 rounded-lg font-medium transition-colors ${
+                view === 'report' 
+                  ? 'bg-orange-500 text-white' 
+                  : 'bg-white text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              Reportes
+            </button>
           </div>
 
-          {/* Segunda fila - 3 cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <CardAlertas />
-            <CardVentasProducto />
-            <CardVentasMensuales />
+          {/* Contenido según la vista seleccionada */}
+          <div>
+            {view === 'register' && <SalesRegisterForm />}
+            {view === 'history' && <SalesHistory />}
+            {view === 'report' && <SalesReports />}
           </div>
         </main>
       </div>
@@ -103,4 +119,4 @@ const Dashboard = () => {
   );
 };
 
-export default Dashboard;
+export default Ventas;

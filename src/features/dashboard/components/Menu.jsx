@@ -37,9 +37,9 @@ const Menu = ({
   };
 
   const navItems = [
-    { name: 'Inicio', icon: <FaHome />, action: () => setActiveSection('dashboard') },
+    { name: 'Inicio', icon: <FaHome />, action: () => navigate('/dashboard') },
     { name: 'Ventas', icon: <FaChartLine />, action: () => navigate('/ventas') },
-    { name: 'Inventario', icon: <FaBoxOpen />, action: () => console.log('Inventario') },
+    { name: 'Inventario', icon: <FaBoxOpen />, action: () => navigate('/inventario') },
     { name: 'Pedidos', icon: <FaClipboardList />, action: () => console.log('Pedidos') },
     { name: 'Proveedores', icon: <FaRegBuilding />, action: () => console.log('Proveedores') },
     { name: 'Promoción', icon: <FaBullhorn />, action: () => console.log('Promoción') },
@@ -68,7 +68,11 @@ const Menu = ({
             <div
               key={idx}
               className={`flex items-center space-x-3 p-3 rounded-lg hover:bg-orange-500 hover:text-white transition-all cursor-pointer text-gray-700 ${
-                activeSection === 'dashboard' && item.name === 'Inicio' ? 'bg-orange-500 text-white' : ''
+                (activeSection === 'dashboard' && item.name === 'Inicio') ||
+                (activeSection === 'inventario' && item.name === 'Inventario') ||
+                (activeSection === 'ventas' && item.name === 'Ventas')
+                  ? 'bg-orange-500 text-white' 
+                  : ''
               }`}
               onClick={item.action}
             >
