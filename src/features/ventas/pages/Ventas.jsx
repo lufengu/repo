@@ -10,6 +10,7 @@ const Ventas = () => {
   const [activeSection, setActiveSection] = useState('ventas');
   const [view, setView] = useState('register');
   const [userName, setUserName] = useState('Usuario');
+  const [refreshHistory, setRefreshHistory] = useState(0);
 
   useEffect(() => {
     // Obtener información del usuario desde localStorage
@@ -25,6 +26,13 @@ const Ventas = () => {
       }
     }
   }, []);
+
+  // Función para refrescar el historial después de crear una venta
+  const handleSaleCreated = () => {
+    setRefreshHistory(prev => prev + 1);
+    // Cambiar automáticamente a la vista del historial para mostrar la nueva venta
+    setView('history');
+  };
 
   return (
     <div className="flex h-screen bg-gray-100">
@@ -109,8 +117,8 @@ const Ventas = () => {
 
           {/* Contenido según la vista seleccionada */}
           <div>
-            {view === 'register' && <SalesRegisterForm />}
-            {view === 'history' && <SalesHistory />}
+            {view === 'register' && <SalesRegisterForm onSuccess={handleSaleCreated} />}
+            {view === 'history' && <SalesHistory refreshTrigger={refreshHistory} />}
             {view === 'report' && <SalesReports />}
           </div>
         </main>

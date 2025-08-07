@@ -1,21 +1,11 @@
-import { useState } from 'react';
-import { FaPlus, FaTrash, FaSave, FaShoppingCart } from 'react-icons/fa';
+import { useState, useEffect } from 'react';
+import { FaPlus, FaTrash, FaSave, FaShoppingCart, FaExclamationTriangle } from 'react-icons/fa';
 import { MetricCard } from './index';
 import SaleReceipt from './SaleReceipt';
 import { ShoppingCart, DollarSign } from 'lucide-react';
-// import { salesAPI } from '../services/ventasService'; // Descomenta cuando tengas el servicio
-
-const productOptions = [
-  { id: 'P001', name: 'Laptop HP', suggestedPrice: 2500000 },
-  { id: 'P002', name: 'Mouse Logitech', suggestedPrice: 85000 },
-  { id: 'P003', name: 'Teclado Gaming', suggestedPrice: 450000 },
-  { id: 'P004', name: 'Monitor 24"', suggestedPrice: 800000 },
-  { id: 'P005', name: 'Webcam HD', suggestedPrice: 320000 },
-  { id: 'P006', name: 'Pan', suggestedPrice: 3000 },
-  { id: 'P007', name: 'Azúcar', suggestedPrice: 4500 },
-  { id: 'P008', name: 'Leche', suggestedPrice: 5200 },
-  // ...otros productos
-];
+import { useProductosVentas } from '../hooks/useProductosVentas';
+import { updateStockAfterSale } from '../../../services/inventoryService';
+import { salesAPI } from '../services/salesService';
 
 const paymentMethods = [
   { value: 'efectivo', label: 'Efectivo' },
@@ -26,9 +16,12 @@ const paymentMethods = [
 ];
 
 export default function SalesRegisterForm({ onSuccess }) {
+  // Hook para productos del inventario
+  const { productos: productOptions, loading: loadingProducts, error: errorProducts, verificarStock, obtenerProductoPorNombre, cargarProductosParaVenta } = useProductosVentas();
+  
   // Estados principales
   const [rows, setRows] = useState([
-    { product: '', quantity: 1, price: '', error: {} }
+    { product: '', quantity: 1, price: '', error: {}, stockWarning: '' }
   ]);
   const [paymentMethod, setPaymentMethod] = useState('');
   const [formError, setFormError] = useState('');
@@ -46,7 +39,7 @@ export default function SalesRegisterForm({ onSuccess }) {
   const totalItems = rows.reduce((sum, r) => sum + (r.quantity || 0), 0);
 
   const handleAddRow = () => {
-    setRows([...rows, { product: '', quantity: 1, price: '', error: {} }]);
+    setRows([...rows, { product: '', quantity: 1, price: '', error: {}, stockWarning: '' }]);
   };
 
   const handleRemoveRow = (idx) => {
@@ -65,10 +58,22 @@ export default function SalesRegisterForm({ onSuccess }) {
       if (selectedProduct && !newRows[idx].price) {
         newRows[idx].price = selectedProduct.suggestedPrice;
       }
+      // Limpiar advertencia de stock al cambiar producto
+      newRows[idx].stockWarning = '';
     } else if (field === 'price') {
       newRows[idx][field] = value === '' ? '' : value;
     } else if (field === 'quantity') {
-      newRows[idx][field] = Math.max(1, Number(value) || 1);
+      const cantidad = Math.max(1, Number(value) || 1);
+      newRows[idx][field] = cantidad;
+      
+      // Validar stock cuando cambia la cantidad
+      if (newRows[idx].product) {
+        const producto = obtenerProductoPorNombre(newRows[idx].product);
+        if (producto) {
+          const stockCheck = verificarStock(producto.id, cantidad);
+          newRows[idx].stockWarning = stockCheck.disponible ? '' : stockCheck.mensaje;
+        }
+      }
     } else {
       newRows[idx][field] = value;
     }
@@ -90,19 +95,35 @@ export default function SalesRegisterForm({ onSuccess }) {
     let ok = true;
     const newRows = rows.map(r => {
       const err = {};
+      let stockWarning = r.stockWarning || '';
+      
       if (!r.product) { 
         err.product = 'Selecciona un producto'; 
         ok = false; 
+      } else {
+        // Validar stock disponible
+        const producto = obtenerProductoPorNombre(r.product);
+        if (producto) {
+          const stockCheck = verificarStock(producto.id, r.quantity);
+          if (!stockCheck.disponible) {
+            err.quantity = stockCheck.mensaje;
+            stockWarning = stockCheck.mensaje;
+            ok = false;
+          }
+        }
       }
+      
       if (!r.quantity || r.quantity <= 0) { 
         err.quantity = 'Cantidad debe ser mayor a 0'; 
         ok = false; 
       }
+      
       if (!r.price || parseFloat(r.price) <= 0) { 
         err.price = 'Precio debe ser mayor a 0'; 
         ok = false; 
       }
-      return { ...r, error: err };
+      
+      return { ...r, error: err, stockWarning };
     });
     
     setRows(newRows);
@@ -145,23 +166,32 @@ export default function SalesRegisterForm({ onSuccess }) {
     };
 
     try {
-      // Cuando tengas la API, descomenta esto:
-      // await salesAPI.createSale(payload);
+      // Guardar la venta en el backend
+      const savedSale = await salesAPI.createSale(payload);
+      console.log('Venta guardada exitosamente:', savedSale);
       
-      // Simular llamada a API
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Actualizar stock en el inventario
+      try {
+        await updateStockAfterSale(payload.items);
+        // Recargar productos para actualizar stock disponible
+        await cargarProductosParaVenta();
+      } catch (stockError) {
+        console.error('Error al actualizar stock:', stockError);
+        setFormError('Venta guardada, pero error al actualizar inventario: ' + stockError.message);
+        return; // No limpiar el formulario si hay error de stock
+      }
       
       // Crear datos de venta completada para el recibo
       const saleData = {
         ...payload,
-        id: Date.now(), // ID temporal
+        id: savedSale.id || Date.now(), // Usar ID del backend o temporal
       };
       
       setCompletedSale(saleData);
       setShowReceipt(true);
       
       // Limpiar formulario
-      setRows([{ product: '', quantity: 1, price: '', error: {} }]);
+      setRows([{ product: '', quantity: 1, price: '', error: {}, stockWarning: '' }]);
       setPaymentMethod('');
       setCustomer({ name: '', phone: '', email: '' });
       
@@ -172,7 +202,7 @@ export default function SalesRegisterForm({ onSuccess }) {
       
     } catch (error) {
       console.error('Error al guardar venta:', error);
-      setFormError('Error al guardar la venta. Por favor intenta nuevamente.');
+      setFormError(`Error al guardar la venta: ${error.message}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -189,6 +219,16 @@ export default function SalesRegisterForm({ onSuccess }) {
 
   return (
     <div className="space-y-6">
+      {/* Error de carga de productos */}
+      {errorProducts && (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+          <div className="flex items-center">
+            <FaExclamationTriangle className="text-red-500 mr-2" />
+            <p className="text-red-700">Error al cargar productos: {errorProducts}</p>
+          </div>
+        </div>
+      )}
+
       {/* Métricas de la venta actual */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <MetricCard
@@ -218,9 +258,17 @@ export default function SalesRegisterForm({ onSuccess }) {
         {/* Panel principal - Formulario de venta */}
         <div className="lg:col-span-2">
           <div className="bg-white shadow-lg rounded-xl p-6">
-            <div className="flex items-center mb-6">
-              <FaShoppingCart className="text-orange-500 mr-3 text-xl" />
-              <h3 className="text-xl font-semibold text-gray-800">Registrar Nueva Venta</h3>
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center">
+                <FaShoppingCart className="text-orange-500 mr-3 text-xl" />
+                <h3 className="text-xl font-semibold text-gray-800">Registrar Nueva Venta</h3>
+              </div>
+              {!loadingProducts && productOptions.length === 0 && (
+                <div className="text-sm text-amber-600 bg-amber-50 px-3 py-1 rounded-lg flex items-center">
+                  <FaExclamationTriangle className="mr-1" />
+                  Sin productos disponibles
+                </div>
+              )}
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -251,19 +299,42 @@ export default function SalesRegisterForm({ onSuccess }) {
                           <select
                             value={r.product}
                             onChange={e => handleChange(i, 'product', e.target.value)}
-                            disabled={isSubmitting}
+                            disabled={isSubmitting || loadingProducts}
                             className={`w-full bg-white text-black border rounded-lg px-3 py-2 
                                        focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent
                                        disabled:opacity-50 disabled:cursor-not-allowed
                                        ${r.error.product ? 'border-red-500' : 'border-gray-300'}`}
                           >
-                            <option value="">– Selecciona un producto –</option>
-                            {productOptions.map(p =>
-                              <option key={p.id} value={p.name}>{p.name}</option>
-                            )}
+                            <option value="">
+                              {loadingProducts ? '⏳ Cargando productos...' : '– Selecciona un producto –'}
+                            </option>
+                            {productOptions.map(p => (
+                              <option key={p.id} value={p.name}>
+                                {p.name} (Stock: {p.stock} {p.unidadMedida}) - ${p.price.toLocaleString()}
+                              </option>
+                            ))}
                           </select>
                           {r.error.product && (
                             <p className="mt-1 text-xs text-red-600">{r.error.product}</p>
+                          )}
+                          {/* Mostrar información del stock disponible cuando hay producto seleccionado */}
+                          {r.product && !r.error.product && (
+                            (() => {
+                              const producto = obtenerProductoPorNombre(r.product);
+                              return producto ? (
+                                <div className="mt-1 text-xs text-gray-600 flex items-center">
+                                  <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
+                                    producto.stock < 5 
+                                      ? 'bg-red-100 text-red-800' 
+                                      : producto.stock < 10 
+                                      ? 'bg-yellow-100 text-yellow-800' 
+                                      : 'bg-green-100 text-green-800'
+                                  }`}>
+                                    Disponible: {producto.stock} {producto.unidadMedida}
+                                  </span>
+                                </div>
+                              ) : null;
+                            })()
                           )}
                         </td>
 
@@ -277,10 +348,16 @@ export default function SalesRegisterForm({ onSuccess }) {
                             className={`w-full bg-white text-black border rounded-lg px-3 py-2 text-right
                                        focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent
                                        disabled:opacity-50 disabled:cursor-not-allowed
-                                       ${r.error.quantity ? 'border-red-500' : 'border-gray-300'}`}
+                                       ${r.error.quantity || r.stockWarning ? 'border-red-500' : 'border-gray-300'}`}
                           />
                           {r.error.quantity && (
                             <p className="mt-1 text-xs text-red-600">{r.error.quantity}</p>
+                          )}
+                          {r.stockWarning && !r.error.quantity && (
+                            <div className="mt-1 flex items-center">
+                              <FaExclamationTriangle className="text-orange-500 text-xs mr-1" />
+                              <p className="text-xs text-orange-600">{r.stockWarning}</p>
+                            </div>
                           )}
                         </td>
 
@@ -380,13 +457,18 @@ export default function SalesRegisterForm({ onSuccess }) {
 
               <button
                 type="submit"
-                disabled={isSubmitting || total <= 0}
+                disabled={isSubmitting || total <= 0 || productOptions.length === 0}
                 className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
               >
                 {isSubmitting ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
                     <span>Guardando venta...</span>
+                  </>
+                ) : productOptions.length === 0 ? (
+                  <>
+                    <FaExclamationTriangle />
+                    <span>Sin productos disponibles</span>
                   </>
                 ) : (
                   <>

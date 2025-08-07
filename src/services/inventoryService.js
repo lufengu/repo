@@ -102,3 +102,31 @@ export const mapFrontendToBackend = (frontendItem) => {
     category: frontendItem.categoria
   };
 };
+
+// Función para actualizar stock después de una venta
+export const updateStockAfterSale = async (ventaItems) => {
+  try {
+    const updatePromises = ventaItems.map(async (item) => {
+      // Buscar el producto por nombre para obtener su ID
+      const inventory = await getInventory();
+      const producto = inventory.find(p => p.name === item.product);
+      
+      if (producto) {
+        const newQuantity = producto.quantity - item.quantity;
+        if (newQuantity >= 0) {
+          return await updateInventoryItem(producto.id, { stock: newQuantity });
+        } else {
+          throw new Error(`Stock insuficiente para ${item.product}`);
+        }
+      } else {
+        throw new Error(`Producto ${item.product} no encontrado en inventario`);
+      }
+    });
+
+    await Promise.all(updatePromises);
+    return { success: true };
+  } catch (error) {
+    console.error('Error al actualizar stock:', error);
+    throw new Error(error.message || 'Error al actualizar inventario');
+  }
+};

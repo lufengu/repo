@@ -19,7 +19,9 @@ export const useProductos = () => {
     try {
       const data = await getInventory();
       const productosFormateados = data.map(item => mapBackendToFrontend(item));
-      setProductos(productosFormateados);
+      // Ordenar por ID descendente para mostrar los más recientes primero
+      const productosOrdenados = productosFormateados.sort((a, b) => b.id - a.id);
+      setProductos(productosOrdenados);
     } catch (err) {
       setError(err.message);
       console.error('Error al cargar productos:', err);
@@ -47,7 +49,7 @@ export const useProductos = () => {
     try {
       const nuevoProducto = await createInventoryItem(producto);
       const productoFormateado = mapBackendToFrontend(nuevoProducto);
-      setProductos(prev => [...prev, productoFormateado]);
+      setProductos(prev => [productoFormateado, ...prev]);
       return productoFormateado;
     } catch (err) {
       setError(err.message);
@@ -81,9 +83,12 @@ export const useProductos = () => {
     try {
       const productoActualizado = await updateInventoryItem(id, datosActualizados);
       const productoFormateado = mapBackendToFrontend(productoActualizado);
-      setProductos(prev => prev.map(p => 
-        p.id === id ? productoFormateado : p
-      ));
+      setProductos(prev => {
+        // Remover el producto editado de su posición actual
+        const sinProductoEditado = prev.filter(p => p.id !== id);
+        // Agregar el producto editado al principio
+        return [productoFormateado, ...sinProductoEditado];
+      });
       return productoFormateado;
     } catch (err) {
       setError(err.message);
