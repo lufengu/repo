@@ -16,6 +16,7 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [userName, setUserName] = useState('Usuario');
+  const [refreshTrigger, setRefreshTrigger] = useState(false);
   
   // Usar el hook de productos
   const { productos } = useProductos();
@@ -94,7 +95,7 @@ const Dashboard = () => {
           {/* Segunda fila - 3 cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <CardAlertas />
-            <CardVentasProducto />
+            <CardVentasProducto refreshTrigger={refreshTrigger} />
             <CardVentasMensuales />
           </div>
         </main>

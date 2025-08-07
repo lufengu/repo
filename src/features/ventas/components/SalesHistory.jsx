@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaSearch, FaEye, FaDownload, FaCalendarAlt, FaChevronLeft, FaChevronRight } from 'react-icons/fa';
 import { MetricCard } from './index';
 import SaleReceipt from './SaleReceipt';
@@ -18,6 +18,9 @@ const SalesHistory = ({ refreshTrigger }) => {
   // Estados para paginación
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+
+  // Estado para guardar los 5 productos más comprados (no se usa en el render)
+  const topProductsRef = useRef([]);
 
   useEffect(() => {
     fetchSales();
@@ -55,6 +58,35 @@ const SalesHistory = ({ refreshTrigger }) => {
     // Resetear página cuando cambian los filtros
     setCurrentPage(1);
   }, [searchTerm, dateFilter, sales]);
+
+  useEffect(() => {
+    // Contar productos vendidos
+    const productCount = {};
+
+    filteredSales.forEach(sale => {
+      // Si la venta tiene items (varios productos)
+      if (sale.items && Array.isArray(sale.items)) {
+        sale.items.forEach(item => {
+          productCount[item.name] = (productCount[item.name] || 0) + item.quantity;
+        });
+      } else if (sale.product) {
+        // Formato legacy: un solo producto por venta
+        productCount[sale.product] = (productCount[sale.product] || 0) + (sale.quantity || 1);
+      }
+    });
+
+    // Ordenar y tomar los 5 más vendidos
+    const topProducts = Object.entries(productCount)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, count]) => ({ name, count }));
+
+    topProductsRef.current = topProducts;
+
+    // Si quieres ver el resultado en consola (puedes quitar esta línea si no quieres nada visible)
+    // console.log('Top 5 productos más comprados:', topProducts);
+
+  }, [filteredSales]);
 
   const fetchSales = async () => {
     try {
@@ -440,11 +472,13 @@ const SalesHistory = ({ refreshTrigger }) => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm text-gray-600">Fecha</p>
-                  <p className="font-medium">{selectedSale.date || new Date(selectedSale.createdAt).toISOString().split('T')[0]}</p>
-                </div>
-                <div>
-                  <p className="text-sm text-gray-600">Hora</p>
-                  <p className="font-medium">{selectedSale.time || new Date(selectedSale.createdAt).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="font-medium">{new Date(selectedSale.createdAt).toLocaleString('es-CO', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  })}</p>
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Cliente</p>
@@ -458,22 +492,37 @@ const SalesHistory = ({ refreshTrigger }) => {
 
               {/* Producto vendido */}
               <div>
-                <h4 className="font-semibold mb-3">Producto Vendido</h4>
+                <h4 className="font-semibold mb-3">Detalles de la compra:</h4>
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
                   <table className="w-full">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Producto</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Cantidad</th>
-                        <th className="px-4 py-2 text-left text-sm font-medium text-gray-700">Total</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Producto</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Cantidad</th>
+                        <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">Precio Unitario</th>
+                        <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">Subtotal</th>
                       </tr>
                     </thead>
-                    <tbody>
-                      <tr>
-                        <td className="px-4 py-2 text-sm">{selectedSale.product}</td>
-                        <td className="px-4 py-2 text-sm">{selectedSale.quantity}</td>
-                        <td className="px-4 py-2 text-sm font-medium">{formatCurrency(selectedSale.total || selectedSale.price * selectedSale.quantity)}</td>
-                      </tr>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {selectedSale.items && Array.isArray(selectedSale.items) ? (
+                        // Nuevo formato con múltiples productos
+                        selectedSale.items.map((item, index) => (
+                          <tr key={index} className="hover:bg-gray-50">
+                            <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700 text-center">{item.quantity}</td>
+                            <td className="px-4 py-3 text-sm text-gray-700 text-right">{formatCurrency(item.price)}</td>
+                            <td className="px-4 py-3 text-sm font-medium text-green-600 text-right">{formatCurrency(item.price * item.quantity)}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        // Formato legacy para compatibilidad
+                        <tr className="hover:bg-gray-50">
+                          <td className="px-4 py-3 text-sm font-medium text-gray-900">{selectedSale.product}</td>
+                          <td className="px-4 py-3 text-sm text-gray-700 text-center">{selectedSale.quantity}</td>
+                          <td className="px-4 py-3 text-sm text-gray-700 text-right">{formatCurrency(selectedSale.price)}</td>
+                          <td className="px-4 py-3 text-sm font-medium text-green-600 text-right">{formatCurrency(selectedSale.price * selectedSale.quantity)}</td>
+                        </tr>
+                      )}
                     </tbody>
                   </table>
                 </div>
