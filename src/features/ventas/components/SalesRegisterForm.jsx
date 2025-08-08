@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { FaPlus, FaTrash, FaSave, FaShoppingCart, FaExclamationTriangle } from 'react-icons/fa';
 import { MetricCard } from './index';
 import SaleReceipt from './SaleReceipt';
@@ -500,19 +500,7 @@ export default function SalesRegisterForm({ onSuccess }) {
                 />
               </div>
               
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Teléfono (Opcional)
-                </label>
-                <input
-                  type="tel"
-                  value={customer.phone}
-                  onChange={(e) => handleCustomerChange('phone', e.target.value)}
-                  disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50"
-                  placeholder="Teléfono del cliente"
-                />
-              </div>
+              
               
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">

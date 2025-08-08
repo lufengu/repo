@@ -116,9 +116,7 @@ const SalesHistory = ({ refreshTrigger }) => {
     return new Date(dateString).toLocaleDateString('es-CO', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      day: 'numeric'
     });
   };
 
@@ -457,50 +455,52 @@ const SalesHistory = ({ refreshTrigger }) => {
           <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex justify-between items-center">
-                <h3 className="text-lg font-semibold">Detalles de Venta #{selectedSale.id}</h3>
+                <h3 className="text-lg font-semibold text-black">Detalles de Venta #{selectedSale.id}</h3>
                 <button
                   onClick={() => setSelectedSale(null)}
                   className="text-gray-400 hover:text-gray-600"
+                  style={{ color: '#000' }}
                 >
                   ✕
                 </button>
               </div>
             </div>
             
-            <div className="p-6 space-y-6">
+            <div className="p-6 space-y-6 text-black">
               {/* Información general */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Fecha</p>
-                  <p className="font-medium">{new Date(selectedSale.createdAt).toLocaleString('es-CO', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}</p>
+                  <p className="text-sm" style={{ color: '#000' }}>Fecha</p>
+                  <p className="font-medium" style={{ color: '#000' }}>
+                    {new Date(selectedSale.createdAt).toLocaleDateString('es-CO', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Cliente</p>
-                  <p className="font-medium">{selectedSale.customer || 'Cliente General'}</p>
+                  <p className="text-sm" style={{ color: '#000' }}>Cliente</p>
+                  <p className="font-medium" style={{ color: '#000' }}>{selectedSale.customer || 'Cliente General'}</p>
                 </div>
+                
                 <div>
-                  <p className="text-sm text-gray-600">Teléfono</p>
-                  <p className="font-medium">{selectedSale.phone || 'No registrado'}</p>
+                  <p className="text-sm" style={{ color: '#000' }}>Email</p>
+                  <p className="font-medium" style={{ color: '#000' }}>{selectedSale.email || 'No registrado'}</p>
                 </div>
               </div>
 
               {/* Producto vendido */}
               <div>
-                <h4 className="font-semibold mb-3">Detalles de la compra:</h4>
+                <h4 className="font-semibold mb-3 text-black">Detalles de la compra:</h4>
                 <div className="border border-gray-200 rounded-lg overflow-hidden">
                   <table className="w-full">
                     <thead className="bg-gray-50">
                       <tr>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-700">Producto</th>
-                        <th className="px-4 py-3 text-center text-sm font-medium text-gray-700">Cantidad</th>
-                        <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">Precio Unitario</th>
-                        <th className="px-4 py-3 text-right text-sm font-medium text-gray-700">Subtotal</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-black">Producto</th>
+                        <th className="px-4 py-3 text-center text-sm font-medium text-black">Cantidad</th>
+                        <th className="px-4 py-3 text-right text-sm font-medium text-black">Precio Unitario</th>
+                        <th className="px-4 py-3 text-right text-sm font-medium text-black">Subtotal</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
@@ -508,19 +508,19 @@ const SalesHistory = ({ refreshTrigger }) => {
                         // Nuevo formato con múltiples productos
                         selectedSale.items.map((item, index) => (
                           <tr key={index} className="hover:bg-gray-50">
-                            <td className="px-4 py-3 text-sm font-medium text-gray-900">{item.name}</td>
-                            <td className="px-4 py-3 text-sm text-gray-700 text-center">{item.quantity}</td>
-                            <td className="px-4 py-3 text-sm text-gray-700 text-right">{formatCurrency(item.price)}</td>
-                            <td className="px-4 py-3 text-sm font-medium text-green-600 text-right">{formatCurrency(item.price * item.quantity)}</td>
+                            <td className="px-4 py-3 text-sm font-medium" style={{ color: '#000' }}>{item.name}</td>
+                            <td className="px-4 py-3 text-sm text-center" style={{ color: '#000' }}>{item.quantity}</td>
+                            <td className="px-4 py-3 text-sm text-right" style={{ color: '#000' }}>{formatCurrency(item.price)}</td>
+                            <td className="px-4 py-3 text-sm font-medium text-right" style={{ color: '#000' }}>{formatCurrency(item.price * item.quantity)}</td>
                           </tr>
                         ))
                       ) : (
                         // Formato legacy para compatibilidad
                         <tr className="hover:bg-gray-50">
-                          <td className="px-4 py-3 text-sm font-medium text-gray-900">{selectedSale.product}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700 text-center">{selectedSale.quantity}</td>
-                          <td className="px-4 py-3 text-sm text-gray-700 text-right">{formatCurrency(selectedSale.price)}</td>
-                          <td className="px-4 py-3 text-sm font-medium text-green-600 text-right">{formatCurrency(selectedSale.price * selectedSale.quantity)}</td>
+                          <td className="px-4 py-3 text-sm font-medium" style={{ color: '#000' }}>{selectedSale.product}</td>
+                          <td className="px-4 py-3 text-sm text-center" style={{ color: '#000' }}>{selectedSale.quantity}</td>
+                          <td className="px-4 py-3 text-sm text-right" style={{ color: '#000' }}>{formatCurrency(selectedSale.price)}</td>
+                          <td className="px-4 py-3 text-sm font-medium text-right" style={{ color: '#000' }}>{formatCurrency(selectedSale.price * selectedSale.quantity)}</td>
                         </tr>
                       )}
                     </tbody>
@@ -530,14 +530,16 @@ const SalesHistory = ({ refreshTrigger }) => {
 
               {/* Método de pago */}
               <div>
-                <p className="text-sm text-gray-600">Método de Pago</p>
-                <p className="font-medium capitalize">{selectedSale.payment_method}</p>
+                <p className="text-sm" style={{ color: '#000' }}>Método de Pago</p>
+                <p className="font-medium capitalize" style={{ color: '#000' }}>{selectedSale.payment_method}</p>
               </div>
 
               {/* Total */}
               <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                <span className="text-lg font-semibold">Total:</span>
-                <span className="text-2xl font-bold text-green-600">{formatCurrency(selectedSale.total || selectedSale.price * selectedSale.quantity)}</span>
+                <span className="text-lg font-semibold text-black">Total:</span>
+                <span className="text-2xl font-bold text-green-600" style={{ color: '#000' }}>
+                  {formatCurrency(selectedSale.total || selectedSale.price * selectedSale.quantity)}
+                </span>
               </div>
 
               {/* Botones */}

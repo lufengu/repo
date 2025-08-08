@@ -2,13 +2,13 @@ import { useState, useEffect } from 'react';
 import { FaFileDownload, FaFileCsv, FaFilePdf, FaCalendarAlt, FaClock, FaChartLine } from 'react-icons/fa';
 import { MetricCard } from './index';
 import { BarChart, LineChart, TrendingUp, Calendar, DollarSign, FileText } from 'lucide-react';
-// import { salesAPI } from '../services/ventasService'; // Descomenta cuando tengas el servicio
+import { salesAPI } from '../services/salesService';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
 const SalesReports = () => {
   const [reportPeriod, setReportPeriod] = useState('daily');
-  const [customDateRange, setCustomDateRange] = useState({
+  const [customDateRange] = useState({
     startDate: '',
     endDate: ''
   });
@@ -29,11 +29,9 @@ const SalesReports = () => {
   const generateReports = async () => {
     setLoading(true);
     setError(null);
-    
     try {
       const today = new Date();
       let startDate, endDate;
-
       if (reportPeriod === 'daily') {
         startDate = endDate = today.toISOString().split('T')[0];
       } else if (reportPeriod === 'monthly') {
@@ -44,100 +42,103 @@ const SalesReports = () => {
         endDate = customDateRange.endDate;
       }
 
-      // Cuando tengas la API, descomenta esto:
-      // const sales = await salesAPI.getSalesByDateRange(startDate, endDate);
-      
-      // Mientras tanto, usar datos de ejemplo:
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Simular carga
-      
+      // Obtener ventas reales del historial
+      const sales = await salesAPI.getSales();
+      // Filtrar por rango de fechas
+      const filteredSales = sales.filter(sale => {
+        const saleDate = new Date(sale.createdAt).toISOString().split('T')[0];
+        return saleDate >= startDate && saleDate <= endDate;
+      });
+
+      // Calcular métricas principales
+      const totalSales = filteredSales.reduce((sum, sale) => sum + (sale.total || sale.price * sale.quantity), 0);
+      const totalTransactions = filteredSales.length;
+      const averageTicket = totalTransactions > 0 ? totalSales / totalTransactions : 0;
+
+      // Agrupar ventas por hora/día
+      let trends = [];
       if (reportPeriod === 'daily') {
-        generateDailyReport();
+        // Ya no agrupamos por hora, solo dejamos vacío
+        trends = [];
       } else {
-        generateMonthlyReport();
+        // Agrupar por día del mes
+        const days = {};
+        filteredSales.forEach(sale => {
+          const day = new Date(sale.createdAt).getDate();
+          if (!days[day]) days[day] = { day, sales: 0, transactions: 0 };
+          days[day].sales += sale.total || sale.price * sale.quantity;
+          days[day].transactions += 1;
+        });
+        trends = Object.values(days).sort((a, b) => a.day - b.day);
+      }
+
+      // Productos más vendidos
+      const productCount = {};
+      filteredSales.forEach(sale => {
+        if (sale.items && Array.isArray(sale.items)) {
+          sale.items.forEach(item => {
+            if (!productCount[item.name]) productCount[item.name] = { product: item.name, quantity: 0, revenue: 0 };
+            productCount[item.name].quantity += item.quantity;
+            productCount[item.name].revenue += item.price * item.quantity;
+          });
+        } else if (sale.product) {
+          if (!productCount[sale.product]) productCount[sale.product] = { product: sale.product, quantity: 0, revenue: 0 };
+          productCount[sale.product].quantity += sale.quantity || 1;
+          productCount[sale.product].revenue += (sale.price || 0) * (sale.quantity || 1);
+        }
+      });
+      const salesByProduct = Object.values(productCount).sort((a, b) => b.quantity - a.quantity).slice(0, 10);
+
+      // Métodos de pago
+      const paymentMethodCount = {};
+      filteredSales.forEach(sale => {
+        const method = sale.payment_method || 'desconocido';
+        if (!paymentMethodCount[method]) paymentMethodCount[method] = { method, count: 0, total: 0 };
+        paymentMethodCount[method].count += 1;
+        paymentMethodCount[method].total += sale.total || sale.price * sale.quantity;
+      });
+      const salesByPaymentMethod = Object.values(paymentMethodCount);
+
+      // Reporte principal
+      if (reportPeriod === 'daily') {
+        setReportData({
+          dailyReport: {
+            date: new Date().toLocaleDateString('es-CO'),
+            totalSales,
+            totalTransactions,
+            averageTicket,
+          },
+          monthlyReport: null,
+          salesByProduct,
+          salesByPaymentMethod,
+          trends: [], // No hay tendencias por hora
+        });
+      } else {
+        setReportData({
+          dailyReport: null,
+          monthlyReport: {
+            month: new Date().toLocaleDateString('es-CO', { month: 'long', year: 'numeric' }),
+            totalSales,
+            totalTransactions,
+            dailyAverage: trends.length > 0 ? totalSales / trends.length : 0,
+          },
+          salesByProduct,
+          salesByPaymentMethod,
+          trends,
+        });
       }
     } catch (error) {
       console.error('Error generando reportes:', error);
-      setError('Error al generar los reportes. Usando datos de ejemplo.');
-      generateExampleReports();
+      setError('Error al generar los reportes.');
+      setReportData({
+        dailyReport: null,
+        monthlyReport: null,
+        salesByProduct: [],
+        salesByPaymentMethod: [],
+        trends: [],
+      });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const generateDailyReport = () => {
-    // Datos de ejemplo para reporte diario
-    const mockDailyData = {
-      dailyReport: {
-        date: new Date().toLocaleDateString('es-CO'),
-        totalSales: 1095000,
-        totalTransactions: 8,
-        averageTicket: 136875,
-        hourlyData: [
-          { hour: '09:00', sales: 155000, transactions: 1 },
-          { hour: '11:00', sales: 90000, transactions: 1 },
-          { hour: '14:00', sales: 850000, transactions: 1 },
-          { hour: '16:00', sales: 0, transactions: 5 }
-        ]
-      },
-      salesByProduct: [
-        { product: 'Laptop HP', quantity: 1, revenue: 850000 },
-        { product: 'Mouse Logitech', quantity: 2, revenue: 155000 },
-        { product: 'Teclado Gaming', quantity: 1, revenue: 90000 }
-      ],
-      salesByPaymentMethod: [
-        { method: 'tarjeta', count: 3, total: 850000 },
-        { method: 'transferencia', count: 2, total: 155000 },
-        { method: 'efectivo', count: 3, total: 90000 }
-      ],
-      trends: [
-        { hour: '09:00', sales: 155000, transactions: 1 },
-        { hour: '11:00', sales: 90000, transactions: 1 },
-        { hour: '14:00', sales: 850000, transactions: 1 },
-        { hour: '16:00', sales: 0, transactions: 5 }
-      ]
-    };
-
-    setReportData(mockDailyData);
-  };
-
-  const generateMonthlyReport = () => {
-    // Datos de ejemplo para reporte mensual
-    const mockMonthlyData = {
-      monthlyReport: {
-        month: new Date().toLocaleDateString('es-CO', { month: 'long', year: 'numeric' }),
-        totalSales: 12450000,
-        totalTransactions: 156,
-        dailyAverage: 402000
-      },
-      salesByProduct: [
-        { product: 'Laptop HP', quantity: 15, revenue: 6500000 },
-        { product: 'Mouse Logitech', quantity: 28, revenue: 2800000 },
-        { product: 'Teclado Gaming', quantity: 18, revenue: 1950000 },
-        { product: 'Monitor 24"', quantity: 8, revenue: 1200000 }
-      ],
-      salesByPaymentMethod: [
-        { method: 'tarjeta', count: 68, total: 7200000 },
-        { method: 'transferencia', count: 45, total: 3600000 },
-        { method: 'efectivo', count: 43, total: 1650000 }
-      ],
-      trends: [
-        { day: 1, sales: 450000, transactions: 6 },
-        { day: 2, sales: 380000, transactions: 4 },
-        { day: 3, sales: 620000, transactions: 8 },
-        { day: 4, sales: 1095000, transactions: 12 },
-        { day: 5, sales: 890000, transactions: 10 },
-        { day: 6, sales: 720000, transactions: 9 }
-      ]
-    };
-
-    setReportData(mockMonthlyData);
-  };
-
-  const generateExampleReports = () => {
-    if (reportPeriod === 'daily') {
-      generateDailyReport();
-    } else {
-      generateMonthlyReport();
     }
   };
 
@@ -149,94 +150,322 @@ const SalesReports = () => {
     }).format(amount);
   };
 
-  const exportReport = () => {
-    const reportContent = {
-      periodo: reportPeriod === 'daily' ? 'Diario' : 'Mensual',
-      fecha: new Date().toLocaleDateString('es-CO'),
-      datos: reportData
-    };
+  const IVA_RATE = 0.19;
 
-    const dataStr = JSON.stringify(reportContent, null, 2);
-    const dataBlob = new Blob([dataStr], { type: 'application/json' });
-    const url = URL.createObjectURL(dataBlob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `reporte-ventas-${reportPeriod}-${new Date().toISOString().split('T')[0]}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
+  const buildDetailedSales = (sales) => {
+    return sales.map(sale => {
+      // Calcular subtotal sin IVA por venta
+      let subtotalSinIVA = 0;
+      let detalles = [];
+      if (sale.items && Array.isArray(sale.items)) {
+        detalles = sale.items.map(item => {
+          const subtotalItem = item.price * item.quantity;
+          const ivaItem = subtotalItem * IVA_RATE;
+          const totalItem = subtotalItem + ivaItem;
+          subtotalSinIVA += subtotalItem;
+          return {
+            producto: item.name,
+            cantidad: item.quantity,
+            precio_unitario: item.price,
+            subtotal_sin_iva: subtotalItem,
+            iva: ivaItem,
+            subtotal_con_iva: totalItem
+          };
+        });
+      } else if (sale.product) {
+        const subtotalItem = (sale.price || 0) * (sale.quantity || 1);
+        const ivaItem = subtotalItem * IVA_RATE;
+        const totalItem = subtotalItem + ivaItem;
+        subtotalSinIVA += subtotalItem;
+        detalles = [{
+          producto: sale.product,
+          cantidad: sale.quantity || 1,
+          precio_unitario: sale.price || 0,
+          subtotal_sin_iva: subtotalItem,
+          iva: ivaItem,
+          subtotal_con_iva: totalItem
+        }];
+      }
+      const ivaVenta = subtotalSinIVA * IVA_RATE;
+      const totalConIVA = subtotalSinIVA + ivaVenta;
+
+      return {
+        fecha: new Date(sale.createdAt).toLocaleDateString('es-CO'),
+        cliente: sale.customer || 'No registrado',
+        telefono: sale.phone || 'No registrado',
+        detalles,
+        metodo_pago: sale.payment_method || 'No registrado',
+        subtotal_sin_iva: subtotalSinIVA,
+        iva: ivaVenta,
+        total_con_iva: totalConIVA
+      };
+    });
   };
 
-  const exportCSV = () => {
-    const periodo = reportPeriod === 'daily' ? 'Diario' : 'Mensual';
-    const fecha = new Date().toLocaleDateString('es-CO');
-    const rows = [];
-    
-    if (reportPeriod === 'daily') {
-      reportData.trends.filter(h => h.sales > 0).forEach(h => {
-        rows.push([periodo, fecha, h.hour, h.transactions, h.sales, (h.sales / h.transactions).toFixed(0)]);
-      });
-    } else {
-      reportData.trends.forEach(d => {
-        rows.push([periodo, fecha, `Día ${d.day}`, d.transactions, d.sales, (d.sales / d.transactions).toFixed(0)]);
-      });
-    }
-    
-    const header = ['Periodo', 'Fecha', 'Hora/Día', 'Transacciones', 'Ventas', 'Promedio'];
-    const csv = [header.join(','), ...rows.map(r => r.join(','))].join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `reporte-ventas-${reportPeriod}-${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
-
-  const exportPDF = () => {
+  const exportReport = async () => {
     try {
-      const doc = new jsPDF();
-      const periodo = reportPeriod === 'daily' ? 'Diario' : 'Mensual';
-      
-      // Título principal
-      doc.setFontSize(18);
-      doc.text(`Reporte de Ventas - ${periodo}`, 14, 20);
-      
-      // Fecha
-      doc.setFontSize(12);
-      doc.text(`Fecha: ${new Date().toLocaleDateString('es-CO')}`, 14, 30);
+      const sales = await salesAPI.getSales();
+      const detailedSales = buildDetailedSales(sales);
 
-      const head = [['Hora/Día', 'Transacciones', 'Ventas', 'Promedio']];
-      const body = reportPeriod === 'daily'
-        ? reportData.trends.filter(h => h.sales > 0).map(h => [
-            h.hour,
-            h.transactions,
-            formatCurrency(h.sales),
-            formatCurrency(h.transactions ? h.sales / h.transactions : 0)
-          ])
-        : reportData.trends.map(d => [
-            `Día ${d.day}`,
-            d.transactions,
-            formatCurrency(d.sales),
-            formatCurrency(d.transactions ? d.sales / d.transactions : 0)
-          ]);
+      const reportContent = {
+        fecha_exportacion: new Date().toLocaleString('es-CO'),
+        ventas: detailedSales
+      };
 
-      autoTable(doc, { 
-        head, 
-        body, 
-        startY: 40,
-        styles: {
-          fontSize: 10,
-          cellPadding: 3
-        },
-        headStyles: {
-          fillColor: [255, 102, 0] // Color naranja
-        }
+      const dataStr = JSON.stringify(reportContent, null, 2);
+      const dataBlob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(dataBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `reporte-detallado-ventas-${new Date().toISOString().split('T')[0]}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('Error al exportar JSON');
+    }
+  };
+
+  const exportCSV = async () => {
+    try {
+      const sales = await salesAPI.getSales();
+      const detailedSales = buildDetailedSales(sales);
+
+      let csv = 'Fecha,Cliente,Teléfono,Producto,Cantidad,Precio Unitario,Subtotal sin IVA,IVA (19%),Subtotal con IVA,Método de Pago,Subtotal Venta sin IVA,IVA Venta,Total Venta con IVA\n';
+      detailedSales.forEach(sale => {
+        sale.detalles.forEach(item => {
+          csv += `"${sale.fecha}","${sale.cliente}","${sale.telefono}","${item.producto}",${item.cantidad},${item.precio_unitario},${item.subtotal_sin_iva},${item.iva},${item.subtotal_con_iva},"${sale.metodo_pago}",${sale.subtotal_sin_iva},${sale.iva},${sale.total_con_iva}\n`;
+        });
       });
-      
-      doc.save(`reporte-ventas-${reportPeriod}-${new Date().toISOString().split('T')[0]}.pdf`);
-    } catch (error) {
-      console.error('Error al exportar PDF:', error);
-      alert('Ocurrió un error al generar el PDF. Revisa la consola para más detalles.');
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `reporte-detallado-ventas-${new Date().toISOString().split('T')[0]}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('Error al exportar CSV');
+    }
+  };
+
+  const exportPDF = async () => {
+    try {
+      const sales = await salesAPI.getSales();
+      const detailedSales = buildDetailedSales(sales);
+
+      const doc = new jsPDF();
+      doc.setFontSize(16);
+      // Centrar el título "REPORTE DETALLADO DE VENTAS"
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const title = 'REPORTE DETALLADO DE VENTAS';
+      const textWidth = doc.getTextWidth(title);
+      const x = (pageWidth - textWidth) / 2;
+      doc.text(title, x, 18);
+
+      // Agregar fecha y hora de generación
+      const fechaHora = new Date().toLocaleString('es-CO');
+      doc.setFontSize(10);
+      doc.text(`Generado el: ${fechaHora}`, 14, 25);
+
+      let y = 35;
+      detailedSales.forEach((sale) => {
+        // Calcular altura estimada del bloque
+        let blockHeight = 70 + (sale.detalles.length * 12);
+        if (y + blockHeight > doc.internal.pageSize.getHeight() - 20) {
+          doc.addPage();
+          y = 18;
+        }
+        // Dibujar recuadro
+        doc.setFillColor(255, 243, 230); // fondo suave
+        doc.setDrawColor(255, 115, 0);   // borde naranja
+        doc.roundedRect(10, y - 4, doc.internal.pageSize.getWidth() - 20, blockHeight, 4, 4, 'FD');
+
+        let innerY = y + 4;
+        doc.setFontSize(12);
+        doc.text(`Fecha: ${sale.fecha}`, 14, innerY);
+        doc.text(`Cliente: ${sale.cliente}`, 14, innerY + 6);
+        doc.text(`Teléfono: ${sale.telefono}`, 14, innerY + 12);
+
+        autoTable(doc, {
+          startY: innerY + 18,
+          margin: { left: 14, right: 14 },
+          head: [['Producto', 'Cantidad', 'Precio Unitario', 'Subtotal sin IVA', 'IVA (19%)', 'Subtotal con IVA']],
+          body: sale.detalles.map(item => [
+            item.producto,
+            item.cantidad,
+            `$${item.precio_unitario.toLocaleString('es-CO')}`,
+            `$${item.subtotal_sin_iva.toLocaleString('es-CO')}`,
+            `$${item.iva.toLocaleString('es-CO')}`,
+            `$${item.subtotal_con_iva.toLocaleString('es-CO')}`
+          ]),
+          theme: 'grid',
+          headStyles: {
+            fillColor: [255, 115, 0],
+            textColor: [255, 255, 255],
+            fontStyle: 'bold',
+            fontSize: 11,
+            halign: 'center',
+            valign: 'middle',
+            lineWidth: 0.5,
+            lineColor: [255, 115, 0]
+          },
+          bodyStyles: {
+            fontSize: 10,
+            textColor: [60, 60, 60],
+            lineWidth: 0.2,
+            lineColor: [220, 220, 220]
+          },
+          alternateRowStyles: {
+            fillColor: [255, 243, 230]
+          },
+          styles: {
+            cellPadding: 2,
+            halign: 'center',
+            valign: 'middle',
+            minCellHeight: 8,
+            font: 'helvetica'
+          }
+        });
+
+        let tableEndY = doc.lastAutoTable.finalY;
+        doc.setFontSize(11);
+        doc.text(`Subtotal sin IVA: $${sale.subtotal_sin_iva.toLocaleString('es-CO')}`, 14, tableEndY + 6);
+        doc.text(`IVA (19%): $${sale.iva.toLocaleString('es-CO')}`, 14, tableEndY + 12);
+        doc.text(`Total con IVA: $${sale.total_con_iva.toLocaleString('es-CO')}`, 14, tableEndY + 18);
+        doc.text(`Método de Pago: ${sale.metodo_pago}`, 14, tableEndY + 24);
+
+        y = tableEndY + 34;
+      });
+
+      doc.save(`reporte-detallado-ventas-${new Date().toISOString().split('T')[0]}.pdf`);
+    } catch {
+      alert('Error al exportar PDF');
+    }
+  };
+
+  const exportDailyReport = async (type = 'json') => {
+    try {
+      const sales = await salesAPI.getSales();
+      const today = new Date().toISOString().split('T')[0];
+      // Filtrar ventas del día actual
+      const dailySales = sales.filter(sale => {
+        const saleDate = new Date(sale.createdAt).toISOString().split('T')[0];
+        return saleDate === today;
+      });
+      const detailedSales = buildDetailedSales(dailySales);
+
+      if (type === 'json') {
+        const reportContent = {
+          fecha_exportacion: new Date().toLocaleString('es-CO'),
+          ventas: detailedSales
+        };
+        const dataStr = JSON.stringify(reportContent, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `reporte-diario-ventas-${today}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+      } else if (type === 'csv') {
+        let csv = 'Fecha,Cliente,Teléfono,Producto,Cantidad,Precio Unitario,Subtotal sin IVA,IVA (19%),Subtotal con IVA,Método de Pago,Subtotal Venta sin IVA,IVA Venta,Total Venta con IVA\n';
+        detailedSales.forEach(sale => {
+          sale.detalles.forEach(item => {
+            csv += `"${sale.fecha}","${sale.cliente}","${sale.telefono}","${item.producto}",${item.cantidad},${item.precio_unitario},${item.subtotal_sin_iva},${item.iva},${item.subtotal_con_iva},"${sale.metodo_pago}",${sale.subtotal_sin_iva},${sale.iva},${sale.total_con_iva}\n`;
+          });
+        });
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `reporte-diario-ventas-${today}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+      } else if (type === 'pdf') {
+        const doc = new jsPDF();
+        doc.setFontSize(16);
+        doc.text('Reporte Diario de Ventas', 14, 18);
+
+        // Agregar fecha y hora de generación
+        const fechaHora = new Date().toLocaleString('es-CO');
+        doc.setFontSize(10);
+        doc.text(`Generado el: ${fechaHora}`, 14, 25);
+
+        let y = 35;
+        detailedSales.forEach((sale) => {
+          // Calcular altura estimada del bloque
+          let blockHeight = 70 + (sale.detalles.length * 12);
+          if (y + blockHeight > doc.internal.pageSize.getHeight() - 20) {
+            doc.addPage();
+            y = 18;
+          }
+          // Dibujar recuadro
+          doc.setFillColor(255, 243, 230); // fondo suave
+          doc.setDrawColor(255, 115, 0);   // borde naranja
+          doc.roundedRect(10, y - 4, doc.internal.pageSize.getWidth() - 20, blockHeight, 4, 4, 'FD');
+
+          let innerY = y + 4;
+          doc.setFontSize(12);
+          doc.text(`Fecha: ${sale.fecha}`, 14, innerY);
+          doc.text(`Cliente: ${sale.cliente}`, 14, innerY + 6);
+          doc.text(`Teléfono: ${sale.telefono}`, 14, innerY + 12);
+
+          autoTable(doc, {
+            startY: innerY + 18,
+            margin: { left: 14, right: 14 },
+            head: [['Producto', 'Cantidad', 'Precio Unitario', 'Subtotal sin IVA', 'IVA (19%)', 'Subtotal con IVA']],
+            body: sale.detalles.map(item => [
+              item.producto,
+              item.cantidad,
+              `$${item.precio_unitario.toLocaleString('es-CO')}`,
+              `$${item.subtotal_sin_iva.toLocaleString('es-CO')}`,
+              `$${item.iva.toLocaleString('es-CO')}`,
+              `$${item.subtotal_con_iva.toLocaleString('es-CO')}`
+            ]),
+            theme: 'grid',
+            headStyles: {
+              fillColor: [255, 115, 0],
+              textColor: [255, 255, 255],
+              fontStyle: 'bold',
+              fontSize: 11,
+              halign: 'center',
+              valign: 'middle',
+              lineWidth: 0.5,
+              lineColor: [255, 115, 0]
+            },
+            bodyStyles: {
+              fontSize: 10,
+              textColor: [60, 60, 60],
+              lineWidth: 0.2,
+              lineColor: [220, 220, 220]
+            },
+            alternateRowStyles: {
+              fillColor: [255, 243, 230]
+            },
+            styles: {
+              cellPadding: 2,
+              halign: 'center',
+              valign: 'middle',
+              minCellHeight: 8,
+              font: 'helvetica'
+            }
+          });
+
+          let tableEndY = doc.lastAutoTable.finalY;
+          doc.setFontSize(11);
+          doc.text(`Subtotal sin IVA: $${sale.subtotal_sin_iva.toLocaleString('es-CO')}`, 14, tableEndY + 6);
+          doc.text(`IVA (19%): $${sale.iva.toLocaleString('es-CO')}`, 14, tableEndY + 12);
+          doc.text(`Total con IVA: $${sale.total_con_iva.toLocaleString('es-CO')}`, 14, tableEndY + 18);
+          doc.text(`Método de Pago: ${sale.metodo_pago}`, 14, tableEndY + 24);
+
+          y = tableEndY + 34;
+        });
+
+        doc.save(`reporte-diario-ventas-${today}.pdf`);
+      }
+    } catch {
+      alert('Error al exportar el reporte diario');
     }
   };
 
@@ -294,21 +523,21 @@ const SalesReports = () => {
         <div className="mt-4 pt-4 border-t border-gray-200">
           <div className="flex flex-wrap gap-2">
             <button
-              onClick={exportCSV}
+              onClick={() => reportPeriod === 'daily' ? exportDailyReport('csv') : exportCSV()}
               className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
               <FaFileCsv className="mr-2" />
               Exportar CSV
             </button>
             <button
-              onClick={exportPDF}
+              onClick={() => reportPeriod === 'daily' ? exportDailyReport('pdf') : exportPDF()}
               className="flex items-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
             >
               <FaFilePdf className="mr-2" />
               Exportar PDF
             </button>
             <button
-              onClick={exportReport}
+              onClick={() => reportPeriod === 'daily' ? exportDailyReport('json') : exportReport()}
               className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
             >
               <FaFileDownload className="mr-2" />
@@ -379,6 +608,7 @@ const SalesReports = () => {
       )}
 
       {/* Reporte detallado por tiempo */}
+      {/* 
       {reportData.trends && reportData.trends.length > 0 && (
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
@@ -450,7 +680,7 @@ const SalesReports = () => {
             </table>
           </div>
         </div>
-      )}
+      )} */}
 
       {/* Productos más vendidos */}
       {reportData.salesByProduct && reportData.salesByProduct.length > 0 && (
