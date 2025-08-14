@@ -209,8 +209,8 @@ const SalesHistory = ({ refreshTrigger }) => {
           value={formatCurrency(totalSales)}
           detail={`${totalTransactions} transacciones`}
           icon={<DollarSign className="w-8 h-8" />}
-          gradient="from-green-500 to-green-600"
-          colorText="text-green-100"
+          gradient="from-blue-500 to-blue-600"
+          colorText="text-blue-100"
         />
         
         <MetricCard
@@ -218,8 +218,8 @@ const SalesHistory = ({ refreshTrigger }) => {
           value={totalItemsSold.toString()}
           detail={`En ${totalTransactions} ventas`}
           icon={<ShoppingBag className="w-8 h-8" />}
-          gradient="from-blue-500 to-blue-600"
-          colorText="text-blue-100"
+          gradient="from-orange-500 to-orange-600"
+          colorText="text-orange-100"
         />
         
         <MetricCard
@@ -227,8 +227,8 @@ const SalesHistory = ({ refreshTrigger }) => {
           value={formatCurrency(averageTicket)}
           detail="Por transacción"
           icon={<TrendingUp className="w-8 h-8" />}
-          gradient="from-purple-500 to-purple-600"
-          colorText="text-purple-100"
+          gradient="from-orange-500 to-orange-600"
+          colorText="text-orange-100"
         />
         
         <MetricCard
@@ -353,13 +353,7 @@ const SalesHistory = ({ refreshTrigger }) => {
                         {sale.quantity}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        <span className={`px-2 py-1 text-xs rounded-full ${
-                          sale.payment_method === 'efectivo' ? 'bg-green-100 text-green-800' :
-                          sale.payment_method === 'tarjeta' ? 'bg-blue-100 text-blue-800' :
-                          'bg-purple-100 text-purple-800'
-                        }`}>
-                          {sale.payment_method}
-                        </span>
+                        {sale.payment_method}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {formatDate(sale.createdAt)}

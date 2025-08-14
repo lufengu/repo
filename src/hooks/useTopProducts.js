@@ -28,7 +28,7 @@ export function useTopProducts(refreshTrigger) {
           .map(([name, count]) => ({ name, count }));
 
         setTopProducts(top);
-      } catch (e) {
+      } catch {
         setTopProducts([]);
       } finally {
         setLoading(false);

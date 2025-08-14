@@ -4,6 +4,7 @@ import Menu from "../../dashboard/components/Menu";
 import SalesRegisterForm from '../components/SalesRegisterForm';
 import SalesHistory from '../components/SalesHistory';
 import SalesReports from '../components/SalesReports';
+import CardVentasMensuales from '../../dashboard/components/CardVentasMensuales';
 
 const Ventas = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -11,6 +12,8 @@ const Ventas = () => {
   const [view, setView] = useState('register');
   const [userName, setUserName] = useState('Usuario');
   const [refreshHistory, setRefreshHistory] = useState(0);
+  const [showSuccess, setShowSuccess] = useState(false);
+  
 
   useEffect(() => {
     // Obtener información del usuario desde localStorage
@@ -29,13 +32,34 @@ const Ventas = () => {
 
   // Función para refrescar el historial después de crear una venta
   const handleSaleCreated = () => {
-    setRefreshHistory(prev => prev + 1);
-    // Cambiar automáticamente a la vista del historial para mostrar la nueva venta
-    setView('history');
+  setRefreshHistory(prev => prev + 1);
+  setShowSuccess(true);
+  // Cambiar automáticamente a la vista del historial para mostrar la nueva venta
+  setView('history');
   };
 
   return (
     <div className="flex h-screen bg-gray-100">
+      {/* Pantalla de éxito al registrar venta */}
+      {showSuccess && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+          <div
+            className="rounded-2xl shadow-lg p-12 flex flex-col items-center justify-center text-center"
+            style={{
+              minWidth: '36rem',
+              minHeight: '24rem',
+              background: 'linear-gradient(135deg, #ffffff 0%, #3b82f6 100%)'
+            }}
+          >
+            <h2 className="text-4xl font-bold text-green-600 mb-4 text-center">¡Gracias por tu compra!</h2>
+            <p className="text-xl text-gray-700 mb-8 text-center">La venta se registró exitosamente.</p>
+            <button
+              className="bg-orange-500 text-white px-8 py-3 rounded-lg font-semibold text-lg hover:bg-orange-600 transition"
+              onClick={() => setShowSuccess(false)}
+            >Cerrar</button>
+          </div>
+        </div>
+      )}
       {/* Menu lateral */}
       <Menu 
         sidebarOpen={sidebarOpen}
@@ -121,6 +145,8 @@ const Ventas = () => {
             {view === 'history' && <SalesHistory refreshTrigger={refreshHistory} />}
             {view === 'report' && <SalesReports />}
           </div>
+
+          {/* Card de Ventas Mensuales eliminada */}
         </main>
       </div>
     </div>

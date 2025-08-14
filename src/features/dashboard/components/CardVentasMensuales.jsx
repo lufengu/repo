@@ -1,7 +1,8 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from "lucide-react";
+import Ventas from '../../ventas/pages/Ventas';
 
-const CardVentasMensuales = () => {
+const CardVentasMensuales = ({ monthlyData }) => {
   // Datos de ejemplo (reemplazar con datos reales de ventas mensuales)
   const data = [
     { mes: 'Ene', ventas: 125000, ventasUnidades: 145 },
@@ -59,10 +60,10 @@ const CardVentasMensuales = () => {
     return null;
   };
 
-  // Obtener el mes actual y las ventas
-  const mesActual = data[data.length - 1];
-  const ventasMesActual = mesActual.ventas;
-  const porcentajeCambio = ((ventasMesActual - data[data.length - 2].ventas) / data[data.length - 2].ventas) * 100;
+  // Si hay datos reales, úsalos
+  const mesActual = monthlyData
+    ? { mes: monthlyData.month, ventas: monthlyData.totalSales }
+    : data[data.length - 1];
 
   return (
     <div className="bg-white p-4 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer">
@@ -73,7 +74,10 @@ const CardVentasMensuales = () => {
         <h2 className="font-semibold text-gray-700">Ventas Totales Mensuales</h2>
       </div>
 
-      <p className="text-sm text-gray-500">{mesActual.mes} 2025</p>
+      <p className="text-sm text-gray-500">{mesActual.mes}</p>
+      <p className="text-xl font-bold text-purple-700">
+        ${mesActual.ventas?.toLocaleString('es-CO')} COP
+      </p>
 
       {/* Gráfico de líneas */}
       <div className="mt-4 h-40">

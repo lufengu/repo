@@ -6,7 +6,7 @@ import { salesAPI } from '../services/salesService';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
-const SalesReports = () => {
+const SalesReports = ({ onMonthlyData, onMonthlyTableData }) => {
   const [reportPeriod, setReportPeriod] = useState('daily');
   const [customDateRange] = useState({
     startDate: '',
@@ -113,19 +113,33 @@ const SalesReports = () => {
           salesByPaymentMethod,
           trends: [], // No hay tendencias por hora
         });
+        // No enviar datos mensuales
+        if (onMonthlyData) onMonthlyData(null);
       } else {
+        const monthlyReport = {
+          month: new Date().toLocaleDateString('es-CO', { month: 'long', year: 'numeric' }),
+          totalSales,
+          totalTransactions,
+          dailyAverage: trends.length > 0 ? totalSales / trends.length : 0,
+        };
         setReportData({
           dailyReport: null,
-          monthlyReport: {
-            month: new Date().toLocaleDateString('es-CO', { month: 'long', year: 'numeric' }),
-            totalSales,
-            totalTransactions,
-            dailyAverage: trends.length > 0 ? totalSales / trends.length : 0,
-          },
+          monthlyReport,
           salesByProduct,
           salesByPaymentMethod,
           trends,
         });
+        // Enviar datos mensuales al padre
+        if (onMonthlyData) onMonthlyData(monthlyReport);
+
+        // Enviar datos de la tabla mensual
+        const arrayDeVentasPorMes = trends.map(trend => ({
+          month: new Date(new Date().getFullYear(), trend.day - 1).toLocaleString('es-CO', { month: 'long' }),
+          totalSales: trend.sales
+        }));
+        if (onMonthlyTableData) onMonthlyTableData(arrayDeVentasPorMes);
+        // arrayDeVentasPorMes debe tener la forma:
+        // [{ month: "Enero", totalSales: 10000 }, ...]
       }
     } catch (error) {
       console.error('Error generando reportes:', error);
@@ -524,7 +538,7 @@ const SalesReports = () => {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => reportPeriod === 'daily' ? exportDailyReport('csv') : exportCSV()}
-              className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
             >
               <FaFileCsv className="mr-2" />
               Exportar CSV
@@ -538,7 +552,7 @@ const SalesReports = () => {
             </button>
             <button
               onClick={() => reportPeriod === 'daily' ? exportDailyReport('json') : exportReport()}
-              className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
               <FaFileDownload className="mr-2" />
               Exportar JSON
@@ -571,8 +585,8 @@ const SalesReports = () => {
             value={formatCurrency(currentReport.totalSales)}
             detail={reportPeriod === 'daily' ? currentReport.date : currentReport.month}
             icon={<DollarSign className="w-8 h-8" />}
-            gradient="from-green-500 to-green-600"
-            colorText="text-green-100"
+            gradient="from-blue-500 to-blue-600"
+            colorText="text-blue-100"
           />
           
           <MetricCard
@@ -580,8 +594,8 @@ const SalesReports = () => {
             value={currentReport.totalTransactions.toString()}
             detail={reportPeriod === 'daily' ? 'transacciones hoy' : 'transacciones del mes'}
             icon={<BarChart className="w-8 h-8" />}
-            gradient="from-blue-500 to-blue-600"
-            colorText="text-blue-100"
+            gradient="from-orange-500 to-orange-600"
+            colorText="text-orange-100"
           />
           
           <MetricCard
@@ -589,18 +603,6 @@ const SalesReports = () => {
             value={formatCurrency(reportPeriod === 'daily' ? currentReport.averageTicket : currentReport.dailyAverage)}
             detail={reportPeriod === 'daily' ? 'por transacción' : 'por día'}
             icon={<TrendingUp className="w-8 h-8" />}
-            gradient="from-purple-500 to-purple-600"
-            colorText="text-purple-100"
-          />
-          
-          <MetricCard
-            title={reportPeriod === 'daily' ? 'Hora Pico' : 'Mejor Día'}
-            value={reportPeriod === 'daily' 
-              ? reportData.trends.sort((a, b) => b.sales - a.sales)[0]?.hour || 'N/A'
-              : `Día ${reportData.trends.sort((a, b) => b.sales - a.sales)[0]?.day || 'N/A'}`
-            }
-            detail="Mayor actividad"
-            icon={<Calendar className="w-8 h-8" />}
             gradient="from-orange-500 to-orange-600"
             colorText="text-orange-100"
           />
@@ -716,9 +718,7 @@ const SalesReports = () => {
                       {product.product}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {product.quantity} unidades
-                      </span>
+                      {product.quantity} unidades
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
                       {formatCurrency(product.revenue)}
@@ -765,13 +765,7 @@ const SalesReports = () => {
                 {reportData.salesByPaymentMethod.map((method, index) => (
                   <tr key={index} className="hover:bg-gray-50">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium capitalize ${
-                        method.method === 'efectivo' ? 'bg-green-100 text-green-800' :
-                        method.method === 'tarjeta' ? 'bg-blue-100 text-blue-800' :
-                        'bg-purple-100 text-purple-800'
-                      }`}>
-                        {method.method}
-                      </span>
+                      {method.method}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {method.count} transacciones
@@ -784,6 +778,41 @@ const SalesReports = () => {
                     </td>
                   </tr>
                 ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tabla de ventas del mes */}
+      {reportData.monthlyReport && (
+        <div className="bg-white rounded-lg shadow overflow-hidden mt-6">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h3 className="text-lg font-semibold text-gray-800">
+              Ventas del Mes
+            </h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Mes
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Valor Total
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                <tr>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                    {reportData.monthlyReport.month}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-green-600">
+                    {formatCurrency(reportData.monthlyReport.totalSales)}
+                  </td>
+                </tr>
               </tbody>
             </table>
           </div>

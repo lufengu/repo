@@ -16,7 +16,7 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [userName, setUserName] = useState('Usuario');
-  const [refreshTrigger, setRefreshTrigger] = useState(false);
+  const [refreshTrigger] = useState(false);
   
   // Usar el hook de productos
   const { productos } = useProductos();

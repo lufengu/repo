@@ -240,8 +240,8 @@ export default function SalesRegisterForm({ onSuccess }) {
           }).format(total)}
           detail={`${totalItems} productos`}
           icon={<DollarSign className="w-8 h-8" />}
-          gradient="from-green-500 to-green-600"
-          colorText="text-green-100"
+          gradient="from-orange-500 to-orange-600"
+          colorText="text-orange-100"
         />
         
         <MetricCard
