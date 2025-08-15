@@ -17,7 +17,8 @@ const SalesReports = () => {
     monthlyReport: null,
     salesByProduct: [],
     salesByPaymentMethod: [],
-    trends: []
+    trends: [],
+    maxSalesByMonth: []
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -99,6 +100,27 @@ const SalesReports = () => {
       });
       const salesByPaymentMethod = Object.values(paymentMethodCount);
 
+      // Calcular máximo de ventas por mes (solo para periodo mensual)
+      let maxSalesByMonth = [];
+      if (reportPeriod === 'monthly') {
+        // Agrupar todas las ventas por mes del año actual
+        const months = Array.from({ length: 12 }, (_, i) => ({
+          month: i,
+          name: new Date(2000, i, 1).toLocaleString('es-CO', { month: 'long' }),
+          totalSales: 0,
+          transactions: 0
+        }));
+        sales.forEach(sale => {
+          const date = new Date(sale.createdAt);
+          if (date.getFullYear() === today.getFullYear()) {
+            const m = date.getMonth();
+            months[m].totalSales += sale.total || sale.price * sale.quantity;
+            months[m].transactions += 1;
+          }
+        });
+        maxSalesByMonth = months;
+      }
+
       // Reporte principal
       if (reportPeriod === 'daily') {
         setReportData({
@@ -112,6 +134,7 @@ const SalesReports = () => {
           salesByProduct,
           salesByPaymentMethod,
           trends: [], // No hay tendencias por hora
+          maxSalesByMonth: []
         });
       } else {
         setReportData({
@@ -125,6 +148,7 @@ const SalesReports = () => {
           salesByProduct,
           salesByPaymentMethod,
           trends,
+          maxSalesByMonth
         });
       }
     } catch (error) {
@@ -136,6 +160,7 @@ const SalesReports = () => {
         salesByProduct: [],
         salesByPaymentMethod: [],
         trends: [],
+        maxSalesByMonth: []
       });
     } finally {
       setLoading(false);
@@ -782,6 +807,37 @@ const SalesReports = () => {
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                       {currentReport && ((method.total / currentReport.totalSales) * 100).toFixed(1)}%
                     </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      {/* Tabla de máximo de ventas por mes (solo en mensual) */}
+      {reportPeriod === 'monthly' && reportData.maxSalesByMonth && reportData.maxSalesByMonth.length > 0 && (
+        <div className="bg-white rounded-lg shadow overflow-hidden mt-6">
+          <div className="px-4 py-2 border-b border-gray-200">
+            <h3 className="text-base font-semibold text-gray-800">
+              Ventas Totales por Mes (Año Actual)
+            </h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200 text-sm">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase tracking-wider">Mes</th>
+                  <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase tracking-wider">Ventas Totales</th>
+                  <th className="px-2 py-1 text-left font-medium text-gray-500 uppercase tracking-wider">Transacciones</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {reportData.maxSalesByMonth.map((month, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50">
+                    <td className="px-2 py-1 whitespace-nowrap font-medium text-gray-900 capitalize">{month.name}</td>
+                    <td className="px-2 py-1 whitespace-nowrap text-green-600">{formatCurrency(month.totalSales)}</td>
+                    <td className="px-2 py-1 whitespace-nowrap text-gray-500">{month.transactions}</td>
                   </tr>
                 ))}
               </tbody>
