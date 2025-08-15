@@ -9,6 +9,7 @@ import { ProtectedRoute, PublicRoute } from './features/auth/components/Protecte
 import './App.css'
 import Inventario from './features/inventario/pages/inventario'
 import Ventas from './features/ventas/pages/Ventas'
+import Proveedores from './features/proveedores/pages/proveedores'
 
 function App() {
   return (
@@ -85,6 +86,16 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Ventas />
+                </ProtectedRoute>
+              } 
+            />
+
+            {/* Ruta para proveedores - requiere autenticación */}
+            <Route 
+              path="/proveedores" 
+              element={
+                <ProtectedRoute>
+                  <Proveedores />
                 </ProtectedRoute>
               } 
             />
