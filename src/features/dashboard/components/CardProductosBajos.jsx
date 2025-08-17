@@ -2,11 +2,16 @@ import React from 'react';
 import { AlertTriangleIcon } from "lucide-react";
 
 const CardProductosBajos = ({ productos = [] }) => {
-  // Obtener productos con stock bajo (menos de 5)
-  const productosStockBajo = productos
-    .filter(p => p.stock < 5)
-    .sort((a, b) => a.stock - b.stock)
-    .slice(0, 3);
+  // Obtener productos con stock bajo (menos de 100)
+  const [paginaActual, setPaginaActual] = React.useState(1);
+  const productosPorPagina = 2;
+  const productosFiltrados = productos
+    .filter(p => p.stock < 100)
+    .sort((a, b) => a.stock - b.stock);
+  const totalPaginas = Math.ceil(productosFiltrados.length / productosPorPagina);
+  const indiceInicio = (paginaActual - 1) * productosPorPagina;
+  const indiceFin = indiceInicio + productosPorPagina;
+  const productosStockBajo = productosFiltrados.slice(indiceInicio, indiceFin);
 
   return (
     <div className="bg-white p-4 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer">
@@ -31,6 +36,22 @@ const CardProductosBajos = ({ productos = [] }) => {
         ) : (
           <div className="flex items-center justify-center p-4 bg-green-50 rounded-lg border border-green-100">
             <span className="text-green-700 text-sm font-medium">✓ Todos los productos tienen stock suficiente</span>
+          </div>
+        )}
+        {/* Paginación */}
+        {totalPaginas > 1 && (
+          <div className="flex justify-center items-center mt-2 gap-2">
+            <button
+              className={`px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs font-semibold ${paginaActual === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={() => setPaginaActual(p => Math.max(1, p - 1))}
+              disabled={paginaActual === 1}
+            >Anterior</button>
+            <span className="text-xs text-gray-500">Página {paginaActual} de {totalPaginas}</span>
+            <button
+              className={`px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs font-semibold ${paginaActual === totalPaginas ? 'opacity-50 cursor-not-allowed' : ''}`}
+              onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))}
+              disabled={paginaActual === totalPaginas}
+            >Siguiente</button>
           </div>
         )}
       </div>

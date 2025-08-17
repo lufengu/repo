@@ -596,8 +596,8 @@ const SalesReports = () => {
             value={formatCurrency(currentReport.totalSales)}
             detail={reportPeriod === 'daily' ? currentReport.date : currentReport.month}
             icon={<DollarSign className="w-8 h-8" />}
-            gradient="from-green-500 to-green-600"
-            colorText="text-green-100"
+            gradient="from-blue-500 to-blue-600"
+            colorText="text-blue-100"
           />
           
           <MetricCard
@@ -605,8 +605,8 @@ const SalesReports = () => {
             value={currentReport.totalTransactions.toString()}
             detail={reportPeriod === 'daily' ? 'transacciones hoy' : 'transacciones del mes'}
             icon={<BarChart className="w-8 h-8" />}
-            gradient="from-blue-500 to-blue-600"
-            colorText="text-blue-100"
+            gradient="from-orange-500 to-orange-600"
+            colorText="text-orange-100"
           />
           
           <MetricCard
@@ -614,8 +614,8 @@ const SalesReports = () => {
             value={formatCurrency(reportPeriod === 'daily' ? currentReport.averageTicket : currentReport.dailyAverage)}
             detail={reportPeriod === 'daily' ? 'por transacción' : 'por día'}
             icon={<TrendingUp className="w-8 h-8" />}
-            gradient="from-purple-500 to-purple-600"
-            colorText="text-purple-100"
+            gradient="from-blue-500 to-blue-600"
+            colorText="text-blue-100"
           />
           
           <MetricCard
