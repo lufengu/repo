@@ -37,13 +37,13 @@ const Menu = ({
   };
 
   const navItems = [
-    { name: 'Inicio', icon: <FaHome />, action: () => navigate('/dashboard') },
-    { name: 'Ventas', icon: <FaChartLine />, action: () => navigate('/ventas') },
-    { name: 'Inventario', icon: <FaBoxOpen />, action: () => navigate('/inventario') },
-    { name: 'Pedidos', icon: <FaClipboardList />, action: () => console.log('Pedidos') },
-    { name: 'Proveedores', icon: <FaRegBuilding />, action: () => console.log('Proveedores') },
-    { name: 'Promoción', icon: <FaBullhorn />, action: () => console.log('Promoción') },
-    { name: 'Configuración', icon: <FaCogs />, action: () => console.log('Configuración') },
+    { name: 'Inicio', icon: <FaHome />, section: 'dashboard', action: () => { setActiveSection && setActiveSection('dashboard'); navigate('/dashboard'); } },
+    { name: 'Ventas', icon: <FaChartLine />, section: 'ventas', action: () => { setActiveSection && setActiveSection('ventas'); navigate('/ventas'); } },
+    { name: 'Inventario', icon: <FaBoxOpen />, section: 'inventario', action: () => { setActiveSection && setActiveSection('inventario'); navigate('/inventario'); } },
+    { name: 'Pedidos', icon: <FaClipboardList />, section: 'pedidos', action: () => { setActiveSection && setActiveSection('pedidos'); /* Aquí puedes agregar navegación si existe */ } },
+    { name: 'Proveedores', icon: <FaRegBuilding />, section: 'proveedores', action: () => { setActiveSection && setActiveSection('proveedores'); navigate('/proveedores'); } },
+    { name: 'Promoción', icon: <FaBullhorn />, section: 'promocion', action: () => { setActiveSection && setActiveSection('promocion'); } },
+    { name: 'Configuración', icon: <FaCogs />, section: 'configuracion', action: () => { setActiveSection && setActiveSection('configuracion'); } },
   ];
 
   return (
@@ -68,11 +68,7 @@ const Menu = ({
             <div
               key={idx}
               className={`flex items-center space-x-3 p-3 rounded-lg hover:bg-orange-500 hover:text-white transition-all cursor-pointer text-gray-700 ${
-                (activeSection === 'dashboard' && item.name === 'Inicio') ||
-                (activeSection === 'inventario' && item.name === 'Inventario') ||
-                (activeSection === 'ventas' && item.name === 'Ventas')
-                  ? 'bg-orange-500 text-white' 
-                  : ''
+                activeSection === item.section ? 'bg-orange-500 text-white' : ''
               }`}
               onClick={item.action}
             >

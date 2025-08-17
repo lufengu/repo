@@ -201,9 +201,9 @@ const SalesHistory = ({ refreshTrigger }) => {
   }
 
   return (
-    <div className="space-y-6">
+  <div className="space-y-4 sm:space-y-6">
       {/* Métricas del historial */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4 sm:gap-6">
         <MetricCard
           title="Total en Ventas"
           value={formatCurrency(totalSales)}
@@ -227,8 +227,13 @@ const SalesHistory = ({ refreshTrigger }) => {
           value={formatCurrency(averageTicket)}
           detail="Por transacción"
           icon={<TrendingUp className="w-8 h-8" />}
+<<<<<<< HEAD
           gradient="from-orange-500 to-orange-600"
           colorText="text-orange-100"
+=======
+          gradient="from-blue-500 to-blue-600"
+          colorText="text-blue-100"
+>>>>>>> mi-rama
         />
         
         <MetricCard
@@ -241,15 +246,15 @@ const SalesHistory = ({ refreshTrigger }) => {
           detail="Transacciones realizadas"
           icon={<Calendar className="w-8 h-8" />}
           gradient="from-orange-500 to-orange-600"
-          colorText="text-orange-100"
+          colorText="text-blue-100"
         />
       </div>
 
       {/* Filtros */}
-      <div className="bg-white rounded-lg shadow p-6">
+  <div className="bg-white rounded-lg shadow p-2 sm:p-6">
         <h3 className="text-lg font-semibold mb-4">Filtrar Ventas</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative">
+  <div className="flex flex-col gap-2 sm:grid sm:grid-cols-2 md:grid-cols-3 sm:gap-4">
+          <div className="relative w-full">
             <FaSearch className="absolute left-3 top-3 text-gray-400" />
             <input
               type="text"
@@ -260,7 +265,7 @@ const SalesHistory = ({ refreshTrigger }) => {
             />
           </div>
           
-          <div className="relative">
+          <div className="relative w-full">
             <FaCalendarAlt className="absolute left-3 top-3 text-gray-400" />
             <input
               type="date"
@@ -271,7 +276,7 @@ const SalesHistory = ({ refreshTrigger }) => {
           </div>
 
           {/* Selector de elementos por página */}
-          <div className="flex items-center space-x-2">
+          <div className="flex flex-wrap items-center space-x-2 w-full">
             <label className="text-sm text-gray-600">Mostrar:</label>
             <select
               value={itemsPerPage}
@@ -289,14 +294,13 @@ const SalesHistory = ({ refreshTrigger }) => {
       </div>
 
       {/* Lista de ventas */}
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
+      <div className="bg-white rounded-lg shadow p-2 sm:p-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-2">
           <h3 className="text-lg font-semibold">Historial de Ventas ({filteredSales.length})</h3>
           <div className="text-sm text-gray-600">
             Mostrando {startIndex + 1}-{Math.min(endIndex, filteredSales.length)} de {filteredSales.length} ventas
           </div>
         </div>
-        
         {filteredSales.length === 0 ? (
           <div className="text-center text-gray-500 py-8">
             <p>No hay ventas registradas aún</p>
@@ -304,51 +308,71 @@ const SalesHistory = ({ refreshTrigger }) => {
           </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
+            {/* Vista tipo card en móvil, tabla en desktop */}
+            <div className="block lg:hidden space-y-4">
+              {currentSales.map((sale) => (
+                <div key={sale.id} className="rounded-xl border border-gray-200 shadow-sm p-4 bg-white flex flex-col gap-2">
+                  <div className="flex justify-between items-center">
+                    <span className="font-semibold text-orange-600">#{sale.id}</span>
+                    <span className="text-xs text-gray-500">{formatDate(sale.createdAt)}</span>
+                  </div>
+                  <div className="flex flex-col gap-1">
+                    <span className="font-medium text-gray-900">{sale.product}</span>
+                    <span className="text-xs text-gray-500">Cliente: {sale.customer || 'Cliente General'}</span>
+                    {sale.phone && <span className="text-xs text-gray-400">Tel: {sale.phone}</span>}
+                  </div>
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="text-gray-700">Cantidad: <span className="font-semibold">{sale.quantity}</span></span>
+                    <span className="text-gray-700">Pago: <span className="font-semibold capitalize">{sale.payment_method}</span></span>
+                  </div>
+                  <div className="flex justify-between items-center mt-2">
+                    <span className="font-bold text-green-600 text-lg">{formatCurrency(sale.total || sale.price * sale.quantity)}</span>
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => handleViewDetails(sale)}
+                        className="text-blue-600 hover:text-blue-900 transition-colors"
+                        title="Ver detalles"
+                      >
+                        <FaEye />
+                      </button>
+                      <button
+                        onClick={() => handleShowReceipt(sale)}
+                        className="text-green-600 hover:text-green-900 transition-colors"
+                        title="Ver recibo"
+                      >
+                        <FaDownload />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="hidden lg:block w-full overflow-x-auto">
+              <table className="min-w-[700px] w-full divide-y divide-gray-200 text-sm">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      ID
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Producto
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Cliente
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Cantidad
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Método de Pago
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Fecha
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Total
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Acciones
-                    </th>
+                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Producto</th>
+                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
+                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
+                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Método de Pago</th>
+                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
                   {currentSales.map((sale) => (
                     <tr key={sale.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        #{sale.id}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {sale.product}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                      <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">#{sale.id}</td>
+                      <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{sale.product}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-900">
                         <div>
                           <p className="font-medium">{sale.customer || 'Cliente General'}</p>
                           {sale.phone && <p className="text-gray-500 text-xs">{sale.phone}</p>}
                         </div>
                       </td>
+<<<<<<< HEAD
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                         {sale.quantity}
                       </td>
@@ -362,6 +386,13 @@ const SalesHistory = ({ refreshTrigger }) => {
                         {formatCurrency(sale.total || sale.price * sale.quantity)}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+=======
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-500">{sale.quantity}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-500">{sale.payment_method}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-500">{formatDate(sale.createdAt)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap font-medium text-green-600">{formatCurrency(sale.total || sale.price * sale.quantity)}</td>
+                      <td className="px-6 py-4 whitespace-nowrap font-medium space-x-2">
+>>>>>>> mi-rama
                         <button
                           onClick={() => handleViewDetails(sale)}
                           className="text-blue-600 hover:text-blue-900 transition-colors"
@@ -382,57 +413,34 @@ const SalesHistory = ({ refreshTrigger }) => {
                 </tbody>
               </table>
             </div>
-
             {/* Paginación */}
             {totalPages > 1 && (
-              <div className="px-6 py-4 border-t border-gray-200 flex items-center justify-between">
-                <div className="flex items-center text-sm text-gray-600">
-                  <span>
-                    Página {currentPage} de {totalPages}
-                  </span>
+              <div className="pt-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+                <div className="flex items-center text-xs sm:text-sm text-gray-600 mb-2 sm:mb-0">
+                  <span>Página {currentPage} de {totalPages}</span>
                 </div>
-                
-                <div className="flex items-center space-x-2">
-                  {/* Botón anterior */}
+                <div className="flex flex-wrap items-center space-x-1">
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className={`px-3 py-2 rounded-md text-sm font-medium ${
-                      currentPage === 1
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                    className={`px-2 py-1 sm:px-3 sm:py-2 rounded-md text-xs sm:text-sm font-medium ${currentPage === 1 ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
                   >
                     <FaChevronLeft className="w-4 h-4" />
                   </button>
-
-                  {/* Números de página */}
                   {getPageNumbers().map((pageNumber, index) => (
                     <button
                       key={index}
                       onClick={() => pageNumber !== '...' && handlePageChange(pageNumber)}
                       disabled={pageNumber === '...'}
-                      className={`px-3 py-2 rounded-md text-sm font-medium ${
-                        pageNumber === currentPage
-                          ? 'bg-orange-500 text-white'
-                          : pageNumber === '...'
-                          ? 'text-gray-400 cursor-default'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      }`}
+                      className={`px-2 py-1 sm:px-3 sm:py-2 rounded-md text-xs sm:text-sm font-medium ${pageNumber === currentPage ? 'bg-orange-500 text-white' : pageNumber === '...' ? 'text-gray-400 cursor-default' : 'text-gray-700 hover:bg-gray-100'}`}
                     >
                       {pageNumber}
                     </button>
                   ))}
-
-                  {/* Botón siguiente */}
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className={`px-3 py-2 rounded-md text-sm font-medium ${
-                      currentPage === totalPages
-                        ? 'text-gray-400 cursor-not-allowed'
-                        : 'text-gray-700 hover:bg-gray-100'
-                    }`}
+                    className={`px-2 py-1 sm:px-3 sm:py-2 rounded-md text-xs sm:text-sm font-medium ${currentPage === totalPages ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700 hover:bg-gray-100'}`}
                   >
                     <FaChevronRight className="w-4 h-4" />
                   </button>
@@ -445,8 +453,8 @@ const SalesHistory = ({ refreshTrigger }) => {
 
       {/* Modal de detalles de venta */}
       {selectedSale && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-lg max-w-2xl w-full mx-4 max-h-screen overflow-y-auto">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-1 sm:p-0">
+          <div className="bg-white rounded-lg shadow-lg w-full max-w-xs sm:max-w-2xl mx-1 sm:mx-4 max-h-screen overflow-y-auto">
             <div className="px-6 py-4 border-b border-gray-200">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-black">Detalles de Venta #{selectedSale.id}</h3>
@@ -460,9 +468,9 @@ const SalesHistory = ({ refreshTrigger }) => {
               </div>
             </div>
             
-            <div className="p-6 space-y-6 text-black">
+            <div className="p-2 sm:p-6 space-y-4 sm:space-y-6 text-black">
               {/* Información general */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-4">
                 <div>
                   <p className="text-sm" style={{ color: '#000' }}>Fecha</p>
                   <p className="font-medium" style={{ color: '#000' }}>
@@ -487,8 +495,8 @@ const SalesHistory = ({ refreshTrigger }) => {
               {/* Producto vendido */}
               <div>
                 <h4 className="font-semibold mb-3 text-black">Detalles de la compra:</h4>
-                <div className="border border-gray-200 rounded-lg overflow-hidden">
-                  <table className="w-full">
+                <div className="border border-gray-200 rounded-lg overflow-x-auto">
+                  <table className="min-w-[300px] w-full text-xs sm:text-sm">
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-4 py-3 text-left text-sm font-medium text-black">Producto</th>
@@ -537,7 +545,7 @@ const SalesHistory = ({ refreshTrigger }) => {
               </div>
 
               {/* Botones */}
-              <div className="flex space-x-4">
+              <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">
                 <button
                   onClick={() => {
                     handleShowReceipt(selectedSale);

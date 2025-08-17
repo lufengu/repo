@@ -1,7 +1,9 @@
+
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from "lucide-react";
 import Ventas from '../../ventas/pages/Ventas';
 
+<<<<<<< HEAD
 const CardVentasMensuales = ({ monthlyData }) => {
   // Datos de ejemplo (reemplazar con datos reales de ventas mensuales)
   const data = [
@@ -37,6 +39,10 @@ const CardVentasMensuales = ({ monthlyData }) => {
   // useEffect(() => {
   //   fetchVentasMensuales();
   // }, []);
+=======
+// Recibe los datos reales por props
+const CardVentasMensuales = ({ data }) => {
+>>>>>>> mi-rama
 
   // Tooltip personalizado
   const CustomTooltip = ({ active, payload, label }) => {
@@ -60,10 +66,19 @@ const CardVentasMensuales = ({ monthlyData }) => {
     return null;
   };
 
+<<<<<<< HEAD
   // Si hay datos reales, úsalos
   const mesActual = monthlyData
     ? { mes: monthlyData.month, ventas: monthlyData.totalSales }
     : data[data.length - 1];
+=======
+  // Obtener el mes actual y las ventas
+  const mesActual = data && data.length > 0 ? data[data.length - 1] : { mes: '', ventas: 0, ventasUnidades: 0 };
+  const ventasMesActual = mesActual.ventas;
+  const porcentajeCambio = data && data.length > 1
+    ? ((ventasMesActual - data[data.length - 2].ventas) / data[data.length - 2].ventas) * 100
+    : 0;
+>>>>>>> mi-rama
 
   return (
     <div className="bg-white p-4 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer">

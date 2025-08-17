@@ -1,0 +1,25 @@
+.metric-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  padding: 18px 22px;
+  margin-bottom: 18px;
+  transition: box-shadow 0.2s;
+}
+.metric-card:hover {
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+.metric-card-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.metric-card-icon {
+  font-size: 1.5em;
+  color: #2563eb;
+}
+.metric-card-content {
+  font-size: 1em;
+  color: #222;
+}

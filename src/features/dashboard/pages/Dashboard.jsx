@@ -11,6 +11,7 @@ import {
   CardVentasProducto,
   CardVentasMensuales,
 } from "../components";
+import { salesAPI } from '../../ventas/services/salesService';
 
 const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -18,8 +19,46 @@ const Dashboard = () => {
   const [userName, setUserName] = useState('Usuario');
   const [refreshTrigger] = useState(false);
   
+
   // Usar el hook de productos
   const { productos } = useProductos();
+
+  // Estado para ventas mensuales
+  const [ventasMensuales, setVentasMensuales] = useState([]);
+
+  useEffect(() => {
+    const fetchVentasMensuales = async () => {
+      try {
+        const sales = await salesAPI.getSales();
+        // Agrupar ventas por mes del año actual
+        const today = new Date();
+        const months = Array.from({ length: 12 }, (_, i) => ({
+          mes: new Date(2000, i, 1).toLocaleString('es-CO', { month: 'short' }),
+          ventas: 0,
+          ventasUnidades: 0
+        }));
+        sales.forEach(sale => {
+          const date = new Date(sale.createdAt);
+          if (date.getFullYear() === today.getFullYear()) {
+            const m = date.getMonth();
+            months[m].ventas += sale.total || (sale.price * sale.quantity) || 0;
+            // Unidades: sumar cantidad de items vendidos
+            if (sale.items && Array.isArray(sale.items)) {
+              months[m].ventasUnidades += sale.items.reduce((sum, item) => sum + (item.quantity || 0), 0);
+            } else if (sale.quantity) {
+              months[m].ventasUnidades += sale.quantity;
+            } else {
+              months[m].ventasUnidades += 1;
+            }
+          }
+        });
+        setVentasMensuales(months);
+      } catch (e) {
+        setVentasMensuales([]);
+      }
+    };
+    fetchVentasMensuales();
+  }, []);
 
   useEffect(() => {
     // Obtener información del usuario desde localStorage
@@ -96,7 +135,7 @@ const Dashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <CardAlertas />
             <CardVentasProducto refreshTrigger={refreshTrigger} />
-            <CardVentasMensuales />
+            <CardVentasMensuales data={ventasMensuales} />
           </div>
         </main>
       </div>
