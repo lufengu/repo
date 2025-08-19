@@ -49,8 +49,8 @@ const Menu = ({
   return (
     <>
       {/* barra lateral */}
-      <div className={`fixed bg-white w-64 h-screen shadow-lg transform transition-transform duration-300 z-30 flex flex-col
-        ${sidebarOpen ? "translate-x-0" : "-translate-x-64"} lg:translate-x-0 lg:static lg:z-auto`}>
+      <div className={`sticky top-0 bg-white w-64 h-screen shadow-lg transform transition-transform duration-300 z-30 flex flex-col
+        ${sidebarOpen ? "translate-x-0" : "-translate-x-64"} lg:translate-x-0 lg:z-auto`}>
 
         <div className='p-6 flex justify-center items-center border-b border-gray-200 relative'>
           <img src={logo} alt="Logo TechDero" className='w-34 h-34 object-contain' />

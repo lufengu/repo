@@ -270,8 +270,11 @@ export default function SalesRegisterForm({ onSuccess }) {
     if (field === 'product') {
       const selectedProduct = productOptions.find(p => p.name === value);
       newRows[idx][field] = value;
-      // Autocompletar precio sugerido si no había precio cargado
-      if (selectedProduct && !newRows[idx].price) {
+      // Si se borra el producto, limpiar el precio
+      if (!value) {
+        newRows[idx].price = '';
+      } else if (selectedProduct) {
+        // Al seleccionar otro producto, actualizar el precio sugerido
         const suggested = selectedProduct.suggestedPrice ?? selectedProduct.price ?? '';
         newRows[idx].price = suggested;
       }
@@ -438,7 +441,7 @@ export default function SalesRegisterForm({ onSuccess }) {
   const formRef = useRef(null); // Nueva referencia para el formulario
 
   return (
-    <div className="space-y-6 overflow-visible">
+    <div className="space-y-6 overflow-visible w-full max-w-7xl mx-auto px-2 sm:px-4">
       {/* Error de carga de productos */}
       {errorProducts && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -476,26 +479,34 @@ export default function SalesRegisterForm({ onSuccess }) {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Panel principal - Formulario de venta */}
-        <div className="lg:col-span-2">
-          <div className="bg-white shadow-lg rounded-2xl p-6" style={{ overflow: 'visible' }}>
-            <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
-              {/* Tabla de productos responsive */}
-              <div className="overflow-x-auto">
-                {/* Desktop/tablet: tabla */}
-                <table className="hidden md:table min-w-full table-fixed divide-y divide-gray-200 text-sm">
+        <div className="lg:col-span-2 w-full">
+          <div className="bg-white shadow-lg rounded-2xl p-2 sm:p-6 w-full" style={{ overflow: 'visible' }}>
+            <form ref={formRef} onSubmit={handleSubmit} className="space-y-6 w-full">
+              {/* Tabla de productos */}
+              <div className="overflow-x-auto w-full">
+                <table className="min-w-full table-fixed divide-y divide-gray-200 text-sm">
                   <thead>
                     <tr>
-                      <th className="px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase min-w-[160px]">Producto</th>
-                      <th className="px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase min-w-[80px]">Cantidad</th>
-                      <th className="px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase min-w-[100px]">Precio unit.</th>
-                      <th className="px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase min-w-[100px]">Subtotal</th>
-                      <th className="px-4 py-3 bg-gray-50 w-12"></th>
+                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase min-w-[160px] sm:min-w-[260px]">
+                        Producto
+                      </th>
+                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase min-w-[80px] sm:min-w-[120px]">
+                        Cantidad
+                      </th>
+                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase min-w-[100px] sm:min-w-[140px]">
+                        Precio unit.
+                      </th>
+                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase min-w-[100px] sm:min-w-[140px]">
+                        Subtotal
+                      </th>
+                      <th className="px-2 sm:px-4 py-3 bg-gray-50 w-8 sm:w-12"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {rows.map((r, i) => (
                       <tr key={i} className="hover:bg-gray-50">
-                        <td className="px-4 py-3 align-top">
+                        {/* Columna Producto: combobox estilizado */}
+                        <td className="px-2 sm:px-4 py-3 min-w-[160px] sm:min-w-[260px]">
                           <ProductComboBox
                             value={r.product}
                             products={productOptions}
@@ -507,13 +518,26 @@ export default function SalesRegisterForm({ onSuccess }) {
                               const next = [...productSearch];
                               next[i] = text;
                               setProductSearch(next);
+
+                              // Si el usuario borra todo, limpiar selección y precio
                               if (text.trim() === '') {
                                 handleChange(i, 'product', '');
+                                handleChange(i, 'price', '');
+                                return;
                               }
+
+                              // Predicción: mostrar precio del primer producto sugerido
+                              const filtered = productOptions.filter(p => p.name.toLowerCase().includes(text.trim().toLowerCase()));
+                              if (filtered.length > 0) {
+                                const suggested = filtered[0].suggestedPrice ?? filtered[0].price ?? '';
+                                handleChange(i, 'price', suggested);
+                              }
+
+                              // Autoselección por coincidencia exacta
                               const match = productOptions.find(
-                                p => p.name.toLowerCase() === text.trim().toLowerCase()
+                                p => p.name.trim().toLowerCase() === text.trim().toLowerCase()
                               );
-                              if (match) {
+                              if (match && text.trim().length === match.name.trim().length) {
                                 handleChange(i, 'product', match.name);
                               }
                             }}
@@ -521,6 +545,8 @@ export default function SalesRegisterForm({ onSuccess }) {
                               handleChange(i, 'product', name);
                             }}
                           />
+
+                          {/* Chip de disponibilidad */}
                           {r.product && !r.error.product && (() => {
                             const producto = obtenerProductoPorNombre(r.product);
                             return producto ? (
@@ -538,14 +564,19 @@ export default function SalesRegisterForm({ onSuccess }) {
                             ) : null;
                           })()}
                         </td>
-                        <td className="px-4 py-3 align-top">
+
+                        {/* Cantidad */}
+                        <td className="px-2 sm:px-4 py-3 min-w-[80px] sm:min-w-[120px]">
                           <input
                             type="number"
                             min="1"
                             value={r.quantity}
                             onChange={e => handleChange(i, 'quantity', e.target.value)}
                             disabled={isSubmitting}
-                            className={`w-full bg-white text-black border rounded-lg px-3 py-2 text-right focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed ${r.error.quantity || r.stockWarning ? 'border-red-500' : 'border-gray-300'}`}
+                            className={`w-full bg-white text-black border rounded-lg px-2 sm:px-3 py-2 text-right
+                                       focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent
+                                       disabled:opacity-50 disabled:cursor-not-allowed
+                                       ${r.error.quantity || r.stockWarning ? 'border-red-500' : 'border-gray-300'}`}
                           />
                           {r.error.quantity && (
                             <p className="mt-1 text-xs text-red-600">{r.error.quantity}</p>
@@ -557,7 +588,9 @@ export default function SalesRegisterForm({ onSuccess }) {
                             </div>
                           )}
                         </td>
-                        <td className="px-4 py-3 align-top">
+
+                        {/* Precio unitario */}
+                        <td className="px-2 sm:px-4 py-3 min-w-[100px] sm:min-w-[140px]">
                           <input
                             type="number"
                             min="0"
@@ -566,22 +599,33 @@ export default function SalesRegisterForm({ onSuccess }) {
                             onChange={e => handleChange(i, 'price', e.target.value)}
                             disabled={isSubmitting}
                             placeholder="0"
-                            className={`w-full bg-white text-black border rounded-lg px-3 py-2 text-right focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed ${r.error.price ? 'border-red-500' : 'border-gray-300'}`}
+                            className={`w-full bg-white text-black border rounded-lg px-2 sm:px-3 py-2 text-right
+                                       focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent
+                                       disabled:opacity-50 disabled:cursor-not-allowed
+                                       ${r.error.price ? 'border-red-500' : 'border-gray-300'}`}
                           />
                           {r.error.price && (
                             <p className="mt-1 text-xs text-red-600">{r.error.price}</p>
                           )}
                         </td>
-                        <td className="px-4 py-3 font-medium text-gray-900 align-top">
-                          {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format((r.quantity || 0) * (parseFloat(r.price) || 0))}
+
+                        {/* Subtotal */}
+                        <td className="px-2 sm:px-4 py-3 font-medium text-gray-900 min-w-[100px] sm:min-w-[140px]">
+                          {new Intl.NumberFormat('es-CO', {
+                            style: 'currency',
+                            currency: 'COP',
+                            minimumFractionDigits: 0
+                          }).format((r.quantity || 0) * (parseFloat(r.price) || 0))}
                         </td>
-                        <td className="px-4 py-3 text-center align-top">
+
+                        {/* Eliminar fila */}
+                        <td className="px-2 sm:px-4 py-3 text-center w-8 sm:w-12">
                           <button
                             type="button"
                             onClick={() => handleRemoveRow(i)}
                             disabled={isSubmitting || rows.length === 1}
                             className="text-red-600 hover:text-red-800 disabled:opacity-50 disabled:cursor-not-allowed p-1"
-                            title={rows.length === 1 ? 'Debe haber al menos un producto' : 'Eliminar producto'}
+                            title={rows.length === 1 ? "Debe haber al menos un producto" : "Eliminar producto"}
                           >
                             <FaTrash />
                           </button>
@@ -590,123 +634,23 @@ export default function SalesRegisterForm({ onSuccess }) {
                     ))}
                   </tbody>
                 </table>
-                {/* Móvil: tarjetas apiladas */}
-                <div className="md:hidden space-y-4">
-                  {rows.map((r, i) => (
-                    <div key={i} className="bg-gray-50 rounded-xl p-4 flex flex-col gap-2 shadow-sm">
-                      <div>
-                        <span className="block text-xs font-semibold text-gray-600 mb-1">Producto</span>
-                        <ProductComboBox
-                          value={r.product}
-                          products={productOptions}
-                          disabled={isSubmitting || loadingProducts}
-                          loading={loadingProducts}
-                          error={r.error.product}
-                          query={productSearch[i] || ''}
-                          onQueryChange={(text) => {
-                            const next = [...productSearch];
-                            next[i] = text;
-                            setProductSearch(next);
-                            if (text.trim() === '') {
-                              handleChange(i, 'product', '');
-                            }
-                            const match = productOptions.find(
-                              p => p.name.toLowerCase() === text.trim().toLowerCase()
-                            );
-                            if (match) {
-                              handleChange(i, 'product', match.name);
-                            }
-                          }}
-                          onChange={(name) => {
-                            handleChange(i, 'product', name);
-                          }}
-                        />
-                        {r.product && !r.error.product && (() => {
-                          const producto = obtenerProductoPorNombre(r.product);
-                          return producto ? (
-                            <div className="mt-1 text-xs text-gray-600 flex items-center">
-                              <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${
-                                producto.stock < 5
-                                  ? 'bg-red-100 text-red-800'
-                                  : producto.stock < 10
-                                  ? 'bg-yellow-100 text-yellow-800'
-                                  : 'bg-green-100 text-green-800'
-                              }`}>
-                                Disponible: {producto.stock} {producto.unidadMedida}
-                              </span>
-                            </div>
-                          ) : null;
-                        })()}
-                      </div>
-                      <div>
-                        <span className="block text-xs font-semibold text-gray-600 mb-1">Cantidad</span>
-                        <input
-                          type="number"
-                          min="1"
-                          value={r.quantity}
-                          onChange={e => handleChange(i, 'quantity', e.target.value)}
-                          disabled={isSubmitting}
-                          className={`w-full bg-white text-black border rounded-lg px-3 py-2 text-right focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed ${r.error.quantity || r.stockWarning ? 'border-red-500' : 'border-gray-300'}`}
-                        />
-                        {r.error.quantity && (
-                          <p className="mt-1 text-xs text-red-600">{r.error.quantity}</p>
-                        )}
-                        {r.stockWarning && !r.error.quantity && (
-                          <div className="mt-1 flex items-center">
-                            <FaExclamationTriangle className="text-orange-500 text-xs mr-1" />
-                            <p className="text-xs text-orange-600">{r.stockWarning}</p>
-                          </div>
-                        )}
-                      </div>
-                      <div>
-                        <span className="block text-xs font-semibold text-gray-600 mb-1">Precio unitario</span>
-                        <input
-                          type="number"
-                          min="0"
-                          step="100"
-                          value={r.price}
-                          onChange={e => handleChange(i, 'price', e.target.value)}
-                          disabled={isSubmitting}
-                          placeholder="0"
-                          className={`w-full bg-white text-black border rounded-lg px-3 py-2 text-right focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50 disabled:cursor-not-allowed ${r.error.price ? 'border-red-500' : 'border-gray-300'}`}
-                        />
-                        {r.error.price && (
-                          <p className="mt-1 text-xs text-red-600">{r.error.price}</p>
-                        )}
-                      </div>
-                      <div className="flex justify-between items-center mt-2">
-                        <span className="text-xs font-semibold text-gray-600">Subtotal</span>
-                        <span className="font-medium text-gray-900">
-                          {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format((r.quantity || 0) * (parseFloat(r.price) || 0))}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => handleRemoveRow(i)}
-                          disabled={isSubmitting || rows.length === 1}
-                          className="text-red-600 hover:text-red-800 disabled:opacity-50 disabled:cursor-not-allowed p-1 ml-2"
-                          title={rows.length === 1 ? 'Debe haber al menos un producto' : 'Eliminar producto'}
-                        >
-                          <FaTrash />
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
               </div>
 
-              {/* Agregar fila */}
-              <button
-                type="button"
-                onClick={handleAddRow}
-                disabled={isSubmitting}
-                className="inline-flex items-center text-orange-600 hover:text-orange-800 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
-              >
-                <FaPlus className="mr-2" /> Agregar producto
-              </button>
+              {/* Agregar fila alineado a la derecha */}
+              <div className="flex justify-end w-full">
+                <button
+                  type="button"
+                  onClick={handleAddRow}
+                  disabled={isSubmitting}
+                  className="inline-flex items-center text-orange-600 hover:text-orange-800 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                >
+                  <FaPlus className="mr-2" /> Agregar producto
+                </button>
+              </div>
 
               {/* Método de pago y total */}
-              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end space-y-4 sm:space-y-0 pt-4 border-t border-gray-200">
-                <div className="flex flex-col space-y-2">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end space-y-4 sm:space-y-0 pt-4 border-t border-gray-200 w-full">
+                <div className="flex flex-col space-y-2 w-full sm:w-auto">
                   <label className="text-sm font-medium text-gray-700">
                     Método de pago *
                   </label>
@@ -714,7 +658,7 @@ export default function SalesRegisterForm({ onSuccess }) {
                     value={paymentMethod}
                     onChange={e => setPaymentMethod(e.target.value)}
                     disabled={isSubmitting}
-                    className={`bg-white text-black border rounded-lg px-3 py-2 min-w-[200px]
+                    className={`bg-white text-black border rounded-lg px-3 py-2 min-w-[160px] sm:min-w-[200px]
                                focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent
                                disabled:opacity-50 disabled:cursor-not-allowed
                                ${formError && !paymentMethod ? 'border-red-500' : 'border-gray-300'}`}
@@ -726,7 +670,7 @@ export default function SalesRegisterForm({ onSuccess }) {
                   </select>
                 </div>
 
-                <div className="text-right">
+                <div className="text-right w-full sm:w-auto">
                   <p className="text-sm text-gray-600 mb-1">Total a pagar:</p>
                   <div className="text-2xl font-bold text-green-600">
                     {new Intl.NumberFormat('es-CO', {
@@ -771,8 +715,8 @@ export default function SalesRegisterForm({ onSuccess }) {
         </div>
 
         {/* Panel lateral - Información del cliente */}
-        <div className="lg:col-span-1">
-          <div className="bg-white shadow-lg rounded-2xl p-6">
+        <div className="lg:col-span-1 w-full">
+          <div className="bg-white shadow-lg rounded-2xl p-2 sm:p-6 w-full">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Información del Cliente</h3>
             <div className="space-y-4">
               <div>
