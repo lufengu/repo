@@ -11,6 +11,7 @@ import Inventario from './features/inventario/pages/inventario'
 import Ventas from './features/ventas/pages/Ventas'
 import RecomendacionesFloatingButton from './features/dashboard/components/RecomendacionesFloatingButton'
 import './features/dashboard/components/RecomendacionesFloatingButton.css'
+import ProveedoresPage from './features/proveedores/pages/proveedores';
 
 
 function AppRoutes() {
@@ -88,6 +89,16 @@ function AppRoutes() {
           element={
             <ProtectedRoute>
               <Ventas />
+            </ProtectedRoute>
+          } 
+        />
+        
+        {/* Ruta para proveedores - requiere autenticación */}
+        <Route 
+          path="/proveedores" 
+          element={
+            <ProtectedRoute>
+              <ProveedoresPage />
             </ProtectedRoute>
           } 
         />

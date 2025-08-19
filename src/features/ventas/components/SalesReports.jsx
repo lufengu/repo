@@ -549,7 +549,7 @@ const SalesReports = () => {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => reportPeriod === 'daily' ? exportDailyReport('csv') : exportCSV()}
-              className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
             >
               <FaFileCsv className="mr-2" />
               Exportar CSV
@@ -563,7 +563,7 @@ const SalesReports = () => {
             </button>
             <button
               onClick={() => reportPeriod === 'daily' ? exportDailyReport('json') : exportReport()}
-              className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
             >
               <FaFileDownload className="mr-2" />
               Exportar JSON

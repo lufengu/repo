@@ -44,6 +44,10 @@ const SaleReceipt = ({ sale, onClose, onPrint }) => {
       <style>
         {`
           @media print {
+            @page {
+              size: 80mm auto;
+              margin: 0;
+            }
             body * {
               visibility: hidden !important;
             }
@@ -59,16 +63,18 @@ const SaleReceipt = ({ sale, onClose, onPrint }) => {
               max-width: 80mm !important;
               margin: 0 !important;
               padding: 0 !important;
-              font-family: 'Arial', 'Helvetica Neue', Helvetica, sans-serif !important;
               font-size: 12px !important;
               background: #fff !important;
               color: #000 !important;
               box-shadow: none !important;
               border-radius: 0 !important;
               overflow: visible !important;
+              max-height: none !important;
+              page-break-inside: avoid !important;
             }
-            #ticket-receipt .no-print {
-              display: none !important;
+            #ticket-receipt * {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
             }
           }
         `}
