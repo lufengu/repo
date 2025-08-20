@@ -11,7 +11,8 @@ const ModalAgregarProducto = ({ isOpen, onClose, onAgregarProducto, categorias }
     presentacion: '',
     proveedor: '',
     fechaVencimiento: '',
-    precioCompra: ''
+    precioCompra: '',
+    umbralAlerta: ''
   });
 
   const unidadesMedida = [
@@ -63,7 +64,8 @@ const ModalAgregarProducto = ({ isOpen, onClose, onAgregarProducto, categorias }
       presentacion: '',
       proveedor: '',
       fechaVencimiento: '',
-      precioCompra: ''
+      precioCompra: '',
+      umbralAlerta: ''
     });
     setErrors({});
     setMostrarNuevaCategoria(false);
@@ -142,6 +144,11 @@ const ModalAgregarProducto = ({ isOpen, onClose, onAgregarProducto, categorias }
       nuevosErrores.presentacion = 'La presentación es requerida';
     }
 
+    // Validar umbral de alerta
+    if (formData.umbralAlerta === '' || isNaN(formData.umbralAlerta) || parseInt(formData.umbralAlerta) < 0) {
+      nuevosErrores.umbralAlerta = 'El umbral debe ser un número mayor o igual a 0';
+    }
+
     // Validar que la nueva categoría no sea duplicada
     if (mostrarNuevaCategoria && categoriasDisponibles.some(cat => 
       cat.toLowerCase() === formData.categoria.toLowerCase().trim()
@@ -175,7 +182,8 @@ const ModalAgregarProducto = ({ isOpen, onClose, onAgregarProducto, categorias }
         presentacion: formData.presentacion.trim(),
         proveedor: formData.proveedor.trim(),
         fechaVencimiento: formData.fechaVencimiento || null,
-        margenGanancia: (((parseFloat(formData.precio) - parseFloat(formData.precioCompra)) / parseFloat(formData.precio)) * 100)
+        margenGanancia: (((parseFloat(formData.precio) - parseFloat(formData.precioCompra)) / parseFloat(formData.precio)) * 100),
+        umbralAlerta: parseInt(formData.umbralAlerta)
       };
 
       await onAgregarProducto(nuevoProducto);
@@ -404,6 +412,22 @@ const ModalAgregarProducto = ({ isOpen, onClose, onAgregarProducto, categorias }
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
               />
+            </div>
+            {/* Umbral de alerta */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Umbral de alerta (Productos mínimo para notificación)
+              </label>
+              <input
+                type="number"
+                name="umbralAlerta"
+                value={formData.umbralAlerta || ''}
+                onChange={handleChange}
+                placeholder="Ej: 20"
+                min="0"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              />
+              {errors.umbralAlerta && <p className="text-red-500 text-xs mt-1">{errors.umbralAlerta}</p>}
             </div>
           </div>
 

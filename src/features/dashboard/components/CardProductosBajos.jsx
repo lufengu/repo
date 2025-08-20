@@ -2,11 +2,11 @@ import React from 'react';
 import { AlertTriangleIcon } from "lucide-react";
 
 const CardProductosBajos = ({ productos = [] }) => {
-  // Obtener productos con stock bajo (menos de 100)
+  // Obtener productos con stock bajo según el umbral configurado en cada producto
   const [paginaActual, setPaginaActual] = React.useState(1);
   const productosPorPagina = 2;
   const productosFiltrados = productos
-    .filter(p => p.stock < 100)
+    .filter(p => typeof p.umbralAlerta === 'number' ? p.stock <= p.umbralAlerta : p.stock < 100)
     .sort((a, b) => a.stock - b.stock);
   const totalPaginas = Math.ceil(productosFiltrados.length / productosPorPagina);
   const indiceInicio = (paginaActual - 1) * productosPorPagina;
@@ -60,7 +60,7 @@ const CardProductosBajos = ({ productos = [] }) => {
       {productosStockBajo.length > 0 && (
         <div className="mt-3 pt-2 border-t border-gray-100">
           <span className="text-xs text-gray-500">
-            {productos.filter(p => p.stock < 5).length} producto(s) requieren atención
+            {productos.filter(p => typeof p.umbralAlerta === 'number' ? p.stock <= p.umbralAlerta : p.stock < 5).length} producto(s) requieren atención
           </span>
         </div>
       )}

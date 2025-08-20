@@ -141,7 +141,7 @@ function ProductComboBox({
       {/* Panel de opciones flotante (estilo command palette) */}
       {open && (
         <div
-          className="absolute z-30 mt-2 w-full rounded-2xl border border-gray-200 bg-white shadow-2xl"
+          className="absolute z-30 mt-2 left-0 w-[340px] sm:w-[400px] max-w-[95vw] rounded-2xl border border-gray-200 bg-white shadow-2xl"
           style={{ overflow: 'hidden' }}
           onWheel={e => e.stopPropagation()} // Evita que el scroll cierre el panel
         >
@@ -191,25 +191,25 @@ function ProductComboBox({
           </ul>
           {/* Controles de paginación */}
           {totalPages > 1 && (
-            <div className="flex justify-between items-center px-3 py-2 border-t bg-gray-50">
+            <div className="flex justify-between items-center px-3 py-2 border-t bg-gray-50 gap-2">
               <button
                 type="button"
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-2 py-1 rounded text-xs bg-blue-500 hover:bg-blue-600 text-white border border-blue-500 disabled:opacity-50"
+                className="min-w-[75px] px-2 py-1.5 rounded-md text-sm bg-blue-500 hover:bg-blue-600 text-white border border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all"
               >
-                Anterior
+                ◀ Anterior
               </button>
-              <span className="text-xs text-gray-600">
-                Página {page} de {totalPages}
+              <span className="text-sm text-gray-700 text-center font-medium min-w-[55px]">
+                {page}/{totalPages}
               </span>
               <button
                 type="button"
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-2 py-1 rounded text-xs bg-blue-500 hover:bg-blue-600 text-white border border-blue-500 disabled:opacity-50"
+                className="min-w-[75px] px-2 py-1.5 rounded-md text-sm bg-blue-500 hover:bg-blue-600 text-white border border-blue-500 disabled:opacity-50 disabled:cursor-not-allowed font-semibold transition-all"
               >
-                Siguiente
+                Siguiente ▶
               </button>
             </div>
           )}
@@ -270,11 +270,8 @@ export default function SalesRegisterForm({ onSuccess }) {
     if (field === 'product') {
       const selectedProduct = productOptions.find(p => p.name === value);
       newRows[idx][field] = value;
-      // Si se borra el producto, limpiar el precio
-      if (!value) {
-        newRows[idx].price = '';
-      } else if (selectedProduct) {
-        // Al seleccionar otro producto, actualizar el precio sugerido
+      // Autocompletar precio sugerido si no había precio cargado
+      if (selectedProduct && !newRows[idx].price) {
         const suggested = selectedProduct.suggestedPrice ?? selectedProduct.price ?? '';
         newRows[idx].price = suggested;
       }
@@ -441,7 +438,7 @@ export default function SalesRegisterForm({ onSuccess }) {
   const formRef = useRef(null); // Nueva referencia para el formulario
 
   return (
-    <div className="space-y-6 overflow-visible w-full max-w-7xl mx-auto px-2 sm:px-4">
+    <div className="space-y-6 overflow-visible w-full">
       {/* Error de carga de productos */}
       {errorProducts && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -453,7 +450,7 @@ export default function SalesRegisterForm({ onSuccess }) {
       )}
 
       {/* Métricas de la venta actual */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
         <MetricCard
           title="Total de la Venta"
           value={new Intl.NumberFormat('es-CO', {
@@ -477,36 +474,36 @@ export default function SalesRegisterForm({ onSuccess }) {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="flex flex-col xl:flex-row gap-6 w-full">
         {/* Panel principal - Formulario de venta */}
-        <div className="lg:col-span-2 w-full">
-          <div className="bg-white shadow-lg rounded-2xl p-2 sm:p-6 w-full" style={{ overflow: 'visible' }}>
+        <div className="w-full xl:w-2/3">
+          <div className="bg-white shadow-lg rounded-2xl p-2 sm:p-4 md:p-6 w-full" style={{ overflow: 'visible' }}>
             <form ref={formRef} onSubmit={handleSubmit} className="space-y-6 w-full">
               {/* Tabla de productos */}
-              <div className="overflow-x-auto w-full">
-                <table className="min-w-full table-fixed divide-y divide-gray-200 text-sm">
+              <div className="w-full">
+                <table className="w-full divide-y divide-gray-200 text-sm">
                   <thead>
                     <tr>
-                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase min-w-[160px] sm:min-w-[260px]">
+                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase">
                         Producto
                       </th>
-                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase min-w-[80px] sm:min-w-[120px]">
+                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase">
                         Cantidad
                       </th>
-                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase min-w-[100px] sm:min-w-[140px]">
+                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase">
                         Precio unit.
                       </th>
-                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase min-w-[100px] sm:min-w-[140px]">
+                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase">
                         Subtotal
                       </th>
-                      <th className="px-2 sm:px-4 py-3 bg-gray-50 w-8 sm:w-12"></th>
+                      <th className="px-2 sm:px-4 py-3 bg-gray-50"></th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {rows.map((r, i) => (
                       <tr key={i} className="hover:bg-gray-50">
                         {/* Columna Producto: combobox estilizado */}
-                        <td className="px-2 sm:px-4 py-3 min-w-[160px] sm:min-w-[260px]">
+                        <td className="px-2 sm:px-4 py-3">
                           <ProductComboBox
                             value={r.product}
                             products={productOptions}
@@ -519,30 +516,31 @@ export default function SalesRegisterForm({ onSuccess }) {
                               next[i] = text;
                               setProductSearch(next);
 
-                              // Si el usuario borra todo, limpiar selección y precio
+                              // Si el usuario borra todo, limpiamos la selección y el precio
                               if (text.trim() === '') {
                                 handleChange(i, 'product', '');
                                 handleChange(i, 'price', '');
                                 return;
                               }
-
-                              // Predicción: mostrar precio del primer producto sugerido
-                              const filtered = productOptions.filter(p => p.name.toLowerCase().includes(text.trim().toLowerCase()));
-                              if (filtered.length > 0) {
-                                const suggested = filtered[0].suggestedPrice ?? filtered[0].price ?? '';
-                                handleChange(i, 'price', suggested);
-                              }
-
-                              // Autoselección por coincidencia exacta
+                              // Solo autocompletar si la coincidencia es exacta
                               const match = productOptions.find(
-                                p => p.name.trim().toLowerCase() === text.trim().toLowerCase()
+                                p => p.name.toLowerCase() === text.trim().toLowerCase()
                               );
-                              if (match && text.trim().length === match.name.trim().length) {
+                              if (match) {
                                 handleChange(i, 'product', match.name);
+                                handleChange(i, 'price', match.suggestedPrice ?? match.price ?? '');
+                              } else {
+                                handleChange(i, 'product', text);
+                                handleChange(i, 'price', '');
                               }
                             }}
                             onChange={(name) => {
                               handleChange(i, 'product', name);
+                              // Autocompletar precio al seleccionar desde el combobox
+                              const match = productOptions.find(p => p.name === name);
+                              if (match) {
+                                handleChange(i, 'price', match.suggestedPrice ?? match.price ?? '');
+                              }
                             }}
                           />
 
@@ -566,7 +564,7 @@ export default function SalesRegisterForm({ onSuccess }) {
                         </td>
 
                         {/* Cantidad */}
-                        <td className="px-2 sm:px-4 py-3 min-w-[80px] sm:min-w-[120px]">
+                        <td className="px-2 sm:px-4 py-3">
                           <input
                             type="number"
                             min="1"
@@ -590,7 +588,7 @@ export default function SalesRegisterForm({ onSuccess }) {
                         </td>
 
                         {/* Precio unitario */}
-                        <td className="px-2 sm:px-4 py-3 min-w-[100px] sm:min-w-[140px]">
+                        <td className="px-2 sm:px-4 py-3">
                           <input
                             type="number"
                             min="0"
@@ -610,7 +608,7 @@ export default function SalesRegisterForm({ onSuccess }) {
                         </td>
 
                         {/* Subtotal */}
-                        <td className="px-2 sm:px-4 py-3 font-medium text-gray-900 min-w-[100px] sm:min-w-[140px]">
+                        <td className="px-2 sm:px-4 py-3 font-medium text-gray-900">
                           {new Intl.NumberFormat('es-CO', {
                             style: 'currency',
                             currency: 'COP',
@@ -619,7 +617,7 @@ export default function SalesRegisterForm({ onSuccess }) {
                         </td>
 
                         {/* Eliminar fila */}
-                        <td className="px-2 sm:px-4 py-3 text-center w-8 sm:w-12">
+                        <td className="px-2 sm:px-4 py-3 text-center">
                           <button
                             type="button"
                             onClick={() => handleRemoveRow(i)}
@@ -636,7 +634,7 @@ export default function SalesRegisterForm({ onSuccess }) {
                 </table>
               </div>
 
-              {/* Agregar fila alineado a la derecha */}
+              {/* Agregar fila - Mover a la derecha */}
               <div className="flex justify-end w-full">
                 <button
                   type="button"
@@ -658,7 +656,7 @@ export default function SalesRegisterForm({ onSuccess }) {
                     value={paymentMethod}
                     onChange={e => setPaymentMethod(e.target.value)}
                     disabled={isSubmitting}
-                    className={`bg-white text-black border rounded-lg px-3 py-2 min-w-[160px] sm:min-w-[200px]
+                    className={`bg-white text-black border rounded-lg px-3 py-2 min-w-[160px] sm:min-w-[200px] w-full sm:w-auto
                                focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent
                                disabled:opacity-50 disabled:cursor-not-allowed
                                ${formError && !paymentMethod ? 'border-red-500' : 'border-gray-300'}`}
@@ -683,7 +681,7 @@ export default function SalesRegisterForm({ onSuccess }) {
               </div>
 
               {formError && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 w-full">
                   <p className="text-center text-red-600 text-sm">{formError}</p>
                 </div>
               )}
@@ -715,8 +713,8 @@ export default function SalesRegisterForm({ onSuccess }) {
         </div>
 
         {/* Panel lateral - Información del cliente */}
-        <div className="lg:col-span-1 w-full">
-          <div className="bg-white shadow-lg rounded-2xl p-2 sm:p-6 w-full">
+        <div className="w-full xl:w-1/3">
+          <div className="bg-white shadow-lg rounded-2xl p-2 sm:p-4 md:p-6 w-full">
             <h3 className="text-lg font-semibold text-gray-800 mb-4">Información del Cliente</h3>
             <div className="space-y-4">
               <div>
@@ -749,7 +747,7 @@ export default function SalesRegisterForm({ onSuccess }) {
             </div>
 
             {/* Resumen de la venta */}
-            <div className="mt-6 pt-4 border-t border-gray-200">
+            <div className="mt-6 pt-4 border-t border-gray-200 w-full">
               <h4 className="text-sm font-medium text-gray-700 mb-3">Resumen de la Venta</h4>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">

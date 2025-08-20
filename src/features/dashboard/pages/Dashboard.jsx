@@ -77,67 +77,84 @@ const Dashboard = () => {
   }, []);
 
   return (
-    <div className="flex h-screen bg-gray-100">
-      {/* Menu lateral */}
-      <Menu 
-        sidebarOpen={sidebarOpen}
-        setSidebarOpen={setSidebarOpen}
-        activeSection={activeSection}
-        setActiveSection={setActiveSection}
-      />
-      
-      {/* Contenido principal */}
-      <div className="flex-1 flex flex-col">
-        {/* Header superior */}
-        <header className="bg-white shadow-sm p-4 flex justify-between items-center border-b">
-          <div className="flex items-center space-x-4">
+    <div className="min-h-screen bg-gray-100 flex flex-row">
+      {/* Menú fijo en escritorio */}
+      <div className="hidden md:block md:min-w-[220px] lg:min-w-[260px] xl:min-w-[300px] bg-white shadow-lg">
+        <Menu
+          sidebarOpen={sidebarOpen}
+          setSidebarOpen={setSidebarOpen}
+          activeSection={activeSection}
+          setActiveSection={setActiveSection}
+        />
+      </div>
+      {/* Botón para abrir menú en móviles */}
+      <button
+        className="md:hidden fixed top-4 left-4 z-50 bg-orange-500 hover:bg-orange-600 text-white rounded-full p-2 shadow-lg focus:outline-none"
+        onClick={() => setSidebarOpen(true)}
+        aria-label="Abrir menú"
+      >
+        <FaBars size={24} />
+      </button>
+      {/* Drawer menú en móviles */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 flex">
+          <div className="relative w-64 bg-white shadow-xl h-full">
             <button
-              onClick={() => setSidebarOpen(true)}
-              className="lg:hidden text-gray-600 hover:text-gray-800"
+              className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-2xl z-50"
+              onClick={() => setSidebarOpen(false)}
+              aria-label="Cerrar menú"
             >
-              <FaBars size={20} />
+              ×
             </button>
-            <div>
-              <p className="text-gray-600 text-sm">¡Hola, {userName}!</p>
-            </div>
+            <Menu
+              sidebarOpen={sidebarOpen}
+              setSidebarOpen={setSidebarOpen}
+              activeSection={activeSection}
+              setActiveSection={setActiveSection}
+            />
+          </div>
+          <div className="flex-1 bg-black bg-opacity-40" onClick={() => setSidebarOpen(false)}></div>
+        </div>
+      )}
+      <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+        {/* Header móvil */}
+        <div className="lg:hidden bg-white shadow-sm p-4 flex items-center">
+          <p className="ml-2 text-xl font-semibold text-gray-800">¡Hola, {userName}!</p>
+        </div>
+        {/* Header escritorio */}
+        <header className="hidden lg:flex bg-white shadow-sm p-4 justify-between items-center border-b">
+          <div className="flex items-center space-x-4">
+            <p className="text-gray-600 text-sm">¡Hola, {userName}!</p>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="relative">
-              <input 
-                type="text" 
-                placeholder="Buscar..." 
-                className="bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
             <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
             <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
           </div>
         </header>
-
         {/* Contenido del dashboard */}
-        <main className="flex-1 p-6 overflow-y-auto">
-          {/* Título principal */}
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-800 mb-2">Inicio del Dashboard</h1>
-            <p className="text-gray-600">
-              Bienvenido a la página principal de tu tienda digital. Aquí encontrarás un resumen de tus métricas clave.
-            </p>
+        <div className="flex-1 overflow-y-auto p-2 sm:p-4 md:p-6">
+          <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
+            {/* Título principal */}
+            <div className="mb-2 sm:mb-4">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">Inicio del Dashboard</h1>
+              <p className="text-gray-600 text-sm sm:text-base">
+                Bienvenido a la página principal de tu tienda digital. Aquí encontrarás un resumen de tus métricas clave.
+              </p>
+            </div>
+            {/* Primera fila - 3 cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-2 sm:mb-6">
+              <CardVentasDia />
+              <CardProductosBajos productos={productos} />
+              <CardUltimosPedidos />
+            </div>
+            {/* Segunda fila - 3 cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
+              <CardAlertas />
+              <CardVentasProducto refreshTrigger={refreshTrigger} />
+              <CardVentasMensuales data={ventasMensuales} />
+            </div>
           </div>
-
-          {/* Primera fila - 3 cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <CardVentasDia />
-            <CardProductosBajos productos={productos} />
-            <CardUltimosPedidos />
-          </div>
-
-          {/* Segunda fila - 3 cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <CardAlertas />
-            <CardVentasProducto refreshTrigger={refreshTrigger} />
-            <CardVentasMensuales data={ventasMensuales} />
-          </div>
-        </main>
+        </div>
       </div>
     </div>
   );
