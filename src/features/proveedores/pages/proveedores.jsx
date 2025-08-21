@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useAuth } from "../../auth/context/AuthContext";
-import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaWhatsapp, FaClock, FaEdit, FaRegBuilding, FaSearch, FaTrashAlt } from "react-icons/fa";
+import { FaPhone, FaMapMarkerAlt, FaWhatsapp, FaClock, FaEdit, FaRegBuilding, FaSearch, FaTrashAlt } from "react-icons/fa";
 import Menu from "../../dashboard/components/Menu";
 import bavariaImg from "../../../assets/bavaria.jpg";
 import laPazImg from "../../../assets/laPaz.png";
@@ -144,13 +144,6 @@ export default function ProveedoresPage() {
     window.open(url, "_blank");
   };
 
-  const handleEnviarCorreo = () => {
-    if (!proveedorSeleccionado) return;
-    const match = proveedorSeleccionado.desc.match(/Correo: ([^\n]+)/i);
-    const correo = match ? match[1].trim() : "";
-    const url = `mailto:${correo}?subject=Pedido%20de%20productos&body=${encodeURIComponent(mensaje)}`;
-    window.open(url, "_blank");
-  };
 
   // Nueva función para eliminar proveedor
   const handleEliminarProveedor = (idx) => {
@@ -447,20 +440,13 @@ export default function ProveedoresPage() {
                   onChange={e => setMensaje(e.target.value)}
                 />
               </div>
-              <div className="flex gap-4 justify-end">
+              <div className="flex justify-center">
                 <button
                   className="flex items-center gap-2 px-4 py-2 rounded bg-green-500 hover:bg-green-600 text-white font-semibold shadow"
                   onClick={handleEnviarWhatsApp}
                   type="button"
                 >
                   <FaWhatsapp /> WhatsApp
-                </button>
-                <button
-                  className="flex items-center gap-2 px-4 py-2 rounded bg-blue-500 hover:bg-blue-600 text-white font-semibold shadow"
-                  onClick={handleEnviarCorreo}
-                  type="button"
-                >
-                  <FaEnvelope /> Correo
                 </button>
               </div>
             </div>

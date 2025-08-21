@@ -12,7 +12,8 @@ const paymentMethods = [
   { value: 'tarjeta', label: 'Tarjeta' },
   { value: 'transferencia', label: 'Transferencia' },
   { value: 'nequi', label: 'Nequi' },
-  { value: 'daviplata', label: 'Daviplata' }
+  { value: 'daviplata', label: 'Daviplata' },
+  { value: 'bancolombia', label: 'Bancolombia' }, // Para coincidir con QrPaymentForm
 ];
 
 /** Combobox elegante con buscador integrado y scroll discreto */
@@ -220,6 +221,17 @@ function ProductComboBox({
 }
 
 export default function SalesRegisterForm({ onSuccess }) {
+  // Obtener usuario actual
+  const userData = localStorage.getItem('user');
+  let userName = 'Usuario';
+  if (userData) {
+    try {
+      const user = JSON.parse(userData);
+      userName = user.name || user.nombre || user.firstName || user.username || 'Usuario';
+    } catch {
+      // Ignore JSON parse errors and use default userName
+    }
+  }
   // Hook para productos del inventario
   const {
     productos: productOptions,
@@ -248,9 +260,28 @@ export default function SalesRegisterForm({ onSuccess }) {
   // Estado por fila para el texto del buscador
   const [productSearch, setProductSearch] = useState(['']);
 
+  // Estado para QR del método de pago
+  const [qrPreview, setQrPreview] = useState(null);
+
   // Cálculos
-  const total = rows.reduce((sum, r) => sum + (r.quantity * (parseFloat(r.price) || 0)), 0);
+  const subtotal = rows.reduce((sum, r) => sum + (r.quantity * (parseFloat(r.price) || 0)), 0);
   const totalItems = rows.reduce((sum, r) => sum + (r.quantity || 0), 0);
+  const iva = Math.round(subtotal * 0.19);
+  const total = subtotal + iva;
+  // Mostrar QR si existe para el método de pago seleccionado
+  useEffect(() => {
+    if (!paymentMethod) {
+      setQrPreview(null);
+      return;
+    }
+    const userKey = `qrPayments_${userName}`;
+    const stored = JSON.parse(localStorage.getItem(userKey) || '{}');
+    if (stored[paymentMethod]) {
+      setQrPreview(stored[paymentMethod]);
+    } else {
+      setQrPreview(null);
+    }
+  }, [paymentMethod, userName]);
 
   const handleAddRow = () => {
     setRows(prev => [...prev, { product: '', quantity: 1, price: '', error: {}, stockWarning: '' }]);
@@ -450,7 +481,31 @@ export default function SalesRegisterForm({ onSuccess }) {
       )}
 
       {/* Métricas de la venta actual */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full">
+        <MetricCard
+          title="Subtotal"
+          value={new Intl.NumberFormat('es-CO', {
+            style: 'currency',
+            currency: 'COP',
+            minimumFractionDigits: 0
+          }).format(subtotal)}
+          detail={`Sin IVA`}
+          icon={<DollarSign className="w-8 h-8" />}
+          gradient="from-orange-500 to-orange-600"
+          colorText="text-orange-100"
+        />
+        <MetricCard
+          title="IVA (19%)"
+          value={new Intl.NumberFormat('es-CO', {
+            style: 'currency',
+            currency: 'COP',
+            minimumFractionDigits: 0
+          }).format(iva)}
+          detail={`Calculado sobre subtotal`}
+          icon={<DollarSign className="w-8 h-8" />}
+          gradient="from-blue-500 to-blue-600"
+          colorText="text-blue-100"
+        />
         <MetricCard
           title="Total de la Venta"
           value={new Intl.NumberFormat('es-CO', {
@@ -462,15 +517,6 @@ export default function SalesRegisterForm({ onSuccess }) {
           icon={<DollarSign className="w-8 h-8" />}
           gradient="from-orange-500 to-orange-600"
           colorText="text-orange-100"
-        />
-
-        <MetricCard
-          title="Productos en Venta"
-          value={totalItems.toString()}
-          detail={`${rows.filter(r => r.product).length} tipos diferentes`}
-          icon={<ShoppingCart className="w-8 h-8" />}
-          gradient="from-blue-500 to-blue-600"
-          colorText="text-blue-100"
         />
       </div>
 
@@ -646,7 +692,7 @@ export default function SalesRegisterForm({ onSuccess }) {
                 </button>
               </div>
 
-              {/* Método de pago y total */}
+              {/* Método de pago, QR y total */}
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end space-y-4 sm:space-y-0 pt-4 border-t border-gray-200 w-full">
                 <div className="flex flex-col space-y-2 w-full sm:w-auto">
                   <label className="text-sm font-medium text-gray-700">
@@ -666,10 +712,33 @@ export default function SalesRegisterForm({ onSuccess }) {
                       <option key={m.value} value={m.value}>{m.label}</option>
                     )}
                   </select>
+                  {/* Mostrar QR si existe */}
+                  {qrPreview && (
+                    <div className="mt-3 flex flex-col items-center">
+                      <span className="text-xs text-gray-500 mb-1">QR registrado para este método:</span>
+                      <img src={qrPreview} alt="QR de pago" className="w-50 h-50 object-contain border-2 border-orange-400 rounded-xl shadow-lg" style={{maxWidth:'100%'}} />
+                    </div>
+                  )}
                 </div>
 
                 <div className="text-right w-full sm:w-auto">
-                  <p className="text-sm text-gray-600 mb-1">Total a pagar:</p>
+                  <p className="text-sm text-gray-600 mb-1">Subtotal:</p>
+                  <div className="text-lg font-semibold text-gray-700">
+                    {new Intl.NumberFormat('es-CO', {
+                      style: 'currency',
+                      currency: 'COP',
+                      minimumFractionDigits: 0
+                    }).format(subtotal)}
+                  </div>
+                  <p className="text-sm text-gray-600 mb-1 mt-2">IVA (19%):</p>
+                  <div className="text-lg font-semibold text-yellow-700">
+                    {new Intl.NumberFormat('es-CO', {
+                      style: 'currency',
+                      currency: 'COP',
+                      minimumFractionDigits: 0
+                    }).format(iva)}
+                  </div>
+                  <p className="text-sm text-gray-600 mb-1 mt-2">Total a pagar:</p>
                   <div className="text-2xl font-bold text-green-600">
                     {new Intl.NumberFormat('es-CO', {
                       style: 'currency',
@@ -765,6 +834,26 @@ export default function SalesRegisterForm({ onSuccess }) {
                   </span>
                 </div>
                 <div className="flex justify-between pt-2 border-t">
+                  <span className="text-gray-600">Subtotal:</span>
+                  <span className="font-medium text-gray-700">
+                    {new Intl.NumberFormat('es-CO', {
+                      style: 'currency',
+                      currency: 'COP',
+                      minimumFractionDigits: 0
+                    }).format(subtotal)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-600">IVA (19%):</span>
+                  <span className="font-medium text-yellow-700">
+                    {new Intl.NumberFormat('es-CO', {
+                      style: 'currency',
+                      currency: 'COP',
+                      minimumFractionDigits: 0
+                    }).format(iva)}
+                  </span>
+                </div>
+                <div className="flex justify-between">
                   <span className="text-gray-600">Total:</span>
                   <span className="font-bold text-green-600">
                     {new Intl.NumberFormat('es-CO', {
