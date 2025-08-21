@@ -1,4 +1,3 @@
-
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { TrendingUp } from "lucide-react";
 
@@ -31,8 +30,8 @@ const CardVentasMensuales = ({ data }) => {
   const mesActual = data && data.length > 0 ? data[data.length - 1] : { mes: '', ventas: 0, ventasUnidades: 0 };
   const ventasMesActual = mesActual.ventas;
   const porcentajeCambio = data && data.length > 1
-    ? ((ventasMesActual - data[data.length - 2].ventas) / data[data.length - 2].ventas) * 100
-    : 0;
+     ? ((ventasMesActual - data[data.length - 2].ventas) / data[data.length - 2].ventas) * 100
+     : 0;
 
   return (
     <div className="bg-white p-4 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer">
@@ -51,7 +50,11 @@ const CardVentasMensuales = ({ data }) => {
           <LineChart data={data}>
             <CartesianGrid strokeDasharray="3 3" className="stroke-gray-200" />
             <XAxis dataKey="mes" className="text-gray-500" />
-            <YAxis className="text-gray-500" />
+            <YAxis
+              className="text-gray-500"
+              width={75}
+              tickFormatter={value => value.toLocaleString('es-CO')}
+            />
             <Tooltip content={<CustomTooltip />} />
             <Line type="monotone" dataKey="ventas" stroke="#6b46c1" strokeWidth={3} dot={false} />
           </LineChart>
