@@ -1,42 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { getProviders, createProvider, deleteProvider } from '../services/providerService';
 import { useAuth } from "../../auth/context/AuthContext";
-import { FaPhone, FaMapMarkerAlt, FaWhatsapp, FaClock, FaEdit, FaRegBuilding, FaSearch, FaTrashAlt } from "react-icons/fa";
+import { FaWhatsapp, FaRegBuilding, FaSearch, FaTrashAlt } from "react-icons/fa";
 import Menu from "../../dashboard/components/Menu";
-import bavariaImg from "../../../assets/bavaria.jpg";
-import laPazImg from "../../../assets/laPaz.png";
-import vitrinazoImg from "../../../assets/vitrinazo.jpg";
-import elHuecoImg from "../../../assets/el-hueco.png";
-
-const initialCards = [
-  {
-    img: bavariaImg,
-    title: "Bavaria",
-  desc: `Dirección: Cl. 37 #6162 a 61-142\nWhatsApp: +57 323 8834526\nCorreo: no aplica\nEncargado: Juan Julian`,
-  },
-  {
-    img: laPazImg,
-    title: "La Paz",
-    desc: `Dirección: Cl. 55 #19-76\nWhatsApp: 3142911656\nCorreo: hernando hernadez\nEncargado: Hernando Hernadez`,
-  },
-  {
-    img: vitrinazoImg,
-    title: "Vitrinazo",
-    desc: `Dirección: Cra. 4 #16 No 49\nWhatsApp: 313 212 9507\nCorreo: peter paez\nEncargado: Peter Paez`,
-  },
-  {
-    img: elHuecoImg,
-    title: "El Hueco",
-    desc: `Dirección: Cl. 49 # 11-14\nWhatsApp: 3183440779\nCorreo: laura laureles\nEncargado: Laura Laureles`,
-  },
-];
-
-
-// Hook para productos reales
 import { useProductos } from '../../../hooks/useProductos';
 
 export default function ProveedoresPage() {
   const { productos } = useProductos();
-  // Filtrar productos agotados (stock <= 0)
+  // Filtrar productos por agotarse (stock <= 50)
   const productosPorAgotarse = productos.filter(p => p.stock <= 50);
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -50,15 +21,44 @@ export default function ProveedoresPage() {
     direccion: "",
     imagen: null,
   });
-  const [cards, setCards] = useState(initialCards);
+  const [cards, setCards] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  // Cargar proveedores reales del backend
+  useEffect(() => {
+    const fetchProviders = async () => {
+      setLoading(true);
+      try {
+        const data = await getProviders();
+        // Adaptar los datos del backend al formato de las cards
+        setCards(
+          data.map((prov) => ({
+            id: prov.id,
+            img: null, // Si tienes imágenes, cámbialo aquí
+            title: prov.title,
+            desc: `Encargado: ${prov.ownerName}\nWhatsApp: ${prov.whatsappNumber}\nCorreo: ${prov.email}\nDirección: ${prov.address}`,
+          }))
+        );
+        setError(null);
+      } catch (err) {
+        setError('Error al cargar proveedores');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProviders();
+  }, []);
   const [showOrdenar, setShowOrdenar] = useState(false);
   const [proveedorSeleccionado, setProveedorSeleccionado] = useState(null);
   const [productoSeleccionado, setProductoSeleccionado] = useState(productosPorAgotarse[0]?.nombre || "");
   const [cantidad, setCantidad] = useState(1);
   const [unidad, setUnidad] = useState("unidades");
   const { user } = useAuth();
-  // Extraer el nombre del usuario una sola vez
-  const userName = user && (user.name || user.nombre || user.firstName || user.username) ? (user.name || user.nombre || user.firstName || user.username) : "Usuario";
+  // Función para obtener el nombre del usuario dinámicamente
+  const getUserName = () =>
+    user && (user.name || user.nombre || user.firstName || user.username)
+      ? (user.name || user.nombre || user.firstName || user.username)
+      : "Usuario";
   const [mensaje, setMensaje] = useState("");
   const [busqueda, setBusqueda] = useState(""); // Estado para el buscador
 
@@ -74,27 +74,40 @@ export default function ProveedoresPage() {
   const handleOpenModal = () => setShowModal(true);
   const handleCloseModal = () => setShowModal(false);
 
-  const handleSubmit = (e) => {
+  // Crear proveedor usando la API
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    let imgUrl = null;
-    if (form.imagen) {
-      imgUrl = URL.createObjectURL(form.imagen);
+    try {
+      const nuevoProveedor = {
+        title: form.nombreProveedor,
+        ownerName: form.nombreEncargado,
+        whatsappNumber: form.whatsapp,
+        email: form.correo,
+        address: form.direccion,
+        // Puedes agregar más campos si tu backend los requiere
+      };
+      const creado = await createProvider(nuevoProveedor);
+      setCards([
+        {
+          id: creado.id,
+          img: null, // Si tienes imágenes, cámbialo aquí
+          title: creado.title,
+          desc: `Encargado: ${creado.ownerName}\nWhatsApp: ${creado.whatsappNumber}\nCorreo: ${creado.email}\nDirección: ${creado.address}`,
+        },
+        ...cards,
+      ]);
+      setForm({
+        nombreProveedor: "",
+        nombreEncargado: "",
+        whatsapp: "",
+        correo: "",
+        direccion: "",
+        imagen: null,
+      });
+      handleCloseModal();
+    } catch (err) {
+      alert('Error al crear proveedor');
     }
-    const nuevaCard = {
-      img: imgUrl,
-      title: form.nombreProveedor,
-      desc: `Encargado: ${form.nombreEncargado}\nWhatsApp: ${form.whatsapp}\nCorreo: ${form.correo}\nDirección: ${form.direccion}`,
-    };
-    setCards([nuevaCard, ...cards]);
-    setForm({
-      nombreProveedor: "",
-      nombreEncargado: "",
-      whatsapp: "",
-      correo: "",
-      direccion: "",
-      imagen: null,
-    });
-    handleCloseModal();
   };
 
   // Abrir modal de ordenar
@@ -104,7 +117,7 @@ export default function ProveedoresPage() {
     setCantidad(1);
     setUnidad(productosPorAgotarse[0]?.unidadMedida || "unidades");
     setMensaje(
-      `Muy buenos días, soy ${userName}. Necesito pedir 1 ${productosPorAgotarse[0]?.unidadMedida || "unidades"} de ${productosPorAgotarse[0]?.nombre}. ¿Qué precio tendría ese pedido?`
+      `Muy buenos días, soy ${getUserName()}. Necesito pedir 1 ${productosPorAgotarse[0]?.unidadMedida || "unidades"} de ${productosPorAgotarse[0]?.nombre}. ¿Qué precio tendría ese pedido?`
     );
     setShowOrdenar(true);
   };
@@ -115,19 +128,19 @@ export default function ProveedoresPage() {
     setProductoSeleccionado(e.target.value);
     setUnidad(prod?.unidadMedida || "unidades");
     setMensaje(
-      `Muy buenos días, soy ${userName}. Necesito pedir ${cantidad} ${prod?.unidadMedida || "unidades"} de ${e.target.value}. ¿Qué precio tendría ese pedido?`
+      `Muy buenos días, soy ${getUserName()}. Necesito pedir ${cantidad} ${prod?.unidadMedida || "unidades"} de ${e.target.value}. ¿Qué precio tendría ese pedido?`
     );
   };
   const handleCantidadChange = (e) => {
     setCantidad(e.target.value);
     setMensaje(
-      `Muy buenos días, soy ${userName}. Necesito pedir ${e.target.value} ${unidad} de ${productoSeleccionado}. ¿Qué precio tendría ese pedido?`
+      `Muy buenos días, soy ${getUserName()}. Necesito pedir ${e.target.value} ${unidad} de ${productoSeleccionado}. ¿Qué precio tendría ese pedido?`
     );
   };
   const handleUnidadChange = (e) => {
     setUnidad(e.target.value);
     setMensaje(
-      `Muy buenos días, soy ${userName}. Necesito pedir ${cantidad} ${e.target.value} de ${productoSeleccionado}. ¿Qué precio tendría ese pedido?`
+      `Muy buenos días, soy ${getUserName()}. Necesito pedir ${cantidad} ${e.target.value} de ${productoSeleccionado}. ¿Qué precio tendría ese pedido?`
     );
   };
 
@@ -146,9 +159,21 @@ export default function ProveedoresPage() {
 
 
   // Nueva función para eliminar proveedor
-  const handleEliminarProveedor = (idx) => {
-    if (window.confirm("¿Seguro que deseas eliminar este proveedor?")) {
+  // Eliminar proveedor usando la API
+  const handleEliminarProveedor = async (idx) => {
+    const proveedor = cards[idx];
+    if (!proveedor.id) {
+      // Si no tiene id, es un proveedor local (no debería pasar)
       setCards(cards.filter((_, i) => i !== idx));
+      return;
+    }
+    if (window.confirm("¿Seguro que deseas eliminar este proveedor?")) {
+      try {
+        await deleteProvider(proveedor.id);
+        setCards(cards.filter((_, i) => i !== idx));
+      } catch (err) {
+        alert('Error al eliminar proveedor');
+      }
     }
   };
 
@@ -359,21 +384,23 @@ export default function ProveedoresPage() {
                   {card.desc}
                 </p>
               </div>
-              <div className="p-4 sm:p-6 pt-0 flex flex-col gap-2">
+              <div className="p-4 sm:p-6 pt-0 flex flex-row gap-3 w-full">
                 <button
-                  className="group relative w-full inline-flex items-center justify-center px-4 sm:px-6 py-2 sm:py-3 font-bold text-white rounded-lg bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-700 hover:to-blue-600 shadow-lg shadow-blue-500/30 transition-all duration-300 text-sm sm:text-base"
+                  className="flex-1 flex items-center justify-center px-0 py-3 font-bold text-white rounded-lg bg-blue-600 hover:bg-blue-700 shadow-lg transition-all duration-300 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
                   onClick={() => handleOpenOrdenar(card)}
+                  style={{ minWidth: 0 }}
                 >
-                  <span className="relative flex items-center gap-2">
+                  <span className="flex items-center gap-2">
                     Ordenar
-                    <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" className="w-4 sm:w-5 h-4 sm:h-5 transform transition-transform group-hover:translate-x-1">
+                    <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" className="w-5 h-5 transform transition-transform group-hover:translate-x-1">
                       <path d="M17 8l4 4m0 0l-4 4m4-4H3" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"></path>
                     </svg>
                   </span>
                 </button>
                 <button
-                  className="w-full sm:w-4/5 mx-auto inline-flex items-center justify-center px-4 sm:px-6 py-2 font-bold text-white rounded-lg bg-red-500 hover:bg-red-600 shadow transition-all duration-300 group text-sm sm:text-base"
+                  className="flex-1 flex items-center justify-center px-0 py-3 font-bold text-white rounded-lg bg-orange-500 hover:bg-orange-600 shadow-lg transition-all duration-300 text-base focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2"
                   onClick={() => handleEliminarProveedor(idx)}
+                  style={{ minWidth: 0 }}
                 >
                   <FaTrashAlt className="mr-2 text-base group-hover:animate-bounce transition-transform duration-300" />
                   Eliminar

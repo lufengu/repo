@@ -70,7 +70,9 @@ export const AuthProvider = ({ children }) => {
         }
       } catch (error) {
         console.error('Error verificando autenticación:', error);
-        logout();
+        // Si hay error de red, mostrar login igual
+        setUser(null);
+        setIsLoggedIn(false);
       } finally {
         setLoading(false);
       }

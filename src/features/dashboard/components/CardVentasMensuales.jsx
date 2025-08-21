@@ -4,12 +4,13 @@ import { TrendingUp } from "lucide-react";
 // Recibe los datos reales por props
 const CardVentasMensuales = ({ data }) => {
 
-  // Tooltip personalizado
+  // Tooltip personalizado con año dinámico
+  const currentYear = new Date().getFullYear();
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-medium text-gray-800">{label} 2025</p>
+          <p className="font-medium text-gray-800">{label} {currentYear}</p>
           <p className="text-sm text-gray-600">
             Ventas: <span className="font-semibold text-purple-600">
               ${payload[0].value?.toLocaleString('es-CO')} COP
@@ -42,7 +43,7 @@ const CardVentasMensuales = ({ data }) => {
         <h2 className="font-semibold text-gray-700">Ventas Totales Mensuales</h2>
       </div>
 
-      <p className="text-sm text-gray-500">{mesActual.mes} 2025</p>
+      <p className="text-sm text-gray-500">{mesActual.mes} {currentYear}</p>
 
       {/* Gráfico de líneas */}
       <div className="mt-4 h-40">
@@ -53,7 +54,11 @@ const CardVentasMensuales = ({ data }) => {
             <YAxis
               className="text-gray-500"
               width={75}
-              tickFormatter={value => value.toLocaleString('es-CO')}
+              tickFormatter={(value) => {
+                if (value >= 1000000) return (value / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+                if (value >= 1000) return (value / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+                return value.toLocaleString('es-CO');
+              }}
             />
             <Tooltip content={<CustomTooltip />} />
             <Line type="monotone" dataKey="ventas" stroke="#6b46c1" strokeWidth={3} dot={false} />

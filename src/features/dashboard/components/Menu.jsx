@@ -58,7 +58,7 @@ const Menu = ({
             className='lg:hidden absolute top-4 right-4 text-gray-500 hover:text-gray-700' 
             onClick={() => setSidebarOpen(false)}
           >
-            ✕
+            
           </button>
         </div>
 
