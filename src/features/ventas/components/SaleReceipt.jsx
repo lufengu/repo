@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { formatColombiaDate } from '../../../utils/dateColombia';
 
@@ -72,6 +71,11 @@ const SaleReceipt = ({ sale, onClose, onPrint }) => {
               page-break-inside: avoid !important;
               break-inside: avoid !important;
             }
+            /* Ocultar elementos marcados como no-print dentro del recibo al imprimir */
+            #ticket-receipt .no-print {
+              display: none !important;
+              visibility: hidden !important;
+            }
           }
         `}
       </style>
@@ -87,6 +91,7 @@ const SaleReceipt = ({ sale, onClose, onPrint }) => {
             <p className="text-xs text-gray-500">NIT: 123.456.789-0</p>
             <p className="text-xs text-gray-500">Dirección: Calle Principal #123</p>
             <p className="text-xs text-gray-500">Tel: +57 (1) 234-5678</p>
+            {/* ...existing header content... */}
           </div>
 
           {/* Información de la venta */}
@@ -103,14 +108,23 @@ const SaleReceipt = ({ sale, onClose, onPrint }) => {
             </div>
             <div className="flex justify-between mb-2">
               <span className="text-sm text-gray-600">Cliente:</span>
-              <span className="text-sm font-medium">{sale.customer || 'Cliente General'}</span>
+              <span className="text-sm font-medium">{(sale.customer && sale.customer.toString().trim()) ? sale.customer : 'N/A'}</span>
             </div>
-            {sale.phone && (
-              <div className="flex justify-between">
-                <span className="text-sm text-gray-600">Teléfono:</span>
-                <span className="text-sm font-medium">{sale.phone}</span>
-              </div>
-            )}
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Cédula:</span>
+              <span className="text-sm font-medium">{(sale.cedula && sale.cedula.toString().trim()) ? sale.cedula : 'N/A'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Dirección:</span>
+              <span className="text-sm font-medium">{(sale.direccion && sale.direccion.toString().trim()) ? sale.direccion : 'N/A'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-sm text-gray-600">Correo electrónico:</span>
+              <span className="text-sm font-medium">
+                {(sale.email && sale.email.toString().trim()) ? sale.email : (sale.correo && sale.correo.toString().trim()) ? sale.correo : 'N/A'}
+              </span>
+            </div>
+            
           </div>
 
           {/* Detalles de los productos */}
@@ -193,8 +207,8 @@ const SaleReceipt = ({ sale, onClose, onPrint }) => {
           <div className="text-center text-xs text-gray-500 mb-6">
             <p className="font-medium">¡Gracias por su compra!</p>
             <p>Su confianza es nuestro compromiso</p>
-            <p className="mt-2">Para devoluciones presente este recibo</p>
-            <p>Políticas de devolución: 15 días calendario</p>
+            <p className="mt-2 no-print">Para devoluciones presente este recibo</p>
+            <p className="no-print">Políticas de devolución: 15 días calendario</p>
           </div>
 
           {/* Botones de acción ocultos en impresión */}

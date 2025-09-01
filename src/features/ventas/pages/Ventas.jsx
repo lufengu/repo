@@ -7,31 +7,7 @@ import SalesReports from '../components/SalesReports';
 
 import QrPaymentForm from '../components/QrPaymentForm';
 
-const AccessibilityPanel = ({ open, onClose, daltonismMode, setDaltonismMode }) => (
-  open ? (
-    <div className="fixed top-20 right-8 z-50 bg-white border border-gray-300 rounded-lg shadow-lg p-5 w-80 animate-fade-in">
-      <h3 className="text-lg font-semibold mb-3 text-gray-800">Accesibilidad</h3>
-      <div className="flex items-center mb-4">
-        <input
-          type="checkbox"
-          id="daltonism"
-          checked={daltonismMode}
-          onChange={e => setDaltonismMode(e.target.checked)}
-          className="mr-2"
-        />
-        <label htmlFor="daltonism" className="text-gray-700">Modo Daltonismo</label>
-      </div>
-      <button
-        onClick={onClose}
-        className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-xl font-normal"
-        aria-label="Cerrar"
-      >×</button>
-      <p className="text-xs text-gray-500 mt-2">
-        El modo daltonismo ajusta los colores para mejorar la visibilidad de personas con esta condición.
-      </p>
-    </div>
-  ) : null
-);
+// Accessibility panel removed
 
 const Ventas = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -43,9 +19,7 @@ const Ventas = () => {
   // Estado para mostrar el formulario QR
   const [showQrForm, setShowQrForm] = useState(false);
 
-  // Estado para el panel de accesibilidad
-  const [accessOpen, setAccessOpen] = useState(false);
-  const [daltonismMode, setDaltonismMode] = useState(false);
+  // Accesibilidad eliminada: no hay estado ni panel
 
   useEffect(() => {
     // Obtener información del usuario desde localStorage
@@ -62,14 +36,7 @@ const Ventas = () => {
     }
   }, []);
 
-  // Efecto para aplicar clase global de modo daltonismo
-  useEffect(() => {
-    if (daltonismMode) {
-      document.body.classList.add('daltonism-mode');
-    } else {
-      document.body.classList.remove('daltonism-mode');
-    }
-  }, [daltonismMode]);
+  // accesibilidad: removido
 
   // Función para refrescar el historial después de crear una venta
   const handleSaleCreated = () => {
@@ -128,13 +95,6 @@ const Ventas = () => {
             </div>
           </div>
           <div className="flex items-center space-x-4">
-            <div className="relative">
-              <input 
-                type="text" 
-                placeholder="Buscar..." 
-                className="bg-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-              />
-            </div>
             <button
               className="w-8 h-8 bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center justify-center shadow-lg transition-colors"
               title="Cargar QR de pago"
@@ -199,21 +159,7 @@ const Ventas = () => {
           </div>
         </main>
       </div>
-      {/* Botón de accesibilidad */}
-      <button
-        className="fixed top-5 right-10 z-50 bg-blue-100 hover:bg-blue-200 text-blue-800 font-semibold px-2.5 py-1.5 rounded-full shadow transition-all flex items-center justify-center"
-        style={{ transform: 'translateY(-3px) translateX(33px)', fontSize: '0.8rem' }}
-        onClick={() => setAccessOpen(true)}
-        aria-label="Accesibilidad"
-      >
-        <span role="img" aria-label="Accesibilidad" style={{ fontSize: '1rem' }}>🦉</span>
-      </button>
-      <AccessibilityPanel
-        open={accessOpen}
-        onClose={() => setAccessOpen(false)}
-        daltonismMode={daltonismMode}
-        setDaltonismMode={setDaltonismMode}
-      />
+  {/* Accesibilidad: botón eliminado */}
     </div>
   );
 };

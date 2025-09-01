@@ -43,6 +43,8 @@ const SalesHistory = ({ refreshTrigger }) => {
         sale.product?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         sale.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         sale.phone?.includes(searchTerm) ||
+        sale.cedula?.toString().includes(searchTerm) ||
+        sale.direccion?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         sale.id.toString().includes(searchTerm) ||
         sale.payment_method?.toLowerCase().includes(searchTerm.toLowerCase())
       );
@@ -310,9 +312,11 @@ const SalesHistory = ({ refreshTrigger }) => {
                     <span className="text-xs text-gray-500">{formatDate(sale.createdAt)}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="font-medium text-gray-900">{sale.product}</span>
-                    <span className="text-xs text-gray-500">Cliente: {sale.customer || 'Cliente General'}</span>
-                    {sale.phone && <span className="text-xs text-gray-400">Tel: {sale.phone}</span>}
+                      <span className="font-medium text-gray-900">{sale.product}</span>
+                      <span className="text-xs text-gray-500">Cliente: {sale.customer || 'Cliente General'}</span>
+                      {sale.cedula && <span className="text-xs text-gray-400">Cédula: {sale.cedula}</span>}
+                      {sale.direccion && <span className="text-xs text-gray-400">Dir: {sale.direccion}</span>}
+                      {sale.phone && <span className="text-xs text-gray-400">Tel: {sale.phone}</span>}
                   </div>
                   <div className="flex justify-between items-center text-sm">
                     <span className="text-gray-700">Cantidad: <span className="font-semibold">{sale.quantity}</span></span>
@@ -362,6 +366,8 @@ const SalesHistory = ({ refreshTrigger }) => {
                       <td className="px-6 py-4 whitespace-nowrap text-gray-900">
                         <div>
                           <p className="font-medium">{sale.customer || 'Cliente General'}</p>
+                          {sale.cedula && <p className="text-gray-500 text-xs">Cédula: {sale.cedula}</p>}
+                          {sale.direccion && <p className="text-gray-500 text-xs">Dir: {sale.direccion}</p>}
                           {sale.phone && <p className="text-gray-500 text-xs">{sale.phone}</p>}
                         </div>
                       </td>

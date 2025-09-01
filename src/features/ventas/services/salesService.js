@@ -11,7 +11,7 @@ const mapBackendToFrontend = (backendSale) => {
     try {
       const products = JSON.parse(backendSale.products);
       totalItems = products.reduce((sum, item) => sum + (item.quantity || 0), 0);
-    } catch (e) {
+    } catch {
       totalItems = 0;
     }
   }
@@ -19,9 +19,11 @@ const mapBackendToFrontend = (backendSale) => {
   return {
     id: backendSale.id,
     date: backendSale.date,
-    customer: backendSale.customer || 'Cliente General',
-    phone: '', // No disponible en backend actual
-    email: backendSale.customerEmail || '',
+  customer: backendSale.customer || 'Cliente General',
+  cedula: backendSale.cedula || backendSale.customerCedula || backendSale.customerDocument || backendSale.document || backendSale.dni || backendSale.documento || '',
+  direccion: backendSale.direccion || backendSale.customerAddress || backendSale.address || backendSale.customerDireccion || backendSale.direccionFiscal || backendSale.direccion_fiscal || '',
+  phone: '', // No disponible en backend actual
+  email: backendSale.customerEmail || '',
     items: backendSale.products ? JSON.parse(backendSale.products) : [],
     payment_method: backendSale.paymentMethod,
     paymentMethod: backendSale.paymentMethod, // Para compatibilidad
@@ -61,6 +63,8 @@ export const salesAPI = {
         date: saleData.date || new Date().toISOString().split('T')[0],
         customer: saleData.customer || 'Cliente General',
         customerEmail: saleData.email || '',
+        cedula: saleData.cedula || saleData.customer?.cedula || saleData.customerCedula || '',
+        direccion: saleData.direccion || saleData.customer?.direccion || saleData.customerAddress || '',
         products: JSON.stringify(saleData.items || []), // El backend espera JSON string
         paymentMethod: saleData.payment_method || saleData.paymentMethod,
         total: parseFloat(saleData.total),
@@ -85,8 +89,8 @@ export const salesAPI = {
   // Obtener una venta específica
   getSale: async (saleId) => {
     try {
-      const response = await api.get(`/sales/get/${saleId}`);
-      return response.data;
+  const response = await api.get(`/sales/get/${saleId}`);
+  return mapBackendToFrontend(response.data);
     } catch (error) {
       const message = error.response?.data?.error || 'Error al obtener venta';
       throw new Error(message);
@@ -104,6 +108,8 @@ export const salesAPI = {
         date: saleData.date,
         customer: saleData.customer,
         customerEmail: saleData.email,
+  cedula: saleData.cedula || saleData.customer?.cedula || saleData.customerCedula || '',
+  direccion: saleData.direccion || saleData.customer?.direccion || saleData.customerAddress || '',
         products: typeof saleData.items === 'string' ? saleData.items : JSON.stringify(saleData.items || []),
         paymentMethod: saleData.payment_method || saleData.paymentMethod,
         total: parseFloat(saleData.total),

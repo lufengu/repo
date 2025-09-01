@@ -9,7 +9,7 @@ import portadaImg from '../../../assets/portada.png';
 
 function RecomendacionesFloatingButton() {
   const [open, setOpen] = useState(false);
-  const { productos, loading: loadingInventario, error: errorInventario } = useProductos();
+  const { productos, loading: loadingInventario, error: errorInventario, cargarProductos } = useProductos();
   const { loading: loadingVentas, error: errorVentas } = useProductosVentas();
   const [ventas, setVentas] = useState([]);
   const [sugerencias, setSugerencias] = useState({
@@ -80,6 +80,7 @@ function RecomendacionesFloatingButton() {
   };
 
   useEffect(() => {
+    // cargar ventas (definida aquí para poder invocarla desde el doble click)
     const fetchVentas = async () => {
       try {
         const data = await salesAPI.get('/sales/list');
@@ -90,6 +91,21 @@ function RecomendacionesFloatingButton() {
     };
     fetchVentas();
   }, []);
+
+  // Exponer función de recarga para doble click
+  const reloadData = async () => {
+    try {
+      if (typeof cargarProductos === 'function') await cargarProductos();
+    } catch (e) {
+      console.error('Error recargando productos:', e);
+    }
+    try {
+      const data = await salesAPI.get('/sales/list');
+      setVentas(Array.isArray(data?.data) ? data.data : []);
+    } catch {
+      // ignore
+    }
+  };
 
   useEffect(() => {
     const now = new Date();
@@ -232,6 +248,55 @@ function RecomendacionesFloatingButton() {
     setAlertasPage(1); // Reiniciar página cada vez que cambian las alertas
   }, [productos, ventas]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // ---------- Floating / draggable behavior ----------
+  const savedPos = (() => {
+    try { return JSON.parse(localStorage.getItem('recFloatingPos')) || null; } catch { return null; }
+  })();
+  const [pos, setPos] = useState(() => savedPos || { right: 24, bottom: 24 });
+  const draggingRef = React.useRef(false);
+  const startRef = React.useRef({ x: 0, y: 0, origX: 0, origY: 0 });
+  const lastTapRef = React.useRef(0);
+
+  const onPointerDown = (e) => {
+    e.preventDefault();
+    draggingRef.current = true;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    startRef.current = { x: clientX, y: clientY, origX: pos.left ?? window.innerWidth - (pos.right || 24), origY: pos.top ?? window.innerHeight - (pos.bottom || 24) };
+    window.addEventListener('mousemove', onPointerMove);
+    window.addEventListener('mouseup', onPointerUp);
+    window.addEventListener('touchmove', onPointerMove);
+    window.addEventListener('touchend', onPointerUp);
+  };
+
+  const onPointerMove = (e) => {
+    if (!draggingRef.current) return;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    const dx = clientX - startRef.current.x;
+    const dy = clientY - startRef.current.y;
+    const newLeft = Math.max(8, Math.min(window.innerWidth - 48, startRef.current.origX + dx));
+    const newTop = Math.max(8, Math.min(window.innerHeight - 48, startRef.current.origY + dy));
+    setPos({ left: newLeft, top: newTop });
+  };
+
+  const onPointerUp = () => {
+    draggingRef.current = false;
+    window.removeEventListener('mousemove', onPointerMove);
+    window.removeEventListener('mouseup', onPointerUp);
+    window.removeEventListener('touchmove', onPointerMove);
+    window.removeEventListener('touchend', onPointerUp);
+    // persist position
+  try { localStorage.setItem('recFloatingPos', JSON.stringify(pos)); } catch (err) { console.error(err); }
+  };
+
+  const handleDoubleClick = async (e) => {
+    e.stopPropagation();
+    // abrir y recargar datos
+    setOpen(true);
+    await reloadData();
+  };
+
   // --------- Filtrado + Paginación de alertas ---------
   const alertasFiltradas = sugerencias.alertas.filter(a =>
     filtroTipo === 'todas' ? true : a.categoria === filtroTipo
@@ -262,10 +327,33 @@ function RecomendacionesFloatingButton() {
     <>
       <button
         className="recomendaciones-floating-btn"
-        onClick={() => setOpen(true)}
-        title="Ver recomendaciones"
+        onDoubleClick={handleDoubleClick}
+        onMouseDown={onPointerDown}
+        onTouchStart={onPointerDown}
+        onTouchEnd={(e) => {
+          // Detect double-tap for touch devices
+          if (draggingRef.current) return;
+          const now = Date.now();
+          const TIME = 300; // ms
+          if (now - lastTapRef.current <= TIME) {
+            handleDoubleClick(e);
+            lastTapRef.current = 0;
+          } else {
+            lastTapRef.current = now;
+          }
+        }}
+        title="Ver recomendaciones (doble clic)"
+        style={{
+          position: 'fixed',
+          left: pos.left,
+          top: pos.top,
+          right: undefined,
+          bottom: undefined,
+          zIndex: 1000,
+          cursor: 'grab'
+        }}
       >
-        <img src={portadaImg} alt="Ver recomendaciones" style={{ width: 70, height: 75 }} />
+        <img src={portadaImg} alt="Ver recomendaciones" style={{ width: 70, height: 75, pointerEvents: 'none' }} />
       </button>
 
       {open && (

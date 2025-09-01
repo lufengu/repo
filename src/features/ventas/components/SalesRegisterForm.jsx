@@ -249,11 +249,10 @@ export default function SalesRegisterForm({ onSuccess }) {
   const [paymentMethod, setPaymentMethod] = useState('');
   const [formError, setFormError] = useState('');
   const [customer, setCustomer] = useState({
-    name: '',
-    phone: '',
-    email: '',
-    address: '',
-    cedula: ''
+  name: '',
+  email: '',
+    cedula: '',
+    direccion: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
@@ -407,11 +406,12 @@ export default function SalesRegisterForm({ onSuccess }) {
       paymentMethod: paymentMethod, // Para compatibilidad
       total,
       totalItems,
-  customer: customer.name || 'Cliente General',
-  phone: customer.phone || '',
-  email: customer.email || '',
-  address: customer.address || '',
-  cedula: customer.cedula || '',
+
+      customer: customer.name || 'Cliente General',
+  // phone removed per request; backend may ignore this field
+      email: customer.email || '',
+      cedula: customer.cedula || '',
+      direccion: customer.direccion || '',
       date: new Date().toISOString().split('T')[0],
       time: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
       createdAt: new Date().toISOString()
@@ -442,11 +442,12 @@ export default function SalesRegisterForm({ onSuccess }) {
       setCompletedSale(saleData);
       setShowReceipt(true);
 
-      // Limpiar formulario
-      setRows([{ product: '', quantity: 1, price: '', error: {}, stockWarning: '' }]);
-      setPaymentMethod('');
-      setCustomer({ name: '', phone: '', email: '' });
-      setProductSearch(['']);
+  // Limpiar formulario
+  setRows([{ product: '', quantity: 1, price: '', error: {}, stockWarning: '' }]);
+  setPaymentMethod('');
+  // Limpiar cliente incluyendo cédula y dirección
+  setCustomer({ name: '', cedula: '', direccion: '', email: '' });
+  setProductSearch(['']);
 
       // Callback si existe
       if (onSuccess) {
@@ -822,8 +823,8 @@ export default function SalesRegisterForm({ onSuccess }) {
                 </label>
                 <input
                   type="text"
-                  value={customer.address}
-                  onChange={(e) => handleCustomerChange('address', e.target.value)}
+                  value={customer.direccion}
+                  onChange={(e) => handleCustomerChange('direccion', e.target.value)}
                   disabled={isSubmitting}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50"
                   placeholder="Dirección del cliente"
