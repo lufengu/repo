@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { getProviders, createProvider, deleteProvider } from '../services/providerService';
+import { getProviders, createProvider, deleteProvider, updateProvider } from '../services/providerService';
 import { uploadObject, getObjectBlobUrl } from '../services/objectService';
 import { useAuth } from "../../auth/context/AuthContext";
-import { FaWhatsapp, FaRegBuilding, FaSearch, FaTrashAlt } from "react-icons/fa";
+import { FaWhatsapp, FaRegBuilding, FaSearch, FaTrashAlt, FaEdit } from "react-icons/fa";
 import Menu from "../../dashboard/components/Menu";
 import { useProductos } from '../../../hooks/useProductos';
 
@@ -47,6 +47,11 @@ export default function ProveedoresPage() {
             objectId: oid ? String(oid) : null,
             img: null,
             title: prov.title,
+            // Agregamos los campos en crudo para facilitar edición
+            ownerName: prov.ownerName,
+            whatsappNumber: prov.whatsappNumber,
+            email: prov.email,
+            address: prov.address,
             desc: `Encargado: ${prov.ownerName}\nWhatsApp: ${prov.whatsappNumber}\nCorreo: ${prov.email}\nDirección: ${prov.address}`,
           };
         });
@@ -168,6 +173,11 @@ export default function ProveedoresPage() {
           objectId,
           img: imgSrc,
           title: creado.title,
+          // Guardamos campos crudos para edición futura
+          ownerName: creado.ownerName,
+          whatsappNumber: creado.whatsappNumber,
+          email: creado.email,
+          address: creado.address,
           desc: `Encargado: ${creado.ownerName}\nWhatsApp: ${creado.whatsappNumber}\nCorreo: ${creado.email}\nDirección: ${creado.address}`,
         },
         ...prev,
@@ -237,7 +247,6 @@ export default function ProveedoresPage() {
     window.open(url, "_blank");
   };
 
-
   // Nueva función para eliminar proveedor
   // Eliminar proveedor usando la API
   const handleEliminarProveedor = async (idx) => {
@@ -254,6 +263,150 @@ export default function ProveedoresPage() {
       } catch (err) {
         alert('Error al eliminar proveedor');
       }
+    }
+  };
+
+  // --- ESTADO Y HANDLERS PARA EDITAR ---
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editIndex, setEditIndex] = useState(null);
+  const [editForm, setEditForm] = useState({
+    id: null,
+    nombreProveedor: "",
+    nombreEncargado: "",
+    whatsapp: "",
+    correo: "",
+    direccion: "",
+    imagen: null,      // preview (dataURL o URL actual)
+    imagenFile: null,  // File seleccionado
+    objectId: null,
+  });
+
+  const openEditFromCard = (card, idx) => {
+    setEditIndex(idx);
+    setEditForm({
+      id: card.id,
+      nombreProveedor: card.title || "",
+      nombreEncargado: card.ownerName || "",
+      whatsapp: card.whatsappNumber || "",
+      correo: card.email || "",
+      direccion: card.address || "",
+      imagen: card.img || null,
+      imagenFile: null,
+      objectId: card.objectId || null,
+    });
+    setShowEditModal(true);
+  };
+
+  const handleCloseEdit = () => {
+    setShowEditModal(false);
+    setEditIndex(null);
+    setEditForm({
+      id: null,
+      nombreProveedor: "",
+      nombreEncargado: "",
+      whatsapp: "",
+      correo: "",
+      direccion: "",
+      imagen: null,
+      imagenFile: null,
+      objectId: null,
+    });
+  };
+
+  const handleEditInputChange = async (e) => {
+    const { name, value, files } = e.target;
+    if (name === "imagen") {
+      const file = files && files[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        alert("El archivo debe ser una imagen.");
+        return;
+      }
+      const maxSize = 2 * 1024 * 1024; // 2MB
+      if (file.size > maxSize) {
+        alert("La imagen supera los 2MB permitidos.");
+        return;
+      }
+      try {
+        const reader = new FileReader();
+        reader.onload = () => {
+          setEditForm((prev) => ({ ...prev, imagen: reader.result, imagenFile: file }));
+        };
+        reader.onerror = () => alert("No se pudo leer la imagen.");
+        reader.readAsDataURL(file);
+      } catch {
+        alert("No se pudo leer la imagen.");
+      }
+    } else {
+      setEditForm((prev) => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleUpdateSubmit = async (e) => {
+    e.preventDefault();
+    if (editIndex == null || !cards[editIndex]) return;
+    try {
+      let newObjectId = editForm.objectId;
+
+      // Si se seleccionó nueva imagen, subirla y obtener nuevo id
+      if (editForm.imagenFile) {
+        const up = await uploadObject(editForm.imagenFile);
+        newObjectId = up?.id ?? null;
+      }
+
+      const payload = {
+        title: editForm.nombreProveedor,
+        ownerName: editForm.nombreEncargado,
+        whatsappNumber: (editForm.whatsapp || "").replace(/\D/g, ""),
+        email: editForm.correo,
+        address: editForm.direccion,
+        objectId: newObjectId ?? null,
+      };
+
+      const actualizado = await updateProvider(editForm.id, payload);
+
+      const next = {
+        id: actualizado?.id ?? editForm.id,
+        title: actualizado?.title ?? payload.title,
+        ownerName: actualizado?.ownerName ?? payload.ownerName,
+        whatsappNumber: actualizado?.whatsappNumber ?? payload.whatsappNumber,
+        email: actualizado?.email ?? payload.email,
+        address: actualizado?.address ?? payload.address,
+        objectId: actualizado?.objectId ?? newObjectId ?? null,
+      };
+
+      // Determinar imagen a mostrar
+      let imgSrc = cards[editIndex].img;
+      if (next.objectId && next.objectId !== cards[editIndex].objectId) {
+        try {
+          imgSrc = await getObjectBlobUrl(next.objectId);
+        } catch {
+          imgSrc = editForm.imagen || imgSrc;
+        }
+      } else if (editForm.imagenFile) {
+        imgSrc = editForm.imagen || imgSrc;
+      }
+
+      setCards((prev) => {
+        const copy = [...prev];
+        copy[editIndex] = {
+          ...copy[editIndex],
+          title: next.title,
+          ownerName: next.ownerName,
+          whatsappNumber: next.whatsappNumber,
+          email: next.email,
+          address: next.address,
+          objectId: next.objectId,
+          img: imgSrc,
+        };
+        return copy;
+      });
+
+      handleCloseEdit();
+    } catch (err) {
+      console.error('Error actualizar proveedor:', err?.response?.data || err);
+      const msg = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Error al actualizar proveedor';
+      alert(`Error al actualizar proveedor: ${msg}`);
     }
   };
 
@@ -355,7 +508,7 @@ export default function ProveedoresPage() {
                     value={form.nombreProveedor}
                     onChange={handleInputChange}
                     placeholder="Ej: Distribuidora Central S.A."
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    className="w-full border border-gray-300 rounded pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     required
                   />
                 </div>
@@ -367,7 +520,7 @@ export default function ProveedoresPage() {
                     value={form.nombreEncargado}
                     onChange={handleInputChange}
                     placeholder="Ej: Juan Pérez"
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    className="w-full border border-gray-300 rounded pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     required
                   />
                 </div>
@@ -379,7 +532,7 @@ export default function ProveedoresPage() {
                     value={form.whatsapp}
                     onChange={handleInputChange}
                     placeholder="Ej: +34 600 123 456"
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    className="w-full border border-gray-300 rounded pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     required
                   />
                 </div>
@@ -391,7 +544,7 @@ export default function ProveedoresPage() {
                     value={form.correo}
                     onChange={handleInputChange}
                     placeholder="Ej: pedidos@proveedor.com"
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    className="w-full border border-gray-300 rounded pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     required
                   />
                 </div>
@@ -403,7 +556,7 @@ export default function ProveedoresPage() {
                     value={form.direccion}
                     onChange={handleInputChange}
                     placeholder="Ej: Calle Principal 123, Ciudad"
-                    className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    className="w-full border border-gray-300 rounded pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     required
                   />
                 </div>
@@ -439,13 +592,13 @@ export default function ProveedoresPage() {
         )}
 
         {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mt-8 sm:mt-16 justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8 mt-8 sm:mt-16">
           {cardsFiltradas.map((card, idx) => (
             <div
               key={idx}
-              className="relative flex flex-col w-full sm:w-80 rounded-xl bg-gradient-to-br from-white to-gray-50 bg-clip-border text-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 mb-6 sm:mb-8 mx-auto"
+              className="relative flex flex-col w-full max-w-xl rounded-xl bg-gradient-to-br from-white to-gray-50 bg-clip-border text-gray-700 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 mb-6 sm:mb-8 mx-auto"
             >
-              <div className="relative mx-2 sm:mx-4 -mt-6 h-36 sm:h-40 overflow-hidden rounded-xl shadow-lg group">
+              <div className="relative mx-2 sm:mx-4 -mt-6 h-48 sm:h-56 overflow-hidden rounded-xl shadow-lg group">
                 {card.img ? (
                   <img
                     src={card.img}
@@ -465,34 +618,41 @@ export default function ProveedoresPage() {
                 )}
               </div>
               <div className="p-4 sm:p-6">
-                <h5 className="mb-2 text-lg sm:text-xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors break-words">
+                <h5 className="mb-2 text-xl sm:text-2xl font-semibold text-gray-900 group-hover:text-blue-600 transition-colors break-words">
                   {card.title}
                 </h5>
                 <p className="text-sm sm:text-base font-light text-gray-700 whitespace-pre-line break-words">
                   {card.desc}
                 </p>
               </div>
-              <div className="p-4 sm:p-6 pt-0 flex flex-row gap-3 w-full">
-                <button
-                  className="flex-1 flex items-center justify-center px-0 py-3 font-bold text-white rounded-lg bg-blue-600 hover:bg-blue-700 shadow-lg transition-all duration-300 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
-                  onClick={() => handleOpenOrdenar(card)}
-                  style={{ minWidth: 0 }}
-                >
-                  <span className="flex items-center gap-2">
-                    Ordenar
-                    <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" className="w-5 h-5 transform transition-transform group-hover:translate-x-1">
-                      <path d="M17 8l4 4m0 0l-4 4m4-4H3" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"></path>
-                    </svg>
-                  </span>
-                </button>
-                <button
-                  className="flex-1 flex items-center justify-center px-0 py-3 font-bold text-white rounded-lg bg-orange-500 hover:bg-orange-600 shadow-lg transition-all duration-300 text-base focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2"
-                  onClick={() => handleEliminarProveedor(idx)}
-                  style={{ minWidth: 0 }}
-                >
-                  <FaTrashAlt className="mr-2 text-base group-hover:animate-bounce transition-transform duration-300" />
-                  Eliminar
-                </button>
+              <div className="p-4 sm:p-6 pt-0 w-full">
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    className="flex items-center justify-center w-full h-11 md:h-12 font-bold text-white rounded-lg bg-blue-600 hover:bg-blue-700 shadow-lg transition-all duration-300 text-base focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2"
+                    onClick={() => handleOpenOrdenar(card)}
+                  >
+                    <span className="flex items-center gap-2">
+                      Ordenar
+                      <svg viewBox="0 0 24 24" stroke="currentColor" fill="none" className="w-5 h-5">
+                        <path d="M17 8l4 4m0 0l-4 4m4-4H3" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round"></path>
+                      </svg>
+                    </span>
+                  </button>
+                  <button
+                    className="flex items-center justify-center w-full h-11 md:h-12 font-bold text-white rounded-lg bg-orange-500 hover:bg-orange-600 shadow-lg transition-all duration-300 text-base focus:outline-none focus:ring-2 focus:ring-orange-400 focus:ring-offset-2"
+                    onClick={() => openEditFromCard(card, idx)}
+                  >
+                    <FaEdit className="mr-2 text-base" />
+                    Editar
+                  </button>
+                  <button
+                    className="flex items-center justify-center w-full h-11 md:h-12 font-bold text-white rounded-lg bg-red-500 hover:bg-red-600 shadow-lg transition-all duration-300 text-base focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-offset-2"
+                    onClick={() => handleEliminarProveedor(idx)}
+                  >
+                    <FaTrashAlt className="mr-2 text-base" />
+                    Eliminar
+                  </button>
+                </div>
               </div>
             </div>
           ))}
@@ -564,6 +724,114 @@ export default function ProveedoresPage() {
                   <FaWhatsapp /> WhatsApp
                 </button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal para editar proveedor */}
+        {showEditModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+            <div className="bg-white rounded-lg shadow-lg w-[92vw] max-w-md relative p-5 sm:p-6 max-h-[90vh] overflow-auto">
+              <button
+                className="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-xl"
+                onClick={handleCloseEdit}
+                aria-label="Cerrar"
+              >
+                ×
+              </button>
+              <h2 className="text-xl sm:text-2xl font-bold mb-3">Editar proveedor</h2>
+              <form onSubmit={handleUpdateSubmit} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-medium mb-1 text-gray-700">Nombre de la empresa o proveedor</label>
+                  <input
+                    type="text"
+                    name="nombreProveedor"
+                    value={editForm.nombreProveedor}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1 text-gray-700">Nombre de la persona encargada</label>
+                  <input
+                    type="text"
+                    name="nombreEncargado"
+                    value={editForm.nombreEncargado}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1 text-gray-700">Número de WhatsApp</label>
+                  <input
+                    type="text"
+                    name="whatsapp"
+                    value={editForm.whatsapp}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1 text-gray-700">Correo electrónico</label>
+                  <input
+                    type="email"
+                    name="correo"
+                    value={editForm.correo}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1 text-gray-700">Dirección</label>
+                  <input
+                    type="text"
+                    name="direccion"
+                    value={editForm.direccion}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1 text-gray-700">Cambiar imagen (opcional)</label>
+                  <input
+                    type="file"
+                    name="imagen"
+                    accept="image/*"
+                    onChange={handleEditInputChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 bg-white"
+                  />
+                  {editForm.imagen && (
+                    <div className="mt-2 w-full h-28 border rounded flex items-center justify-center bg-white overflow-hidden">
+                      <img
+                        src={editForm.imagen}
+                        alt="Preview"
+                        className="max-h-28 object-contain"
+                      />
+                    </div>
+                  )}
+                  <span className="text-[11px] text-gray-400">Formatos: JPG, PNG, SVG. Máx 2MB.</span>
+                </div>
+                <div className="flex justify-end gap-2 pt-1">
+                  <button
+                    type="button"
+                    className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 text-sm"
+                    onClick={handleCloseEdit}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-3 py-2 rounded bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow text-sm"
+                  >
+                    Guardar cambios
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
