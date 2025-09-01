@@ -1,3 +1,9 @@
+/* Forzar que el menú lateral no tenga sombra ni filtro visual */
+.no-shadow-menu, .no-shadow-menu * {
+  box-shadow: none !important;
+  filter: none !important;
+  background-image: none !important;
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

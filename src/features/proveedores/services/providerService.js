@@ -8,9 +8,16 @@ export const getProviders = async () => {
   return res.data;
 };
 
-export const createProvider = async (data) => {
-  const res = await api.post(`${API_URL}/create`, data);
-  return res.data;
+export const createProvider = async (provider) => {
+  try {
+    const res = await api.post(`${API_URL}/create`, provider);
+    return res.data;
+  } catch (err) {
+    const data = err.response?.data;
+    const message =
+      data?.message || data?.error || (typeof data === 'string' ? data : JSON.stringify(data)) || err.message;
+    throw new Error(message);
+  }
 };
 
 export const deleteProvider = async (id) => {

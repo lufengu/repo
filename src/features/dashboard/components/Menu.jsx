@@ -40,8 +40,8 @@ const Menu = ({
     { name: 'Inicio', icon: <FaHome />, section: 'dashboard', action: () => { setActiveSection && setActiveSection('dashboard'); navigate('/dashboard'); } },
     { name: 'Ventas', icon: <FaChartLine />, section: 'ventas', action: () => { setActiveSection && setActiveSection('ventas'); navigate('/ventas'); } },
     { name: 'Inventario', icon: <FaBoxOpen />, section: 'inventario', action: () => { setActiveSection && setActiveSection('inventario'); navigate('/inventario'); } },
-    { name: 'Pedidos', icon: <FaClipboardList />, section: 'pedidos', action: () => { setActiveSection && setActiveSection('pedidos'); /* Aquí puedes agregar navegación si existe */ } },
     { name: 'Proveedores', icon: <FaRegBuilding />, section: 'proveedores', action: () => { setActiveSection && setActiveSection('proveedores'); navigate('/proveedores'); } },
+    { name: 'Pedidos', icon: <FaClipboardList />, section: 'pedidos', action: () => { setActiveSection && setActiveSection('pedidos'); /* Aquí puedes agregar navegación si existe */ } },
     { name: 'Promoción', icon: <FaBullhorn />, section: 'promocion', action: () => { setActiveSection && setActiveSection('promocion'); } },
     { name: 'Configuración', icon: <FaCogs />, section: 'configuracion', action: () => { setActiveSection && setActiveSection('configuracion'); } },
   ];

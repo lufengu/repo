@@ -29,7 +29,10 @@ const Inventario = () => {
 
   // Cálculos derivados
   const categorias = ['Todas', ...new Set(productos.map(p => p.categoria))];
-  const productosStockBajo = productos.filter(p => p.stock < 5).length;
+  // Usar el mismo criterio que CardProductosBajos
+  const productosStockBajo = productos.filter(
+    p => typeof p.umbralAlerta === 'number' ? p.stock <= p.umbralAlerta : p.stock < 100
+  ).length;
 
   const productosFiltrados = productos.filter((p) => {
     const coincideBusqueda = p.nombre.toLowerCase().includes(busqueda.toLowerCase());
@@ -114,7 +117,7 @@ const Inventario = () => {
     return (
       <div className="min-h-screen bg-gray-100 flex flex-row">
         {/* Menú fijo en escritorio */}
-        <div className="hidden md:block md:min-w-[220px] lg:min-w-[260px] xl:min-w-[300px] bg-white shadow-lg">
+  <div className="hidden md:block md:min-w-[220px] lg:min-w-[260px] xl:min-w-[300px] bg-white no-shadow-menu">
           <Menu
             sidebarOpen={sidebarOpen}
             setSidebarOpen={setSidebarOpen}

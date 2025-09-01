@@ -1,11 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { getProviders, createProvider, deleteProvider } from '../services/providerService';
+import { uploadObject, getObjectBlobUrl } from '../services/objectService';
 import { useAuth } from "../../auth/context/AuthContext";
 import { FaWhatsapp, FaRegBuilding, FaSearch, FaTrashAlt } from "react-icons/fa";
 import Menu from "../../dashboard/components/Menu";
 import { useProductos } from '../../../hooks/useProductos';
 
 export default function ProveedoresPage() {
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
+  const getObjectUrl = (id) => `${API_BASE}/objects/get/${id}`;
+
+  // Placeholder para cuando no haya imagen o falle la carga
+  const PLACEHOLDER_IMG =
+    "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='320'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial, Helvetica, sans-serif' font-size='48' fill='%239ca3af'>Sin imagen</text></svg>";
+
   const { productos } = useProductos();
   // Filtrar productos por agotarse (stock <= 50)
   const productosPorAgotarse = productos.filter(p => p.stock <= 50);
@@ -20,6 +28,7 @@ export default function ProveedoresPage() {
     correo: "",
     direccion: "",
     imagen: null,
+    imagenFile: null, // <- guardar el File original para subir
   });
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,23 +39,44 @@ export default function ProveedoresPage() {
       setLoading(true);
       try {
         const data = await getProviders();
-        // Adaptar los datos del backend al formato de las cards
-        setCards(
-          data.map((prov) => ({
+        console.log('Providers list:', data);
+        const base = data.map((prov) => {
+          const oid = prov.objectId ?? prov.object_id ?? null;
+          return {
             id: prov.id,
-            img: null, // Si tienes imágenes, cámbialo aquí
+            objectId: oid ? String(oid) : null,
+            img: null,
             title: prov.title,
             desc: `Encargado: ${prov.ownerName}\nWhatsApp: ${prov.whatsappNumber}\nCorreo: ${prov.email}\nDirección: ${prov.address}`,
-          }))
-        );
+          };
+        });
+        setCards(base);
+
+        base.forEach(async (_c, idx) => {
+          const oid = base[idx].objectId;
+          if (!oid) return;
+          try {
+            const blobUrl = await getObjectBlobUrl(oid);
+            setCards((prev) => {
+              const copy = [...prev];
+              if (copy[idx]) copy[idx] = { ...copy[idx], img: blobUrl };
+              return copy;
+            });
+          } catch (e) {
+            console.warn('Error cargando imagen', oid, e);
+          }
+        });
+
         setError(null);
-      } catch (err) {
+      } catch (e) {
+        console.error('getProviders error:', e);
         setError('Error al cargar proveedores');
       } finally {
         setLoading(false);
       }
     };
     fetchProviders();
+    return () => {};
   }, []);
   const [showOrdenar, setShowOrdenar] = useState(false);
   const [proveedorSeleccionado, setProveedorSeleccionado] = useState(null);
@@ -62,10 +92,35 @@ export default function ProveedoresPage() {
   const [mensaje, setMensaje] = useState("");
   const [busqueda, setBusqueda] = useState(""); // Estado para el buscador
 
-  const handleInputChange = (e) => {
+  // Util: convertir archivo a Base64 (Data URL)
+  const fileToBase64 = (file) =>
+    new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result); // "data:<mime>;base64,...."
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+  const handleInputChange = async (e) => {
     const { name, value, files } = e.target;
     if (name === "imagen") {
-      setForm({ ...form, imagen: files[0] });
+      const file = files && files[0];
+      if (!file) return;
+      if (!file.type.startsWith("image/")) {
+        alert("El archivo debe ser una imagen.");
+        return;
+      }
+      const maxSize = 2 * 1024 * 1024; // 2MB
+      if (file.size > maxSize) {
+        alert("La imagen supera los 2MB permitidos.");
+        return;
+      }
+      try {
+        const base64 = await fileToBase64(file);
+        setForm({ ...form, imagen: base64, imagenFile: file }); // Base64 para previsualizar y File para subir
+      } catch {
+        alert("No se pudo leer la imagen.");
+      }
     } else {
       setForm({ ...form, [name]: value });
     }
@@ -78,24 +133,46 @@ export default function ProveedoresPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const nuevoProveedor = {
+      let objectId = null;
+      if (form.imagenFile) {
+        const up = await uploadObject(form.imagenFile);
+        console.log('uploadObject ->', up);
+        objectId = up?.id ?? null; // string
+      }
+
+      const payload = {
         title: form.nombreProveedor,
         ownerName: form.nombreEncargado,
-        whatsappNumber: form.whatsapp,
+        whatsappNumber: (form.whatsapp || '').replace(/\D/g, ''),
         email: form.correo,
         address: form.direccion,
-        // Puedes agregar más campos si tu backend los requiere
+        objectId: objectId ?? null, // backend requiere string | null
       };
-      const creado = await createProvider(nuevoProveedor);
-      setCards([
+      console.log('createProvider payload:', payload);
+
+      const creado = await createProvider(payload);
+      console.log('createProvider ->', creado);
+
+      let imgSrc = null;
+      if (objectId) {
+        try {
+          imgSrc = await getObjectBlobUrl(objectId);
+        } catch (e) {
+          console.warn('Error obteniendo blob recién creado', objectId, e);
+        }
+      }
+
+      setCards((prev) => [
         {
           id: creado.id,
-          img: null, // Si tienes imágenes, cámbialo aquí
+          objectId,
+          img: imgSrc,
           title: creado.title,
           desc: `Encargado: ${creado.ownerName}\nWhatsApp: ${creado.whatsappNumber}\nCorreo: ${creado.email}\nDirección: ${creado.address}`,
         },
-        ...cards,
+        ...prev,
       ]);
+
       setForm({
         nombreProveedor: "",
         nombreEncargado: "",
@@ -103,10 +180,13 @@ export default function ProveedoresPage() {
         correo: "",
         direccion: "",
         imagen: null,
+        imagenFile: null,
       });
       handleCloseModal();
     } catch (err) {
-      alert('Error al crear proveedor');
+      console.error('Error crear proveedor/objeto:', err?.response?.data || err);
+      const msg = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Error al crear proveedor';
+      alert(`Error al crear proveedor: ${msg}`);
     }
   };
 
@@ -185,7 +265,7 @@ export default function ProveedoresPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex flex-row">
       {/* Menú fijo en escritorio */}
-      <div className="hidden md:block md:min-w-[220px] lg:min-w-[260px] xl:min-w-[300px] bg-white shadow-lg">
+  <div className="hidden md:block md:min-w-[220px] lg:min-w-[260px] xl:min-w-[300px] bg-white no-shadow-menu">
         <Menu
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}
@@ -371,9 +451,17 @@ export default function ProveedoresPage() {
                     src={card.img}
                     alt={card.title}
                     className="absolute inset-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 bg-white"
+                    onError={(e) => {
+                      e.currentTarget.onerror = null;
+                      e.currentTarget.src = PLACEHOLDER_IMG;
+                    }}
                   />
                 ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-gray-200 text-gray-400 text-3xl sm:text-4xl font-bold">?</div>
+                  <img
+                    src={PLACEHOLDER_IMG}
+                    alt="Sin imagen"
+                    className="absolute inset-0 w-full h-full object-contain group-hover:scale-105 transition-transform duration-300 bg-white"
+                  />
                 )}
               </div>
               <div className="p-4 sm:p-6">

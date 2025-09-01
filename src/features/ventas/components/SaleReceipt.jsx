@@ -1,4 +1,6 @@
+
 import React from 'react';
+import { formatColombiaDate } from '../../../utils/dateColombia';
 
 const SaleReceipt = ({ sale, onClose, onPrint }) => {
   const formatCurrency = (amount) => {
@@ -10,13 +12,7 @@ const SaleReceipt = ({ sale, onClose, onPrint }) => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleString('es-CO', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    return formatColombiaDate(dateString);
   };
 
   // Calcular totales (ajustado para manejar múltiples productos)

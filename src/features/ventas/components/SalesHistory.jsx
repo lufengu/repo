@@ -4,6 +4,7 @@ import { MetricCard } from './index';
 import SaleReceipt from './SaleReceipt';
 import { TrendingUp, ShoppingBag, Calendar, DollarSign } from 'lucide-react';
 import { salesAPI } from '../services/salesService';
+import { toColombiaDate, formatColombiaShortDate } from '../../../utils/dateColombia';
 
 const SalesHistory = ({ refreshTrigger }) => {
   const [sales, setSales] = useState([]);
@@ -49,7 +50,8 @@ const SalesHistory = ({ refreshTrigger }) => {
 
     if (dateFilter) {
       filtered = filtered.filter(sale => {
-        const saleDate = new Date(sale.createdAt).toISOString().split('T')[0];
+        // Ajustar la fecha a Colombia antes de comparar
+        const saleDate = toColombiaDate(sale.createdAt).toISOString().split('T')[0];
         return saleDate === dateFilter;
       });
     }
@@ -113,11 +115,7 @@ const SalesHistory = ({ refreshTrigger }) => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('es-CO', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
+    return formatColombiaShortDate(dateString);
   };
 
   // Calcular métricas
@@ -234,8 +232,8 @@ const SalesHistory = ({ refreshTrigger }) => {
         <MetricCard
           title="Ventas Hoy"
           value={filteredSales.filter(s => {
-            const today = new Date().toISOString().split('T')[0];
-            const saleDate = new Date(s.createdAt).toISOString().split('T')[0];
+            const today = toColombiaDate(new Date()).toISOString().split('T')[0];
+            const saleDate = toColombiaDate(s.createdAt).toISOString().split('T')[0];
             return saleDate === today;
           }).length.toString()}
           detail="Transacciones realizadas"

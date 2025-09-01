@@ -79,7 +79,7 @@ const Dashboard = () => {
   return (
     <div className="min-h-screen bg-gray-100 flex flex-row">
       {/* Menú fijo en escritorio */}
-      <div className="hidden md:block md:min-w-[220px] lg:min-w-[260px] xl:min-w-[300px] bg-white shadow-lg">
+  <div className="hidden md:block md:min-w-[220px] lg:min-w-[260px] xl:min-w-[300px] bg-white no-shadow-menu">
         <Menu
           sidebarOpen={sidebarOpen}
           setSidebarOpen={setSidebarOpen}

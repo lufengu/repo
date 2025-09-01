@@ -21,7 +21,7 @@ const CardProductosBajos = ({ productos = [] }) => {
         </div>
         <h2 className="font-semibold text-gray-700">Productos por Agotarse</h2>
       </div>
-      
+
       {/* Lista de productos con stock bajo */}
       <div className="space-y-2">
         {productosStockBajo.length > 0 ? (
@@ -55,12 +55,12 @@ const CardProductosBajos = ({ productos = [] }) => {
           </div>
         )}
       </div>
-      
+
       {/* Indicador de total */}
       {productosStockBajo.length > 0 && (
         <div className="mt-3 pt-2 border-t border-gray-100">
           <span className="text-xs text-gray-500">
-            {productos.filter(p => typeof p.umbralAlerta === 'number' ? p.stock <= p.umbralAlerta : p.stock < 5).length} producto(s) requieren atención
+            {productos.filter(p => typeof p.umbralAlerta === 'number' ? p.stock <= p.umbralAlerta : p.stock < 100).length} producto{productos.filter(p => typeof p.umbralAlerta === 'number' ? p.stock <= p.umbralAlerta : p.stock < 100).length !== 1 ? 's' : ''} requieren atención
           </span>
         </div>
       )}

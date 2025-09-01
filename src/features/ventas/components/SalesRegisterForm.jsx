@@ -251,7 +251,9 @@ export default function SalesRegisterForm({ onSuccess }) {
   const [customer, setCustomer] = useState({
     name: '',
     phone: '',
-    email: ''
+    email: '',
+    address: '',
+    cedula: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
@@ -405,9 +407,11 @@ export default function SalesRegisterForm({ onSuccess }) {
       paymentMethod: paymentMethod, // Para compatibilidad
       total,
       totalItems,
-      customer: customer.name || 'Cliente General',
-      phone: customer.phone || '',
-      email: customer.email || '',
+  customer: customer.name || 'Cliente General',
+  phone: customer.phone || '',
+  email: customer.email || '',
+  address: customer.address || '',
+  cedula: customer.cedula || '',
       date: new Date().toISOString().split('T')[0],
       time: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
       createdAt: new Date().toISOString()
@@ -640,10 +644,10 @@ export default function SalesRegisterForm({ onSuccess }) {
                             min="0"
                             step="100"
                             value={r.price}
-                            onChange={e => handleChange(i, 'price', e.target.value)}
+                            readOnly
                             disabled={isSubmitting}
                             placeholder="0"
-                            className={`w-full bg-white text-black border rounded-lg px-2 sm:px-3 py-2 text-right
+                            className={`w-full bg-gray-100 text-black border rounded-lg px-2 sm:px-3 py-2 text-right
                                        focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent
                                        disabled:opacity-50 disabled:cursor-not-allowed
                                        ${r.error.price ? 'border-red-500' : 'border-gray-300'}`}
@@ -799,7 +803,32 @@ export default function SalesRegisterForm({ onSuccess }) {
                   placeholder="Nombre del cliente"
                 />
               </div>
-
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Cédula (Opcional)
+                </label>
+                <input
+                  type="text"
+                  value={customer.cedula}
+                  onChange={(e) => handleCustomerChange('cedula', e.target.value)}
+                  disabled={isSubmitting}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50"
+                  placeholder="Cédula del cliente"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Dirección (Opcional)
+                </label>
+                <input
+                  type="text"
+                  value={customer.address}
+                  onChange={(e) => handleCustomerChange('address', e.target.value)}
+                  disabled={isSubmitting}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50"
+                  placeholder="Dirección del cliente"
+                />
+              </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Email (Opcional)
