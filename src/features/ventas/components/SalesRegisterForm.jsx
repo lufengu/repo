@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { getQrUrlForMethod } from '../services/qrFrontendService';
 import { FaPlus, FaTrash, FaSave, FaShoppingCart, FaExclamationTriangle } from 'react-icons/fa';
 import { MetricCard } from './index';
 import SaleReceipt from './SaleReceipt';
@@ -261,7 +262,7 @@ export default function SalesRegisterForm({ onSuccess }) {
   // Estado por fila para el texto del buscador
   const [productSearch, setProductSearch] = useState(['']);
 
-  // Estado para QR del método de pago
+  // Estado para QR del método de pago (se consulta al cambiar método)
   const [qrPreview, setQrPreview] = useState(null);
 
   // Cálculos
@@ -269,20 +270,20 @@ export default function SalesRegisterForm({ onSuccess }) {
   const totalItems = rows.reduce((sum, r) => sum + (r.quantity || 0), 0);
   const iva = Math.round(subtotal * 0.19);
   const total = subtotal + iva;
-  // Mostrar QR si existe para el método de pago seleccionado
+  // Consultar QR al cambiar método de pago
   useEffect(() => {
-    if (!paymentMethod) {
-      setQrPreview(null);
-      return;
+    let ignore = false;
+    async function fetchQr() {
+      if (!paymentMethod) {
+        setQrPreview(null);
+        return;
+      }
+      const url = await getQrUrlForMethod(paymentMethod);
+      if (!ignore) setQrPreview(url);
     }
-    const userKey = `qrPayments_${userName}`;
-    const stored = JSON.parse(localStorage.getItem(userKey) || '{}');
-    if (stored[paymentMethod]) {
-      setQrPreview(stored[paymentMethod]);
-    } else {
-      setQrPreview(null);
-    }
-  }, [paymentMethod, userName]);
+    fetchQr();
+    return () => { ignore = true; };
+  }, [paymentMethod]);
 
   const handleAddRow = () => {
     setRows(prev => [...prev, { product: '', quantity: 1, price: '', error: {}, stockWarning: '' }]);
@@ -717,11 +718,18 @@ export default function SalesRegisterForm({ onSuccess }) {
                       <option key={m.value} value={m.value}>{m.label}</option>
                     )}
                   </select>
-                  {/* Mostrar QR si existe */}
+                  {/* Mostrar QR */}
                   {qrPreview && (
                     <div className="mt-3 flex flex-col items-center">
                       <span className="text-xs text-gray-500 mb-1">QR registrado para este método:</span>
-                      <img src={qrPreview} alt="QR de pago" className="w-50 h-50 object-contain border-2 border-orange-400 rounded-xl shadow-lg" style={{maxWidth:'100%'}} />
+                      <div style={{ width: 400, height: 400, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <img 
+                          src={qrPreview} 
+                          alt="QR de pago" 
+                          className="object-contain border-2 border-orange-400 rounded-xl shadow-lg"
+                          style={{ width: '100%', height: '100%', maxWidth: 400, maxHeight: 400 }}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>
