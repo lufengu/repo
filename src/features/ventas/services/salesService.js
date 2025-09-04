@@ -59,12 +59,16 @@ export const salesAPI = {
       const totalQuantity = saleData.items ? saleData.items.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0;
       
       // Mapear datos del frontend al formato del backend
+      const cedulaValue = saleData.cedula || saleData.customer?.cedula || saleData.customerCedula || '';
+      const direccionValue = saleData.direccion || saleData.customer?.direccion || saleData.customerAddress || '';
       const backendData = {
         date: saleData.date || new Date().toISOString().split('T')[0],
         customer: saleData.customer || 'Cliente General',
         customerEmail: saleData.email || '',
-        cedula: saleData.cedula || saleData.customer?.cedula || saleData.customerCedula || '',
-        direccion: saleData.direccion || saleData.customer?.direccion || saleData.customerAddress || '',
+        cedula: cedulaValue,
+        dni: String(cedulaValue),
+        direccion: direccionValue,
+        address: String(direccionValue),
         products: JSON.stringify(saleData.items || []), // El backend espera JSON string
         paymentMethod: saleData.payment_method || saleData.paymentMethod,
         total: parseFloat(saleData.total),

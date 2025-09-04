@@ -27,6 +27,7 @@ export default function ProveedoresPage() {
     whatsapp: "",
     correo: "",
     direccion: "",
+    deliveryDay: "", // Nuevo campo requerido
     imagen: null,
     imagenFile: null, // <- guardar el File original para subir
   });
@@ -151,6 +152,7 @@ export default function ProveedoresPage() {
         whatsappNumber: (form.whatsapp || '').replace(/\D/g, ''),
         email: form.correo,
         address: form.direccion,
+        deliveryDay: form.deliveryDay || "", // Aseguramos que siempre se envía
         objectId: objectId ?? null, // backend requiere string | null
       };
       console.log('createProvider payload:', payload);
@@ -189,6 +191,7 @@ export default function ProveedoresPage() {
         whatsapp: "",
         correo: "",
         direccion: "",
+        deliveryDay: "",
         imagen: null,
         imagenFile: null,
       });
@@ -276,6 +279,7 @@ export default function ProveedoresPage() {
     whatsapp: "",
     correo: "",
     direccion: "",
+    deliveryDay: "", // Nuevo campo para edición
     imagen: null,      // preview (dataURL o URL actual)
     imagenFile: null,  // File seleccionado
     objectId: null,
@@ -290,6 +294,7 @@ export default function ProveedoresPage() {
       whatsapp: card.whatsappNumber || "",
       correo: card.email || "",
       direccion: card.address || "",
+      deliveryDay: card.deliveryDay || "", // Cargar deliveryDay si existe
       imagen: card.img || null,
       imagenFile: null,
       objectId: card.objectId || null,
@@ -307,6 +312,7 @@ export default function ProveedoresPage() {
       whatsapp: "",
       correo: "",
       direccion: "",
+      deliveryDay: "",
       imagen: null,
       imagenFile: null,
       objectId: null,
@@ -360,6 +366,7 @@ export default function ProveedoresPage() {
         whatsappNumber: (editForm.whatsapp || "").replace(/\D/g, ""),
         email: editForm.correo,
         address: editForm.direccion,
+        deliveryDay: editForm.deliveryDay || "",
         objectId: newObjectId ?? null,
       };
 
@@ -556,6 +563,18 @@ export default function ProveedoresPage() {
                     value={form.direccion}
                     onChange={handleInputChange}
                     placeholder="Ej: Calle Principal 123, Ciudad"
+                    className="w-full border border-gray-300 rounded pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-1">Descripción</label>
+                  <input
+                    type="text"
+                    name="deliveryDay"
+                    value={form.deliveryDay}
+                    onChange={handleInputChange}
+                    placeholder="Ej: lunes, martes, etc."
                     className="w-full border border-gray-300 rounded pl-10 pr-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400"
                     required
                   />
@@ -791,6 +810,17 @@ export default function ProveedoresPage() {
                     type="text"
                     name="direccion"
                     value={editForm.direccion}
+                    onChange={handleEditInputChange}
+                    className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium mb-1 text-gray-700">Descripción</label>
+                  <input
+                    type="text"
+                    name="deliveryDay"
+                    value={editForm.deliveryDay}
                     onChange={handleEditInputChange}
                     className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
                     required
