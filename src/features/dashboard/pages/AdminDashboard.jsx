@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../../features/auth/context/AuthContext";
 import { CardEstadisticasAdmin } from "../components";
@@ -176,69 +177,111 @@ const ModalEditarUsuario = ({ formData, setFormData, cancelarEdicion, guardarEdi
   <div className="fixed inset-0 flex items-center justify-center z-50">
     <div className="bg-white rounded-lg shadow-lg p-6 sm:p-8 max-w-md w-full">
       <h2 className="text-xl font-bold text-gray-800 mb-4">Editar Usuario</h2>
-      <form onSubmit={guardarEdicion}>
-        {/* ...campos del formulario... */}
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
-          <input
-            type="text"
-            value={formData.name}
-            onChange={e => setFormData({ ...formData, name: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 w-full"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-          <input
-            type="email"
-            value={formData.email}
-            onChange={e => setFormData({ ...formData, email: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 w-full"
-            required
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña (dejar en blanco para no cambiar)</label>
-          <input
-            type="password"
-            value={formData.password}
-            onChange={e => setFormData({ ...formData, password: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 w-full"
-          />
-        </div>
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Rol</label>
-          <select
-            value={formData.rol}
-            onChange={e => setFormData({ ...formData, rol: e.target.value })}
-            className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 w-full"
-            required
-          >
-            <option value="">Seleccionar rol</option>
-            <option value="administrador">Administrador</option>
-            <option value="usuario">Usuario</option>
-          </select>
-        </div>
-        <div className="flex justify-end gap-2">
-          <button
-            type="button"
-            onClick={cancelarEdicion}
-            className="px-4 py-2 text-sm bg-gray-300 rounded-lg hover:bg-gray-400 transition-colors"
-          >
-            Cancelar
-          </button>
-          <button
-            type="submit"
-            className="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-          >
-            Guardar Cambios
-          </button>
-        </div>
-      </form>
+      <ModalEditarUsuarioForm formData={formData} setFormData={setFormData} cancelarEdicion={cancelarEdicion} guardarEdicion={guardarEdicion} />
     </div>
   </div>
+
 );
+
+// Nuevo componente para el formulario con el ojito
+function ModalEditarUsuarioForm({ formData, setFormData, cancelarEdicion, guardarEdicion }) {
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [passwordError, setPasswordError] = React.useState("");
+
+  // Validaciones individuales
+  function getPasswordError(value) {
+    if (!value) return "";
+    if (value.length < 8) return "Mínimo 8 caracteres";
+    if (!/[a-z]/.test(value)) return "Falta una minúscula";
+    if (!/[A-Z]/.test(value)) return "Falta una mayúscula";
+    if (!/\d/.test(value)) return "Falta un número";
+    if (!/[@$!%*?&]/.test(value)) return "Falta un carácter especial";
+    return "";
+  }
+
+  function handlePasswordChange(e) {
+    const value = e.target.value;
+    setFormData({ ...formData, password: value });
+    setPasswordError(getPasswordError(value));
+  }
+  return (
+    <form onSubmit={guardarEdicion}>
+      {/* ...campos del formulario... */}
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Nombre</label>
+        <input
+          type="text"
+          value={formData.name}
+          onChange={e => setFormData({ ...formData, name: e.target.value })}
+          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 w-full"
+          required
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+        <input
+          type="email"
+          value={formData.email}
+          onChange={e => setFormData({ ...formData, email: e.target.value })}
+          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 w-full"
+          required
+        />
+      </div>
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Contraseña (dejar en blanco para no cambiar)</label>
+        <div className="relative">
+          <input
+            type={showPassword ? "text" : "password"}
+            value={formData.password}
+            onChange={handlePasswordChange}
+            className={`px-3 py-2 border ${passwordError ? 'border-red-400' : 'border-gray-300'} rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 w-full pr-10`}
+          />
+        {passwordError && (
+          <p className="text-xs text-red-500 mt-1">{passwordError}</p>
+        )}
+          <button
+            type="button"
+            tabIndex={-1}
+            className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-500 focus:outline-none"
+            onClick={() => setShowPassword(v => !v)}
+            aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+          >
+            {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+          </button>
+        </div>
+      </div>
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-2">Rol</label>
+        <select
+          value={formData.rol}
+          onChange={e => setFormData({ ...formData, rol: e.target.value })}
+          className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500 w-full"
+          required
+        >
+          <option value="">Seleccionar rol</option>
+          <option value="tendero">Tendero</option>
+          <option value="administrador">Administrador</option>
+          <option value="supervisor">Supervisor</option>
+        </select>
+      </div>
+      <div className="flex justify-end gap-2">
+        <button
+          type="button"
+          onClick={cancelarEdicion}
+          className="px-4 py-2 text-sm bg-gray-300 rounded-lg hover:bg-gray-400 transition-colors"
+        >
+          Cancelar
+        </button>
+        <button
+          type="submit"
+          className="px-4 py-2 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+        >
+          Guardar Cambios
+        </button>
+      </div>
+    </form>
+  );
+}
 
 // =======================
 // COMPONENTE PRINCIPAL
