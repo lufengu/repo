@@ -27,6 +27,9 @@ const ModalEditarProducto = ({ isOpen, onClose, onEditarProducto, producto, cate
     { value: 'bot', label: 'Botella', ejemplo: 'Ej: 24 botellas de agua' }
   ];
 
+  // ejemplo de la unidad seleccionada, se usa para mostrar ayuda en el formulario
+  const unidadEjemplo = unidadesMedida.find(u => u.value === formData.unidadMedida)?.ejemplo || '';
+
   const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
@@ -79,21 +82,6 @@ const ModalEditarProducto = ({ isOpen, onClose, onEditarProducto, producto, cate
         }));
       }
     }
-  };
-
-  const limpiarFormulario = () => {
-    setFormData({
-      nombre: '',
-      categoria: '',
-      precio: '',
-      stock: '',
-      unidadMedida: 'und',
-      presentacion: '',
-      proveedor: '',
-      fechaVencimiento: '',
-      precioCompra: ''
-    });
-    setErrors({});
   };
 
   const validarFormulario = () => {
@@ -314,6 +302,11 @@ const ModalEditarProducto = ({ isOpen, onClose, onEditarProducto, producto, cate
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="font-medium">Unidad de medida:</span> {formData.unidadMedida}
+                  {unidadEjemplo && (
+                    <div className="text-xs text-gray-500 mt-1">
+                      {unidadEjemplo}
+                    </div>
+                  )}
                 </div>
                 <div>
                   <span className="font-medium">Proveedor:</span> {formData.proveedor || 'No especificado'}

@@ -22,11 +22,13 @@ export const useProductos = () => {
       // Ordenar por ID descendente para mostrar los más recientes primero
       const productosOrdenados = productosFormateados.sort((a, b) => b.id - a.id);
       setProductos(productosOrdenados);
+  return productosOrdenados;
     } catch (err) {
       setError(err.message);
       console.error('Error al cargar productos:', err);
       // En caso de error, usar productos de respaldo vacío
-      setProductos([]);
+  setProductos([]);
+  return [];
     } finally {
       setLoading(false);
     }

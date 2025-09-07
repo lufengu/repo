@@ -220,7 +220,6 @@ const SalesReports = () => {
         cedula: (sale.cedula && sale.cedula.toString().trim()) ? sale.cedula : 'N/A',
         direccion: (sale.direccion && sale.direccion.toString().trim()) ? sale.direccion : 'N/A',
         correo: (sale.email && sale.email.toString().trim()) ? sale.email : ((sale.correo && sale.correo.toString().trim()) ? sale.correo : 'N/A'),
-        telefono: (sale.phone && sale.phone.toString().trim()) ? sale.phone : 'N/A',
         detalles,
         metodo_pago: sale.payment_method || 'N/A',
         subtotal_sin_iva: subtotalSinIVA,
@@ -258,10 +257,10 @@ const SalesReports = () => {
       const sales = await salesAPI.getSales();
       const detailedSales = buildDetailedSales(sales);
 
-    let csv = 'Fecha,Cliente,Cédula,Dirección,Correo,Teléfono,Producto,Cantidad,Precio Unitario,Subtotal sin IVA,IVA (19%),Subtotal con IVA,Método de Pago,Subtotal Venta sin IVA,IVA Venta,Total Venta con IVA\n';
+  let csv = 'Fecha,Cliente,Cédula,Dirección,Correo,Producto,Cantidad,Precio Unitario,Subtotal sin IVA,IVA (19%),Subtotal con IVA,Método de Pago,Subtotal Venta sin IVA,IVA Venta,Total Venta con IVA\n';
       detailedSales.forEach(sale => {
         sale.detalles.forEach(item => {
-      csv += `"${sale.fecha}","${sale.cliente}","${sale.cedula}","${sale.direccion}","${sale.correo}","${sale.telefono}","${item.producto}",${item.cantidad},${item.precio_unitario},${item.subtotal_sin_iva},${item.iva},${item.subtotal_con_iva},"${sale.metodo_pago}",${sale.subtotal_sin_iva},${sale.iva},${sale.total_con_iva}\n`;
+  csv += `"${sale.fecha}","${sale.cliente}","${sale.cedula}","${sale.direccion}","${sale.correo}","${item.producto}",${item.cantidad},${item.precio_unitario},${item.subtotal_sin_iva},${item.iva},${item.subtotal_con_iva},"${sale.metodo_pago}",${sale.subtotal_sin_iva},${sale.iva},${sale.total_con_iva}\n`;
         });
       });
 
@@ -316,7 +315,7 @@ const SalesReports = () => {
         doc.text(`Cédula: ${sale.cedula}`, 14, innerY + 12);
         doc.text(`Dirección: ${sale.direccion}`, 14, innerY + 18);
         doc.text(`Correo: ${sale.correo}`, 14, innerY + 24);
-        doc.text(`Teléfono: ${sale.telefono}`, 14, innerY + 30);
+  
 
         autoTable(doc, {
           startY: innerY + 36,
@@ -400,10 +399,10 @@ const SalesReports = () => {
         link.click();
         URL.revokeObjectURL(url);
       } else if (type === 'csv') {
-        let csv = 'Fecha,Cliente,Cédula,Dirección,Correo,Teléfono,Producto,Cantidad,Precio Unitario,Subtotal sin IVA,IVA (19%),Subtotal con IVA,Método de Pago,Subtotal Venta sin IVA,IVA Venta,Total Venta con IVA\n';
+  let csv = 'Fecha,Cliente,Cédula,Dirección,Correo,Producto,Cantidad,Precio Unitario,Subtotal sin IVA,IVA (19%),Subtotal con IVA,Método de Pago,Subtotal Venta sin IVA,IVA Venta,Total Venta con IVA\n';
         detailedSales.forEach(sale => {
           sale.detalles.forEach(item => {
-            csv += `"${sale.fecha}","${sale.cliente}","${sale.cedula}","${sale.direccion}","${sale.correo}","${sale.telefono}","${item.producto}",${item.cantidad},${item.precio_unitario},${item.subtotal_sin_iva},${item.iva},${item.subtotal_con_iva},"${sale.metodo_pago}",${sale.subtotal_sin_iva},${sale.iva},${sale.total_con_iva}\n`;
+            csv += `"${sale.fecha}","${sale.cliente}","${sale.cedula}","${sale.direccion}","${sale.correo}","${item.producto}",${item.cantidad},${item.precio_unitario},${item.subtotal_sin_iva},${item.iva},${item.subtotal_con_iva},"${sale.metodo_pago}",${sale.subtotal_sin_iva},${sale.iva},${sale.total_con_iva}\n`;
           });
         });
         const blob = new Blob([csv], { type: 'text/csv' });
@@ -424,7 +423,7 @@ const SalesReports = () => {
         doc.text(`Generado el: ${fechaHora}`, 14, 25);
 
         let y = 35;
-        detailedSales.forEach((sale) => {
+    detailedSales.forEach((sale) => {
             // Calcular altura estimada del bloque (ajustado por más líneas de cliente)
             let blockHeight = 90 + (sale.detalles.length * 12);
             if (y + blockHeight > doc.internal.pageSize.getHeight() - 20) {
@@ -443,7 +442,7 @@ const SalesReports = () => {
           doc.text(`Cédula: ${sale.cedula}`, 14, innerY + 12);
           doc.text(`Dirección: ${sale.direccion}`, 14, innerY + 18);
           doc.text(`Correo: ${sale.correo}`, 14, innerY + 24);
-          doc.text(`Teléfono: ${sale.telefono}`, 14, innerY + 30);
+          
 
           autoTable(doc, {
             startY: innerY + 36,

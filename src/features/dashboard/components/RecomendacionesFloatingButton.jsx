@@ -248,36 +248,42 @@ function RecomendacionesFloatingButton() {
     setAlertasPage(1); // Reiniciar página cada vez que cambian las alertas
   }, [productos, ventas]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ---------- Floating / draggable behavior ----------
+  // ---------- Floating / draggable behavior (vertical only, anclado a la derecha) ----------
   const savedPos = (() => {
     try { return JSON.parse(localStorage.getItem('recFloatingPos')) || null; } catch { return null; }
   })();
-  const [pos, setPos] = useState(() => savedPos || { right: 24, bottom: 24 });
+  // ahora la posición se guarda como { right, top }
+  const [pos, setPos] = useState(() => savedPos || { right: 24, top: 24 });
   const draggingRef = React.useRef(false);
-  const startRef = React.useRef({ x: 0, y: 0, origX: 0, origY: 0 });
+  const startRef = React.useRef({ y: 0, origTop: 0 });
   const lastTapRef = React.useRef(0);
 
   const onPointerDown = (e) => {
     e.preventDefault();
     draggingRef.current = true;
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    startRef.current = { x: clientX, y: clientY, origX: pos.left ?? window.innerWidth - (pos.right || 24), origY: pos.top ?? window.innerHeight - (pos.bottom || 24) };
+    const currentTop = (typeof pos.top === 'number') ? pos.top : (window.innerHeight - (pos.bottom || 24));
+    startRef.current = { y: clientY, origTop: currentTop };
     window.addEventListener('mousemove', onPointerMove);
     window.addEventListener('mouseup', onPointerUp);
-    window.addEventListener('touchmove', onPointerMove);
+    window.addEventListener('touchmove', onPointerMove, { passive: false });
     window.addEventListener('touchend', onPointerUp);
   };
 
   const onPointerMove = (e) => {
     if (!draggingRef.current) return;
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    // prevenir scroll en touch mientras se arrastra
+    if (e.cancelable) e.preventDefault();
     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    const dx = clientX - startRef.current.x;
     const dy = clientY - startRef.current.y;
-    const newLeft = Math.max(8, Math.min(window.innerWidth - 48, startRef.current.origX + dx));
-    const newTop = Math.max(8, Math.min(window.innerHeight - 48, startRef.current.origY + dy));
-    setPos({ left: newLeft, top: newTop });
+    const minTop = 8;
+    const maxTop = Math.max(8, window.innerHeight - 48);
+    const newTop = Math.max(minTop, Math.min(maxTop, startRef.current.origTop + dy));
+    setPos(prev => {
+      const next = { right: prev.right ?? 24, top: newTop };
+      try { localStorage.setItem('recFloatingPos', JSON.stringify(next)); } catch { /* ignore */ }
+      return next;
+    });
   };
 
   const onPointerUp = () => {
@@ -286,8 +292,7 @@ function RecomendacionesFloatingButton() {
     window.removeEventListener('mouseup', onPointerUp);
     window.removeEventListener('touchmove', onPointerMove);
     window.removeEventListener('touchend', onPointerUp);
-    // persist position
-  try { localStorage.setItem('recFloatingPos', JSON.stringify(pos)); } catch (err) { console.error(err); }
+    // posición ya guardada en onPointerMove
   };
 
   const handleDoubleClick = async (e) => {
@@ -345,9 +350,9 @@ function RecomendacionesFloatingButton() {
         title="Ver recomendaciones (doble clic)"
         style={{
           position: 'fixed',
-          left: pos.left,
+          left: undefined,
           top: pos.top,
-          right: undefined,
+          right: pos.right,
           bottom: undefined,
           zIndex: 1000,
           cursor: 'grab'

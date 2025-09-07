@@ -1,70 +1,81 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { AlertTriangleIcon } from "lucide-react";
+import ModalProductosBajos from './ModalProductosBajos';
 
-const CardProductosBajos = ({ productos = [] }) => {
+const CardProductosBajos = ({ productos = [], onClick = () => {} }) => {
+  const [isOpen, setIsOpen] = useState(false);
   // Obtener productos con stock bajo según el umbral configurado en cada producto
-  const [paginaActual, setPaginaActual] = React.useState(1);
-  const productosPorPagina = 2;
+  // Ordenar de menor a mayor stock para resaltar los más críticos
   const productosFiltrados = productos
     .filter(p => typeof p.umbralAlerta === 'number' ? p.stock <= p.umbralAlerta : p.stock < 100)
     .sort((a, b) => a.stock - b.stock);
-  const totalPaginas = Math.ceil(productosFiltrados.length / productosPorPagina);
-  const indiceInicio = (paginaActual - 1) * productosPorPagina;
-  const indiceFin = indiceInicio + productosPorPagina;
-  const productosStockBajo = productosFiltrados.slice(indiceInicio, indiceFin);
+  const productosCount = productosFiltrados.length;
+  // Mostrar una vista previa en grid (hasta 2 mini-cards)
+  const productosPorPagina = 2;
+  const productosStockBajo = productosFiltrados.slice(0, productosPorPagina);
+
+  const handleOpen = () => {
+    setIsOpen(true);
+    try { onClick(productosFiltrados); } catch (e) { console.error('onClick handler error:', e); }
+  };
 
   return (
-    <div className="bg-white p-4 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer">
+    <>
+      <div
+        onClick={handleOpen}
+    className="bg-white p-4 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer border-l-4 border-dashed border-white hover:ring-2 hover:ring-gray-100"
+        role="button"
+        tabIndex={0}
+        onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpen(); }}
+      >
       <div className="flex items-center mb-3">
-        <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center mr-3">
-          <AlertTriangleIcon className="w-4 h-4 text-red-600" />
+        <div className="w-9 h-9 rounded flex items-center justify-center mr-3 border border-gray-100 bg-white">
+          <AlertTriangleIcon className="w-4 h-4 text-gray-700" aria-hidden="true" />
         </div>
-        <h2 className="font-semibold text-gray-700">Productos por Agotarse</h2>
+        <div className="flex-1">
+          <h2 className="font-semibold text-gray-800 leading-tight">Productos por Agotarse</h2>
+          <p className="text-xs text-gray-500">Ordenado por menor stock — toca la card para ver la lista completa</p>
+        </div>
+        <div className="text-xs text-gray-600">{productosCount} requieren atención</div>
       </div>
 
-      {/* Lista de productos con stock bajo */}
-      <div className="space-y-2">
-        {productosStockBajo.length > 0 ? (
-          productosStockBajo.map(producto => (
-            <div key={producto.id} className="flex justify-between items-center p-2 bg-red-50 rounded-lg border border-red-100">
-              <span className="text-sm text-gray-700 font-medium">{producto.nombre}</span>
-              <span className="text-xs bg-red-200 text-red-800 px-2 py-1 rounded-full font-semibold">
-                {producto.stock} unidades
-              </span>
-            </div>
-          ))
-        ) : (
-          <div className="flex items-center justify-center p-4 bg-green-50 rounded-lg border border-green-100">
-            <span className="text-green-700 text-sm font-medium">✓ Todos los productos tienen stock suficiente</span>
-          </div>
-        )}
-        {/* Paginación */}
-        {totalPaginas > 1 && (
-          <div className="flex justify-center items-center mt-2 gap-2">
-            <button
-              className={`px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs font-semibold ${paginaActual === 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-              onClick={() => setPaginaActual(p => Math.max(1, p - 1))}
-              disabled={paginaActual === 1}
-            >Anterior</button>
-            <span className="text-xs text-gray-500">Página {paginaActual} de {totalPaginas}</span>
-            <button
-              className={`px-2 py-1 rounded bg-gray-200 text-gray-700 text-xs font-semibold ${paginaActual === totalPaginas ? 'opacity-50 cursor-not-allowed' : ''}`}
-              onClick={() => setPaginaActual(p => Math.min(totalPaginas, p + 1))}
-              disabled={paginaActual === totalPaginas}
-            >Siguiente</button>
-          </div>
-        )}
-      </div>
-
-      {/* Indicador de total */}
-      {productosStockBajo.length > 0 && (
-        <div className="mt-3 pt-2 border-t border-gray-100">
-          <span className="text-xs text-gray-500">
-            {productos.filter(p => typeof p.umbralAlerta === 'number' ? p.stock <= p.umbralAlerta : p.stock < 100).length} producto{productos.filter(p => typeof p.umbralAlerta === 'number' ? p.stock <= p.umbralAlerta : p.stock < 100).length !== 1 ? 's' : ''} requieren atención
-          </span>
+      {/* Grid de mini-cards por producto */}
+      {productosStockBajo.length > 0 ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {productosStockBajo.map(producto => {
+            const maxStock = producto.maxStock || producto.stockMax || 100;
+            const pct = Math.max(0, Math.min(100, Math.round((producto.stock / maxStock) * 100)));
+            return (
+              <div key={producto.id} className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col gap-2 hover:shadow-md">
+                <div className="flex items-center justify-between">
+                  <div className="min-w-0">
+                    <div className="text-sm font-medium text-gray-800 truncate">{producto.nombre}</div>
+                    <div className="text-xs text-gray-500">{producto.categoria || 'Sin categoría'}</div>
+                  </div>
+                  <div className="flex items-center ml-3">
+                    <div className="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center text-lg font-bold border border-blue-600">{producto.stock}</div>
+                  </div>
+                </div>
+                <div className="w-full">
+                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                    <div className="h-2 bg-blue-500 transition-all duration-500 ease-in-out" style={{ width: `${pct}%` }} aria-hidden="true"></div>
+                  </div>
+                  <div className="mt-1 text-xs text-gray-500">{producto.stock}/{maxStock} ({pct}%)</div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="flex items-center justify-center p-4 bg-white rounded-lg border border-gray-100">
+          <span className="text-sm text-gray-600">No hay productos con stock bajo.</span>
         </div>
       )}
-    </div>
+      </div>
+
+      {/* Modal que muestra la lista completa de productos con stock bajo */}
+      <ModalProductosBajos isOpen={isOpen} onClose={() => setIsOpen(false)} productos={productosFiltrados} />
+    </>
   );
 };
 

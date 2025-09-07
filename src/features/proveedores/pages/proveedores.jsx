@@ -8,15 +8,13 @@ import { useProductos } from '../../../hooks/useProductos';
 
 export default function ProveedoresPage() {
   const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
-  const getObjectUrl = (id) => `${API_BASE}/objects/get/${id}`;
 
   // Placeholder para cuando no haya imagen o falle la carga
   const PLACEHOLDER_IMG =
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='320'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial, Helvetica, sans-serif' font-size='48' fill='%239ca3af'>Sin imagen</text></svg>";
 
-  const { productos } = useProductos();
-  // Filtrar productos por agotarse (stock <= 50)
-  const productosPorAgotarse = productos.filter(p => p.stock <= 50);
+  const { productos, cargarProductos } = useProductos();
+  // Nota: filtrado cuando se necesita (ej. en select)
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("proveedores");
@@ -32,8 +30,8 @@ export default function ProveedoresPage() {
     imagenFile: null, // <- guardar el File original para subir
   });
   const [cards, setCards] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [_loading, setLoading] = useState(true);
+  const [_error, setError] = useState(null);
   // Cargar proveedores reales del backend
   useEffect(() => {
     const fetchProviders = async () => {
@@ -43,6 +41,7 @@ export default function ProveedoresPage() {
         console.log('Providers list:', data);
         const base = data.map((prov) => {
           const oid = prov.objectId ?? prov.object_id ?? null;
+          const delivery = (prov.deliveryDay ?? prov.delivery_day ?? prov.delivery) || "";
           return {
             id: prov.id,
             objectId: oid ? String(oid) : null,
@@ -53,7 +52,8 @@ export default function ProveedoresPage() {
             whatsappNumber: prov.whatsappNumber,
             email: prov.email,
             address: prov.address,
-            desc: `Encargado: ${prov.ownerName}\nWhatsApp: ${prov.whatsappNumber}\nCorreo: ${prov.email}\nDirección: ${prov.address}`,
+            deliveryDay: delivery,
+            desc: `Encargado: ${prov.ownerName}\nWhatsApp: ${prov.whatsappNumber}\nCorreo: ${prov.email}\nDirección: ${prov.address}${delivery ? "\nDescripción: " + delivery : ""}`,
           };
         });
         setCards(base);
@@ -81,12 +81,11 @@ export default function ProveedoresPage() {
         setLoading(false);
       }
     };
-    fetchProviders();
-    return () => {};
+  fetchProviders();
   }, []);
   const [showOrdenar, setShowOrdenar] = useState(false);
   const [proveedorSeleccionado, setProveedorSeleccionado] = useState(null);
-  const [productoSeleccionado, setProductoSeleccionado] = useState(productosPorAgotarse[0]?.nombre || "");
+  const [productoSeleccionado, setProductoSeleccionado] = useState("");
   const [cantidad, setCantidad] = useState(1);
   const [unidad, setUnidad] = useState("unidades");
   const { user } = useAuth();
@@ -180,7 +179,8 @@ export default function ProveedoresPage() {
           whatsappNumber: creado.whatsappNumber,
           email: creado.email,
           address: creado.address,
-          desc: `Encargado: ${creado.ownerName}\nWhatsApp: ${creado.whatsappNumber}\nCorreo: ${creado.email}\nDirección: ${creado.address}`,
+          deliveryDay: creado.deliveryDay ?? payload.deliveryDay ?? "",
+          desc: `Encargado: ${creado.ownerName}\nWhatsApp: ${creado.whatsappNumber}\nCorreo: ${creado.email}\nDirección: ${creado.address}${(creado.deliveryDay ?? payload.deliveryDay) ? "\nDescripción: " + (creado.deliveryDay ?? payload.deliveryDay) : ""}`,
         },
         ...prev,
       ]);
@@ -196,9 +196,9 @@ export default function ProveedoresPage() {
         imagenFile: null,
       });
       handleCloseModal();
-    } catch (err) {
-      console.error('Error crear proveedor/objeto:', err?.response?.data || err);
-      const msg = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Error al crear proveedor';
+    } catch (error) {
+      console.error('Error crear proveedor/objeto:', error?.response?.data || error);
+      const msg = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Error al crear proveedor';
       alert(`Error al crear proveedor: ${msg}`);
     }
   };
@@ -206,18 +206,30 @@ export default function ProveedoresPage() {
   // Abrir modal de ordenar
   const handleOpenOrdenar = (card) => {
     setProveedorSeleccionado(card);
-    setProductoSeleccionado(productosPorAgotarse[0]?.nombre || "");
-    setCantidad(1);
-    setUnidad(productosPorAgotarse[0]?.unidadMedida || "unidades");
-    setMensaje(
-      `Muy buenos días, soy ${getUserName()}. Necesito pedir 1 ${productosPorAgotarse[0]?.unidadMedida || "unidades"} de ${productosPorAgotarse[0]?.nombre}. ¿Qué precio tendría ese pedido?`
-    );
-    setShowOrdenar(true);
+    // Refrescar productos desde inventario antes de abrir el modal para asegurar datos actuales
+    cargarProductos().then((lista) => {
+      const first = lista && lista.length > 0 ? lista[0] : null;
+      const nombre = first?.nombre || first?.name || "";
+      setProductoSeleccionado(nombre);
+      setCantidad(1);
+      setUnidad(first?.unidadMedida || "unidades");
+      setMensaje(
+        `Muy buenos días, soy ${getUserName()}. Necesito pedir 1 ${first?.unidadMedida || "unidades"} de ${nombre}. ¿Qué precio tendría ese pedido?`
+      );
+      setShowOrdenar(true);
+    }).catch(() => {
+      // En caso de error, abrir modal con valores por defecto vacíos
+      setProductoSeleccionado("");
+      setCantidad(1);
+      setUnidad("unidades");
+      setMensaje(`Muy buenos días, soy ${getUserName()}. Necesito pedir 1 unidades de . ¿Qué precio tendría ese pedido?`);
+      setShowOrdenar(true);
+    });
   };
 
   // Actualizar mensaje
   const handleProductoChange = (e) => {
-    const prod = productosPorAgotarse.find(p => p.nombre === e.target.value);
+    const prod = productos.find(p => p.nombre === e.target.value);
     setProductoSeleccionado(e.target.value);
     setUnidad(prod?.unidadMedida || "unidades");
     setMensaje(
@@ -263,7 +275,8 @@ export default function ProveedoresPage() {
       try {
         await deleteProvider(proveedor.id);
         setCards(cards.filter((_, i) => i !== idx));
-      } catch (err) {
+      } catch (error) {
+        console.error('Error eliminar proveedor:', error);
         alert('Error al eliminar proveedor');
       }
     }
@@ -380,6 +393,7 @@ export default function ProveedoresPage() {
         email: actualizado?.email ?? payload.email,
         address: actualizado?.address ?? payload.address,
         objectId: actualizado?.objectId ?? newObjectId ?? null,
+        deliveryDay: actualizado?.deliveryDay ?? payload.deliveryDay ?? "",
       };
 
       // Determinar imagen a mostrar
@@ -394,7 +408,7 @@ export default function ProveedoresPage() {
         imgSrc = editForm.imagen || imgSrc;
       }
 
-      setCards((prev) => {
+    setCards((prev) => {
         const copy = [...prev];
         copy[editIndex] = {
           ...copy[editIndex],
@@ -404,15 +418,17 @@ export default function ProveedoresPage() {
           email: next.email,
           address: next.address,
           objectId: next.objectId,
-          img: imgSrc,
+      img: imgSrc,
+      deliveryDay: next.deliveryDay,
+      desc: `Encargado: ${next.ownerName}\nWhatsApp: ${next.whatsappNumber}\nCorreo: ${next.email}\nDirección: ${next.address}${next.deliveryDay ? "\nDescripción: " + next.deliveryDay : ""}`,
         };
         return copy;
       });
 
       handleCloseEdit();
-    } catch (err) {
-      console.error('Error actualizar proveedor:', err?.response?.data || err);
-      const msg = err?.response?.data?.message || err?.response?.data?.error || err?.message || 'Error al actualizar proveedor';
+    } catch (error) {
+      console.error('Error actualizar proveedor:', error?.response?.data || error);
+      const msg = error?.response?.data?.message || error?.response?.data?.error || error?.message || 'Error al actualizar proveedor';
       alert(`Error al actualizar proveedor: ${msg}`);
     }
   };
@@ -696,7 +712,7 @@ export default function ProveedoresPage() {
                   value={productoSeleccionado}
                   onChange={handleProductoChange}
                 >
-                  {productosPorAgotarse.map((prod, idx) => (
+                  {productos.filter(p => p.stock > 0).map((prod, idx) => (
                     <option key={idx} value={prod.nombre}>{prod.nombre}</option>
                   ))}
                 </select>
