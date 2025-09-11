@@ -1,4 +1,6 @@
 import React, { useEffect } from 'react';
+import logoCompleto from '../../../assets/logoCompleto.png';
+// ...existing code...
 
 const IconBox = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="text-red-600">
@@ -14,6 +16,28 @@ const CloseIcon = ({ className = '' }) => (
   </svg>
 );
 
+// Helpers locales (no archivos nuevos)
+const getCapacity = (p) => {
+  // Buscar campos comunes que indiquen capacidad/total inicial
+  if (!p) return null;
+  return (typeof p.maxStock === 'number' ? p.maxStock
+    : typeof p.stockMax === 'number' ? p.stockMax
+    : typeof p.cantidadTotal === 'number' ? p.cantidadTotal
+    : typeof p.total === 'number' ? p.total
+    : typeof p.inventoryTotal === 'number' ? p.inventoryTotal
+    : typeof p.capacidad === 'number' ? p.capacidad
+    : null);
+};
+
+const getStockPct = (p) => {
+  if (!p || typeof p.stock !== 'number') return null;
+  const cap = getCapacity(p);
+  if (typeof cap === 'number' && cap > 0) {
+    return Math.max(0, Math.min(100, Math.round((p.stock / cap) * 100)));
+  }
+  return null;
+};
+
 const ModalProductosBajos = ({ isOpen, onClose, productos = [] }) => {
   useEffect(() => {
     if (!isOpen) return;
@@ -26,13 +50,21 @@ const ModalProductosBajos = ({ isOpen, onClose, productos = [] }) => {
 
   if (!isOpen) return null;
 
+  // Cálculo de resumen global
+  const totalStock = productos.reduce((s, p) => s + (Number(p.stock) || 0), 0);
+  const totalCapacity = productos.reduce((s, p) => {
+    const c = getCapacity(p);
+    return s + (typeof c === 'number' ? c : 0);
+  }, 0);
+  const overallPct = (totalCapacity > 0) ? Math.max(0, Math.min(100, Math.round((totalStock / totalCapacity) * 100))) : null;
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40 backdrop-blur-sm px-4">
-  <div className="bg-white rounded-lg shadow-2xl w-full p-5 transform transition-all duration-200 ease-out scale-100" style={{ maxWidth: '60.2rem', maxHeight: '70vh' }}>
+      <div className="bg-white rounded-lg shadow-2xl w-full p-5 transform transition-all duration-200 ease-out scale-100" style={{ maxWidth: '60.2rem', maxHeight: '70vh' }}>
         <div className="flex items-start justify-between gap-4 mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center">
-              <IconBox />
+            <div className="w-10 h-10 bg-red-50 rounded-lg flex items-center justify-center overflow-hidden">
+              <img src={logoCompleto} alt="Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <h3 className="text-lg font-semibold text-gray-800">Productos por Agotarse</h3>
@@ -58,40 +90,69 @@ const ModalProductosBajos = ({ isOpen, onClose, productos = [] }) => {
             .custom-scrollbar::-webkit-scrollbar-thumb:hover{background:#FCA5A5}
           `}
         </style>
-  {/* Mostrar exactamente 3 filas y activar scroll si hay más */}
+
+        {/* Resumen global (barra o total) */}
+        <div className="mb-4">
+          {overallPct !== null ? (
+            <div className="bg-gray-50 p-3 rounded-md">
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-sm font-medium text-gray-700">Inventario total</div>
+                <div className="text-sm text-gray-600 font-medium">{totalStock}/{totalCapacity} ({overallPct}%)</div>
+              </div>
+              <div className="relative w-full rounded-full h-4 overflow-hidden bg-orange-100">
+                <div
+                  className="absolute left-0 top-0 h-full bg-orange-500"
+                  style={{ width: `${overallPct}%` }}
+                  aria-hidden="true"
+                />
+                <div className={`absolute inset-0 flex items-center justify-center text-sm font-semibold ${overallPct >= 25 ? 'text-white' : 'text-gray-700'}`}>
+                  {totalStock}/{totalCapacity} ({overallPct}%)
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="text-sm text-gray-600">Total unidades: {totalStock}</div>
+          )}
+        </div>
+
+        {/* Mostrar exactamente 3 filas y activar scroll si hay más */}
         <div
           className="divide-y divide-gray-100 overflow-y-auto custom-scrollbar"
-          style={{ maxHeight: 'calc(70vh - 160px)' }}
+          style={{ maxHeight: 'calc(70vh - 220px)' }}
           onWheel={(e) => {
-            // Mejorar la sensibilidad del scroll: multiplicador ajustable
-            const SPEED = 2.5; // mayor = scroll más rápido
+            const SPEED = 2.5;
             e.preventDefault();
             const container = e.currentTarget;
-            // usar deltaY para desplazar
             container.scrollTop += e.deltaY * SPEED;
           }}
         >
           {productos.length > 0 ? (
             productos.map(p => {
-              const maxStock = p.maxStock || p.stockMax || 100;
-              const pct = Math.max(0, Math.min(100, Math.round((p.stock / maxStock) * 100)));
+              const maxStock = getCapacity(p);
+              const pct = getStockPct(p);
               return (
                 <div
                   key={p.id}
                   className="flex items-center justify-between gap-4 py-3 px-3 hover:bg-red-50 rounded-md transition-colors min-h-[64px]"
                 >
                   <div className="flex items-center gap-3 w-full">
-                    <div className="w-10 h-10 bg-white border border-red-100 rounded-md flex items-center justify-center">
-                      <IconBox />
+                    <div className="w-10 h-10 bg-white border border-red-100 rounded-md flex items-center justify-center overflow-hidden">
+                      <img src={logoCompleto} alt="logo" className="w-8 h-8 object-contain" />
                     </div>
                     <div className="flex-1">
                       <div className="text-sm font-medium text-gray-800">{p.nombre}</div>
                       <div className="text-xs text-gray-500">{p.categoria || 'Sin categoría'}</div>
                       <div className="mt-2">
-                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                          <div className="h-2 bg-amber-500" style={{ width: `${pct}%` }} aria-hidden="true"></div>
+                        <div className="relative w-full rounded-full h-6 overflow-hidden bg-orange-100">
+                          <div
+                            className="absolute left-0 top-0 h-full bg-orange-500"
+                            style={{ width: `${pct ?? 0}%` }}
+                            aria-hidden="true"
+                          />
+                          <div className={`absolute inset-0 flex items-center justify-center text-xs font-medium ${pct !== null && pct >= 25 ? 'text-white' : 'text-gray-700'}`}>
+                            {maxStock ? `${p.stock}/${maxStock} (${pct ?? 0}%)` : `${p.stock} und`}
+                          </div>
                         </div>
-                        <div className="mt-1 text-xs text-gray-500">{p.stock}/{maxStock} ({pct}%)</div>
                       </div>
                     </div>
                   </div>

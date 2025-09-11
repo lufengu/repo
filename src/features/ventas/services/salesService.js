@@ -185,3 +185,55 @@ export const salesAPI = {
 };
 
 export default salesAPI;
+
+// Función para propagar un cambio de nombre de producto en las ventas/historial
+export const updateProductNameInSales = async (productId, newName) => {
+  try {
+    // Obtener todas las ventas (mapeadas al formato frontend)
+    const sales = await salesAPI.getSales();
+
+    const updatePromises = sales.map(async (sale) => {
+      if (!sale.items || !Array.isArray(sale.items)) return null;
+
+      let changed = false;
+      const updatedItems = sale.items.map(item => {
+        // item.product puede ser id (num o string) o nombre; comparamos por id estricto o débil
+        const matches = item.product === productId || item.product == productId || String(item.product) === String(productId);
+        if (matches) {
+          changed = true;
+          return { ...item, productName: newName, name: newName };
+        }
+        return item;
+      });
+
+      if (changed) {
+        // Construir payload compatible con updateSale
+        const saleData = {
+          date: sale.date,
+          customer: sale.customer,
+          email: sale.email,
+          cedula: sale.cedula,
+          direccion: sale.direccion,
+          items: updatedItems,
+          payment_method: sale.payment_method || sale.paymentMethod,
+          total: sale.total
+        };
+
+        try {
+          await salesAPI.updateSale(sale.id, saleData);
+        } catch (err) {
+          console.error(`Error actualizando venta ${sale.id} al propagar nombre del producto:`, err);
+          // No lanzamos para permitir que las demás ventas sigan procesándose
+        }
+      }
+
+      return null;
+    });
+
+    await Promise.all(updatePromises);
+    return { success: true };
+  } catch (error) {
+    console.error('Error en updateProductNameInSales:', error);
+    throw error;
+  }
+};

@@ -222,17 +222,7 @@ function ProductComboBox({
 }
 
 export default function SalesRegisterForm({ onSuccess }) {
-  // Obtener usuario actual
-  const userData = localStorage.getItem('user');
-  let userName = 'Usuario';
-  if (userData) {
-    try {
-      const user = JSON.parse(userData);
-      userName = user.name || user.nombre || user.firstName || user.username || 'Usuario';
-    } catch {
-      // Ignore JSON parse errors and use default userName
-    }
-  }
+  // Obtener usuario actual (se usa el localStorage en otros lugares si es necesario)
   // Hook para productos del inventario
   const {
     productos: productOptions,
@@ -397,12 +387,17 @@ export default function SalesRegisterForm({ onSuccess }) {
     setFormError('');
 
     const payload = {
-      items: rows.map(r => ({
-        product: r.product,
-        quantity: r.quantity,
-        price: parseFloat(r.price),
-        name: r.product // Para compatibilidad con el recibo
-      })),
+      items: rows.map(r => {
+        // Intentar resolver el producto seleccionado a su ID actual
+        const producto = obtenerProductoPorNombre(r.product);
+        return {
+          product: producto ? producto.id : r.product,
+          productName: r.product,
+          quantity: r.quantity,
+          price: parseFloat(r.price),
+          name: r.product // Para compatibilidad con el recibo
+        };
+      }),
       payment_method: paymentMethod,
       paymentMethod: paymentMethod, // Para compatibilidad
       total,

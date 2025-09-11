@@ -28,7 +28,8 @@ export function useTopProducts(refreshTrigger) {
           .map(([name, count]) => ({ name, count }));
 
         setTopProducts(top);
-      } catch (e) {
+      } catch (error) {
+        console.error('Error obteniendo ventas para topProducts:', error);
         setTopProducts([]);
       } finally {
         setLoading(false);

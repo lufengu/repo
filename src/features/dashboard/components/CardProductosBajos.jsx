@@ -4,15 +4,14 @@ import ModalProductosBajos from './ModalProductosBajos';
 
 const CardProductosBajos = ({ productos = [], onClick = () => {} }) => {
   const [isOpen, setIsOpen] = useState(false);
+
   // Obtener productos con stock bajo según el umbral configurado en cada producto
   // Ordenar de menor a mayor stock para resaltar los más críticos
   const productosFiltrados = productos
     .filter(p => typeof p.umbralAlerta === 'number' ? p.stock <= p.umbralAlerta : p.stock < 100)
     .sort((a, b) => a.stock - b.stock);
+
   const productosCount = productosFiltrados.length;
-  // Mostrar una vista previa en grid (hasta 2 mini-cards)
-  const productosPorPagina = 2;
-  const productosStockBajo = productosFiltrados.slice(0, productosPorPagina);
 
   const handleOpen = () => {
     setIsOpen(true);
@@ -23,54 +22,49 @@ const CardProductosBajos = ({ productos = [], onClick = () => {} }) => {
     <>
       <div
         onClick={handleOpen}
-    className="bg-white p-4 rounded-2xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer border-l-4 border-dashed border-white hover:ring-2 hover:ring-gray-100"
+        className="bg-white p-3 rounded-xl shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-200 cursor-pointer border border-transparent hover:border-gray-100 w-full max-w-sm"
         role="button"
         tabIndex={0}
         onKeyPress={(e) => { if (e.key === 'Enter' || e.key === ' ') handleOpen(); }}
       >
-      <div className="flex items-center mb-3">
-        <div className="w-9 h-9 rounded flex items-center justify-center mr-3 border border-gray-100 bg-white">
-          <AlertTriangleIcon className="w-4 h-4 text-gray-700" aria-hidden="true" />
-        </div>
-        <div className="flex-1">
-          <h2 className="font-semibold text-gray-800 leading-tight">Productos por Agotarse</h2>
-          <p className="text-xs text-gray-500">Ordenado por menor stock — toca la card para ver la lista completa</p>
-        </div>
-        <div className="text-xs text-gray-600">{productosCount} requieren atención</div>
-      </div>
-
-      {/* Grid de mini-cards por producto */}
-      {productosStockBajo.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {productosStockBajo.map(producto => {
-            const maxStock = producto.maxStock || producto.stockMax || 100;
-            const pct = Math.max(0, Math.min(100, Math.round((producto.stock / maxStock) * 100)));
-            return (
-              <div key={producto.id} className="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex flex-col gap-2 hover:shadow-md">
-                <div className="flex items-center justify-between">
-                  <div className="min-w-0">
-                    <div className="text-sm font-medium text-gray-800 truncate">{producto.nombre}</div>
-                    <div className="text-xs text-gray-500">{producto.categoria || 'Sin categoría'}</div>
-                  </div>
-                  <div className="flex items-center ml-3">
-                    <div className="w-12 h-12 rounded-full bg-blue-500 text-white flex items-center justify-center text-lg font-bold border border-blue-600">{producto.stock}</div>
-                  </div>
-                </div>
-                <div className="w-full">
-                  <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                    <div className="h-2 bg-blue-500 transition-all duration-500 ease-in-out" style={{ width: `${pct}%` }} aria-hidden="true"></div>
-                  </div>
-                  <div className="mt-1 text-xs text-gray-500">{producto.stock}/{maxStock} ({pct}%)</div>
-                </div>
+        <div className="flex items-start gap-3 mb-3">
+          <div className="w-9 h-9 rounded-full flex items-center justify-center bg-blue-50 border border-blue-100">
+            <AlertTriangleIcon className="w-4 h-4 text-blue-600" aria-hidden="true" />
+          </div>
+          <div className="flex-1">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-base font-bold text-blue-700 leading-tight">¡Atención! Productos por agotarse</h3>
+                <p className="text-xs text-gray-500 leading-snug max-w-[16rem] break-words">
+                  Haz click para ver todos los productos en riesgo.
+                </p>
               </div>
-            );
-          })}
+              <div className="ml-2">
+                <span className="inline-flex w-24 items-center justify-center bg-blue-50 text-blue-700 text-[11px] font-medium px-2 py-1 rounded-full border border-blue-100">{productosCount} en riesgo</span>
+              </div>
+            </div>
+          </div>
         </div>
-      ) : (
-        <div className="flex items-center justify-center p-4 bg-white rounded-lg border border-gray-100">
-          <span className="text-sm text-gray-600">No hay productos con stock bajo.</span>
-        </div>
-      )}
+
+        {/* Lista vertical de productos (vista previa) */}
+        {productosFiltrados.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {productosFiltrados.slice(0, 2).map((producto, idx) => (
+              <div key={producto.id ?? idx} className="flex items-center justify-between bg-blue-50 hover:bg-blue-100 transition-colors rounded-md p-2 border border-blue-50">
+                <div className="min-w-0">
+                  <div className="text-sm font-semibold text-blue-800 truncate">{producto.nombre || 'Sin nombre'}</div>
+                  <div className="text-xs text-blue-600">{producto.categoria || 'Sin categoría'}</div>
+                </div>
+                <div className="text-xs font-semibold text-blue-700">Stock: <span className="font-bold text-blue-800 ml-1">{producto.stock}</span></div>
+              </div>
+            ))}
+            {productosFiltrados.length > 2 && (
+              <div className="text-xs text-gray-500">y {productosFiltrados.length - 2} más...</div>
+            )}
+          </div>
+        ) : (
+          <div className="p-3 bg-gray-50 rounded-md border border-gray-100 text-xs text-gray-600">No hay productos con stock bajo.</div>
+        )}
       </div>
 
       {/* Modal que muestra la lista completa de productos con stock bajo */}

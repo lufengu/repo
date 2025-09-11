@@ -6,6 +6,7 @@ import {
   deleteInventoryItem,
   mapBackendToFrontend 
 } from '../services/inventoryService';
+import { updateProductNameInSales } from '../features/ventas/services/salesService';
 
 export const useProductos = () => {
   const [productos, setProductos] = useState([]);
@@ -85,6 +86,18 @@ export const useProductos = () => {
     try {
       const productoActualizado = await updateInventoryItem(id, datosActualizados);
       const productoFormateado = mapBackendToFrontend(productoActualizado);
+      // Propagar cambio de nombre a ventas/historial si el nombre cambió
+      try {
+        const productoPrev = productos.find(p => p.id === id);
+        const prevName = productoPrev?.nombre;
+        const newName = productoFormateado.nombre;
+        if (prevName && newName && prevName !== newName) {
+          // No await para no bloquear la UI; capturamos errores internamente
+          updateProductNameInSales(id, newName).catch(err => console.error('Error propagando nombre a ventas:', err));
+        }
+      } catch (err) {
+        console.error('Error comprobando cambio de nombre para propagar:', err);
+      }
       setProductos(prev => {
         // Remover el producto editado de su posición actual
         const sinProductoEditado = prev.filter(p => p.id !== id);

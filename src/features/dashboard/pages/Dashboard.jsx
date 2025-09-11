@@ -17,7 +17,7 @@ const Dashboard = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [userName, setUserName] = useState('Usuario');
-  const [refreshTrigger] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(false);
   
 
   // Usar el hook de productos
@@ -119,12 +119,12 @@ const Dashboard = () => {
       <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
         {/* Header móvil */}
         <div className="lg:hidden bg-white shadow-sm p-4 flex items-center">
-          <p className="ml-2 text-xl font-semibold text-gray-800">¡Hola, {userName}!</p>
+          <p className="ml-2 font-bold text-gray-800" style={{ fontSize: '2.34rem' }}>¡Hola, {userName}!</p>
         </div>
         {/* Header escritorio */}
         <header className="hidden lg:flex bg-white shadow-sm p-4 justify-between items-center border-b">
           <div className="flex items-center space-x-4">
-            <p className="text-gray-600 text-sm">¡Hola, {userName}!</p>
+            <p className="text-gray-600 font-semibold" style={{ fontSize: '1.755rem' }}>¡Hola, {userName}!</p>
           </div>
           <div className="flex items-center space-x-4">
             <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
@@ -136,9 +136,9 @@ const Dashboard = () => {
           <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
             {/* Título principal */}
             <div className="mb-2 sm:mb-4">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">Inicio del Dashboard</h1>
-              <p className="text-gray-600 text-sm sm:text-base">
-                Bienvenido a la página principal de tu tienda digital. Aquí encontrarás un resumen de tus métricas clave.
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 mb-1 sm:mb-2">Mi Tienda</h1>
+              <p className="text-gray-600 text-[1.05rem] sm:text-[1.2rem]">
+                Impulsa tu tienda: gestiona, vende y crece con confianza.
               </p>
             </div>
             {/* Primera fila - 3 cards */}
@@ -150,7 +150,7 @@ const Dashboard = () => {
             {/* Segunda fila - 3 cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               <CardAlertas />
-              <CardVentasProducto refreshTrigger={refreshTrigger} />
+              <CardVentasProducto refreshTrigger={refreshTrigger} onRefreshToggle={() => setRefreshTrigger(t => !t)} />
               <CardVentasMensuales data={ventasMensuales} />
             </div>
           </div>

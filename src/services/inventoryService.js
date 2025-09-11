@@ -121,20 +121,28 @@ export const mapFrontendToBackend = (frontendItem) => {
 // Función para actualizar stock después de una venta
 export const updateStockAfterSale = async (ventaItems) => {
   try {
+    // Obtener inventario una sola vez
+    const inventory = await getInventory();
+
     const updatePromises = ventaItems.map(async (item) => {
-      // Buscar el producto por nombre para obtener su ID
-      const inventory = await getInventory();
-      const producto = inventory.find(p => p.name === item.product);
-      
-      if (producto) {
-        const newQuantity = producto.quantity - item.quantity;
-        if (newQuantity >= 0) {
-          return await updateInventoryItem(producto.id, { stock: newQuantity });
-        } else {
-          throw new Error(`Stock insuficiente para ${item.product}`);
-        }
+      // item.product puede ser el id o el nombre; además recibimos productName en el payload
+      const producto = inventory.find(p => (
+        // Comparar id estrictamente o por igualdad débil para cubrir strings/números
+        p.id === item.product || p.id == item.product ||
+        // Comparar por nombre usando product o productName
+        p.name === item.product || p.name === item.productName
+      ));
+
+      if (!producto) {
+        const idOrName = item.product || item.productName || 'desconocido';
+        throw new Error(`Producto ${idOrName} no encontrado en inventario`);
+      }
+
+      const newQuantity = producto.quantity - item.quantity;
+      if (newQuantity >= 0) {
+        return await updateInventoryItem(producto.id, { stock: newQuantity });
       } else {
-        throw new Error(`Producto ${item.product} no encontrado en inventario`);
+        throw new Error(`Stock insuficiente para ${producto.name}`);
       }
     });
 
