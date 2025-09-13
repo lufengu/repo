@@ -23,6 +23,19 @@ const Inventario = () => {
   const [modalEditarOpen, setModalEditarOpen] = useState(false);
   const [modalEliminarOpen, setModalEliminarOpen] = useState(false);
   const [productoSeleccionado, setProductoSeleccionado] = useState(null);
+    const [userName, setUserName] = useState('Usuario');
+    useEffect(() => {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          const name = user.name || user.nombre || user.firstName || user.username || 'Usuario';
+          setUserName(name);
+        } catch (error) {
+          setUserName('Usuario');
+        }
+      }
+    }, []);
 
   // Hook de productos
   const { productos, loading, error, agregarProducto, editarProducto, eliminarProducto } = useProductos();
@@ -157,6 +170,15 @@ const Inventario = () => {
           </div>
         )}
         <div className="flex-1 flex flex-col overflow-hidden lg:ml-0">
+           {/* Header superior */}
+           <header className="bg-white shadow-sm p-4 flex justify-between items-center border-b">
+             <div className="flex items-center space-x-4">
+               <div className="flex items-center space-x-4">
+                 <p className="text-gray-600 font-semibold" style={{ fontSize: '1.755rem' }}>¡Hola, {userName}!</p>
+                 <span className="text-gray-600 font-semibold" style={{ fontSize: '1.755rem' }}>Un inventario claro, un negocio rentable</span>
+               </div>
+             </div>
+           </header>
           {/* Header móvil */}
           <div className="lg:hidden bg-white shadow-sm p-4 flex items-center">
             <h1 className="ml-2 text-xl font-semibold text-gray-800">Inventario</h1>

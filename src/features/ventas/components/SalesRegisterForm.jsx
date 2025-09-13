@@ -176,7 +176,7 @@ function ProductComboBox({
                 onMouseDown={(e) => { e.preventDefault(); selectItem(item); }}
                 onMouseEnter={() => setHighlight(idx)}
                 className={`px-3 py-2 cursor-pointer transition-colors
-                            ${idx === highlight ? 'bg-orange-50' : 'bg-white'}
+                            ${idx === highlight ? 'bg-blue-50' : 'bg-white'}
                             ${value === item.name ? 'font-medium text-gray-900' : 'text-gray-800'}`}
               >
                 <div className="flex items-center justify-between">
@@ -471,6 +471,14 @@ export default function SalesRegisterForm({ onSuccess }) {
 
   return (
     <div className="space-y-6 overflow-visible w-full">
+      <style>{`
+        .ventas-form-text {
+          font-size: 1.07rem;
+        }
+        .ventas-form-label {
+          font-size: 1rem;
+        }
+      `}</style>
       {/* Error de carga de productos */}
       {errorProducts && (
         <div className="bg-red-50 border border-red-200 rounded-lg p-4">
@@ -492,8 +500,8 @@ export default function SalesRegisterForm({ onSuccess }) {
           }).format(subtotal)}
           detail={`Sin IVA`}
           icon={<DollarSign className="w-8 h-8" />}
-          gradient="from-orange-500 to-orange-600"
-          colorText="text-orange-100"
+          gradient="from-blue-500 to-blue-600"
+          colorText="text-blue-100"
         />
         <MetricCard
           title="IVA (19%)"
@@ -516,8 +524,8 @@ export default function SalesRegisterForm({ onSuccess }) {
           }).format(total)}
           detail={`${totalItems} productos`}
           icon={<DollarSign className="w-8 h-8" />}
-          gradient="from-orange-500 to-orange-600"
-          colorText="text-orange-100"
+          gradient="from-blue-500 to-blue-600"
+          colorText="text-blue-100"
         />
       </div>
 
@@ -525,22 +533,22 @@ export default function SalesRegisterForm({ onSuccess }) {
         {/* Panel principal - Formulario de venta */}
         <div className="w-full xl:w-2/3">
           <div className="bg-white shadow-lg rounded-2xl p-2 sm:p-4 md:p-6 w-full" style={{ overflow: 'visible' }}>
-            <form ref={formRef} onSubmit={handleSubmit} className="space-y-6 w-full">
+            <form ref={formRef} onSubmit={handleSubmit} className="space-y-6 w-full ventas-form-text">
               {/* Tabla de productos */}
               <div className="w-full">
                 <table className="w-full divide-y divide-gray-200 text-sm">
                   <thead>
                     <tr>
-                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase">
+                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase ventas-form-label">
                         Producto
                       </th>
-                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase">
+                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase ventas-form-label">
                         Cantidad
                       </th>
-                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase">
+                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase ventas-form-label">
                         Precio unit.
                       </th>
-                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase">
+                      <th className="px-2 sm:px-4 py-3 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase ventas-form-label">
                         Subtotal
                       </th>
                       <th className="px-2 sm:px-4 py-3 bg-gray-50"></th>
@@ -618,8 +626,8 @@ export default function SalesRegisterForm({ onSuccess }) {
                             value={r.quantity}
                             onChange={e => handleChange(i, 'quantity', e.target.value)}
                             disabled={isSubmitting}
-                            className={`w-full bg-white text-black border rounded-lg px-2 sm:px-3 py-2 text-right
-                                       focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent
+                            className={`w-full bg-white text-black border rounded-lg px-2 sm:px-3 py-2 text-right ventas-form-text
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                                        disabled:opacity-50 disabled:cursor-not-allowed
                                        ${r.error.quantity || r.stockWarning ? 'border-red-500' : 'border-gray-300'}`}
                           />
@@ -628,8 +636,8 @@ export default function SalesRegisterForm({ onSuccess }) {
                           )}
                           {r.stockWarning && !r.error.quantity && (
                             <div className="mt-1 flex items-center">
-                              <FaExclamationTriangle className="text-orange-500 text-xs mr-1" />
-                              <p className="text-xs text-orange-600">{r.stockWarning}</p>
+                              <FaExclamationTriangle className="text-blue-500 text-xs mr-1" />
+                              <p className="text-xs text-blue-600">{r.stockWarning}</p>
                             </div>
                           )}
                         </td>
@@ -644,8 +652,8 @@ export default function SalesRegisterForm({ onSuccess }) {
                             readOnly
                             disabled={isSubmitting}
                             placeholder="0"
-                            className={`w-full bg-gray-100 text-black border rounded-lg px-2 sm:px-3 py-2 text-right
-                                       focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent
+                            className={`w-full bg-gray-100 text-black border rounded-lg px-2 sm:px-3 py-2 text-right ventas-form-text
+                                       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
                                        disabled:opacity-50 disabled:cursor-not-allowed
                                        ${r.error.price ? 'border-red-500' : 'border-gray-300'}`}
                           />
@@ -687,7 +695,7 @@ export default function SalesRegisterForm({ onSuccess }) {
                   type="button"
                   onClick={handleAddRow}
                   disabled={isSubmitting}
-                  className="inline-flex items-center text-orange-600 hover:text-orange-800 disabled:opacity-50 disabled:cursor-not-allowed font-medium"
+                  className="inline-flex items-center text-blue-600 hover:text-blue-800 disabled:opacity-50 disabled:cursor-not-allowed font-medium ventas-form-text"
                 >
                   <FaPlus className="mr-2" /> Agregar producto
                 </button>
@@ -697,13 +705,13 @@ export default function SalesRegisterForm({ onSuccess }) {
               <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end space-y-4 sm:space-y-0 pt-4 border-t border-gray-200 w-full">
                 <div className="flex flex-col space-y-2 w-full sm:w-auto">
                   <label className="text-sm font-medium text-gray-700">
-                    Método de pago *
+                    <span className="ventas-form-label">Método de pago *</span>
                   </label>
                   <select
                     value={paymentMethod}
                     onChange={e => setPaymentMethod(e.target.value)}
                     disabled={isSubmitting}
-                    className={`bg-white text-black border rounded-lg px-3 py-2 min-w-[160px] sm:min-w-[200px] w-full sm:w-auto
+                    className={`bg-white text-black border rounded-lg px-3 py-2 min-w-[160px] sm:min-w-[200px] w-full sm:w-auto ventas-form-text
                                focus:outline-none focus:ring-2 focus:ring-orange-500 focus:border-transparent
                                disabled:opacity-50 disabled:cursor-not-allowed
                                ${formError && !paymentMethod ? 'border-red-500' : 'border-gray-300'}`}
@@ -721,7 +729,7 @@ export default function SalesRegisterForm({ onSuccess }) {
                         <img 
                           src={qrPreview} 
                           alt="QR de pago" 
-                          className="object-contain border-2 border-orange-400 rounded-xl shadow-lg"
+                          className="object-contain border-2 border-blue-400 rounded-xl shadow-lg"
                           style={{ width: '100%', height: '100%', maxWidth: 400, maxHeight: 400 }}
                         />
                       </div>
@@ -766,7 +774,7 @@ export default function SalesRegisterForm({ onSuccess }) {
               <button
                 type="submit"
                 disabled={isSubmitting || total <= 0 || productOptions.length === 0}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2 ventas-form-text"
               >
                 {isSubmitting ? (
                   <>
@@ -791,11 +799,11 @@ export default function SalesRegisterForm({ onSuccess }) {
 
         {/* Panel lateral - Información del cliente */}
         <div className="w-full xl:w-1/3">
-          <div className="bg-white shadow-lg rounded-2xl p-2 sm:p-4 md:p-6 w-full">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Información del Cliente</h3>
+          <div className="bg-white shadow-lg rounded-2xl p-2 sm:p-4 md:p-6 w-full ventas-form-text">
+            <h3 className="text-lg font-semibold text-gray-800 mb-4 ventas-form-label">Información del Cliente</h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 ventas-form-label">
                   Nombre (Opcional)
                 </label>
                 <input
@@ -803,12 +811,12 @@ export default function SalesRegisterForm({ onSuccess }) {
                   value={customer.name}
                   onChange={(e) => handleCustomerChange('name', e.target.value)}
                   disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 ventas-form-text"
                   placeholder="Nombre del cliente"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 ventas-form-label">
                   Cédula (Opcional)
                 </label>
                 <input
@@ -816,12 +824,12 @@ export default function SalesRegisterForm({ onSuccess }) {
                   value={customer.cedula}
                   onChange={(e) => handleCustomerChange('cedula', e.target.value)}
                   disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50 ventas-form-text"
                   placeholder="Cédula del cliente"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 ventas-form-label">
                   Dirección (Opcional)
                 </label>
                 <input
@@ -829,12 +837,12 @@ export default function SalesRegisterForm({ onSuccess }) {
                   value={customer.direccion}
                   onChange={(e) => handleCustomerChange('direccion', e.target.value)}
                   disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50 ventas-form-text"
                   placeholder="Dirección del cliente"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1 ventas-form-label">
                   Email (Opcional)
                 </label>
                 <input
@@ -842,7 +850,7 @@ export default function SalesRegisterForm({ onSuccess }) {
                   value={customer.email}
                   onChange={(e) => handleCustomerChange('email', e.target.value)}
                   disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50 ventas-form-text"
                   placeholder="email@cliente.com"
                 />
               </div>

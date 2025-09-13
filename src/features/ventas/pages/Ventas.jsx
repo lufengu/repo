@@ -89,26 +89,11 @@ const Ventas = () => {
         {/* Header superior */}
         <header className="bg-white shadow-sm p-4 flex justify-between items-center border-b">
           <div className="flex items-center space-x-4">
-            {/* El botón de menú solo se muestra en móviles, ya está arriba */}
-            <div>
-              <p className="text-gray-600 text-sm">¡Hola, {userName}!</p>
+            <div className="flex items-center space-x-4">
+              <p className="text-gray-600 font-semibold" style={{ fontSize: '1.755rem' }}>¡Hola, {userName}!</p>
+              <span className="text-gray-600 font-semibold" style={{ fontSize: '1.755rem' }}>Más ventas, más futuro para tu tienda</span>
             </div>
           </div>
-          <div className="flex items-center space-x-4">
-            <button
-              className="w-8 h-8 bg-orange-500 hover:bg-orange-600 text-white rounded-full flex items-center justify-center shadow-lg transition-colors"
-              title="Cargar QR de pago"
-              onClick={() => setShowQrForm(true)}
-              aria-label="Cargar QR de pago"
-            >
-              <span className="font-bold text-lg">QR</span>
-            </button>
-            <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
-          </div>
-          {/* Formulario QR desplegable */}
-          {showQrForm && (
-            <QrPaymentForm userName={userName} onClose={() => setShowQrForm(false)} />
-          )}
         </header>
         {/* Contenido del dashboard de ventas */}
         <main className="flex-1 p-2 sm:p-4 md:p-6 overflow-y-auto">
@@ -120,36 +105,54 @@ const Ventas = () => {
           </div>
           {/* Navegación de pestañas */}
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4 sm:mb-6">  
-            <button 
-              onClick={() => setView('register')} 
-              className={`px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors ${
-                view === 'register' 
-                  ? 'bg-orange-500 text-white' 
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              Registrar Venta
-            </button>
-            <button 
-              onClick={() => setView('history')} 
-              className={`px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors ${
-                view === 'history' 
-                  ? 'bg-orange-500 text-white' 
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              Historial
-            </button>
-            <button 
-              onClick={() => setView('report')} 
-              className={`px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors ${
-                view === 'report' 
-                  ? 'bg-orange-500 text-white' 
-                  : 'bg-white text-gray-700 hover:bg-gray-50'
-              }`}
-            >
-              Reportes
-            </button>
+            <div className="flex flex-1 flex-col sm:flex-row gap-2 sm:gap-4">
+              <button 
+                onClick={() => setView('register')} 
+                className={`px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors ${
+                  view === 'register' 
+                    ? 'bg-orange-500 text-white' 
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Registrar Venta
+              </button>
+              <button 
+                onClick={() => setView('history')} 
+                className={`px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors ${
+                  view === 'history' 
+                    ? 'bg-orange-500 text-white' 
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Historial
+              </button>
+              <button 
+                onClick={() => setView('report')} 
+                className={`px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors ${
+                  view === 'report' 
+                    ? 'bg-orange-500 text-white' 
+                    : 'bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                Reportes
+              </button>
+            </div>
+            <div className="flex items-center justify-end flex-1">
+              {view === 'register' && (
+                <button
+                  className="px-4 sm:px-6 py-2 rounded-lg font-medium transition-colors bg-orange-500 text-white flex items-center gap-2 shadow-lg hover:bg-orange-600"
+                  onClick={() => setShowQrForm(true)}
+                  aria-label="Cargar QR de pago"
+                  title="Código QR de pago"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg>
+                  Código QR de pago
+                </button>
+              )}
+            </div>
+            {showQrForm && (
+              <QrPaymentForm userName={userName} onClose={() => setShowQrForm(false)} />
+            )}
           </div>
           {/* Contenido según la vista seleccionada */}
           <div>

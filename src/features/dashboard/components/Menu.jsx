@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  FaHome, FaChartLine, FaBoxOpen, FaClipboardList, 
+  FaStore, FaChartLine, FaBoxOpen, FaClipboardList, 
   FaRegBuilding, FaBullhorn, FaCogs, FaDoorClosed, FaSpinner
 } from 'react-icons/fa';
 import { useAuth } from '../../auth/context/AuthContext';
@@ -37,11 +37,11 @@ const Menu = ({
   };
 
   const navItems = [
-    { name: 'Inicio', icon: <FaHome />, section: 'dashboard', action: () => { setActiveSection && setActiveSection('dashboard'); navigate('/dashboard'); } },
+    { name: 'Mi Tienda', icon: <FaStore />, section: 'dashboard', action: () => { setActiveSection && setActiveSection('dashboard'); navigate('/dashboard'); } },
     { name: 'Ventas', icon: <FaChartLine />, section: 'ventas', action: () => { setActiveSection && setActiveSection('ventas'); navigate('/ventas'); } },
     { name: 'Inventario', icon: <FaBoxOpen />, section: 'inventario', action: () => { setActiveSection && setActiveSection('inventario'); navigate('/inventario'); } },
     { name: 'Proveedores', icon: <FaRegBuilding />, section: 'proveedores', action: () => { setActiveSection && setActiveSection('proveedores'); navigate('/proveedores'); } },
-    { name: 'Pedidos', icon: <FaClipboardList />, section: 'pedidos', action: () => { setActiveSection && setActiveSection('pedidos'); /* Aquí puedes agregar navegación si existe */ } },
+  { name: 'Pedidos', icon: <FaClipboardList />, section: 'pedidos', action: () => { setActiveSection && setActiveSection('pedidos'); navigate('/pedidos'); } },
     { name: 'Promoción', icon: <FaBullhorn />, section: 'promocion', action: () => { setActiveSection && setActiveSection('promocion'); } },
     { name: 'Configuración', icon: <FaCogs />, section: 'configuracion', action: () => { setActiveSection && setActiveSection('configuracion'); } },
   ];

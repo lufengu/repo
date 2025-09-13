@@ -193,7 +193,7 @@ const SalesHistory = ({ refreshTrigger }) => {
     return (
       <div className="bg-white p-6 rounded-lg shadow">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p>Cargando historial de ventas...</p>
         </div>
       </div>
@@ -218,8 +218,8 @@ const SalesHistory = ({ refreshTrigger }) => {
           value={totalItemsSold.toString()}
           detail={`En ${totalTransactions} ventas`}
           icon={<ShoppingBag className="w-8 h-8" />}
-          gradient="from-orange-500 to-orange-600"
-          colorText="text-orange-100"
+          gradient="from-blue-500 to-blue-600"
+          colorText="text-blue-100"
         />
         
         <MetricCard
@@ -240,7 +240,7 @@ const SalesHistory = ({ refreshTrigger }) => {
           }).length.toString()}
           detail="Transacciones realizadas"
           icon={<Calendar className="w-8 h-8" />}
-          gradient="from-orange-500 to-orange-600"
+          gradient="from-blue-500 to-blue-600"
           colorText="text-blue-100"
         />
       </div>
@@ -256,7 +256,7 @@ const SalesHistory = ({ refreshTrigger }) => {
               placeholder="Buscar por producto, cliente, teléfono o método de pago..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
           
@@ -266,7 +266,7 @@ const SalesHistory = ({ refreshTrigger }) => {
               type="date"
               value={dateFilter}
               onChange={(e) => setDateFilter(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
 
@@ -276,7 +276,7 @@ const SalesHistory = ({ refreshTrigger }) => {
             <select
               value={itemsPerPage}
               onChange={(e) => handleItemsPerPageChange(Number(e.target.value))}
-              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+              className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value={5}>5</option>
               <option value={10}>10</option>
@@ -312,14 +312,12 @@ const SalesHistory = ({ refreshTrigger }) => {
                     <span className="text-xs text-gray-500">{formatDate(sale.createdAt)}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                      <span className="font-medium text-gray-900">{sale.product}</span>
                       <span className="text-xs text-gray-500">Cliente: {sale.customer || 'Cliente General'}</span>
                       {sale.cedula && <span className="text-xs text-gray-400">Cédula: {sale.cedula}</span>}
                       {sale.direccion && <span className="text-xs text-gray-400">Dir: {sale.direccion}</span>}
                       {sale.phone && <span className="text-xs text-gray-400">Tel: {sale.phone}</span>}
                   </div>
                   <div className="flex justify-between items-center text-sm">
-                    <span className="text-gray-700">Cantidad: <span className="font-semibold">{sale.quantity}</span></span>
                     <span className="text-gray-700">Pago: <span className="font-semibold capitalize">{sale.payment_method}</span></span>
                   </div>
                   <div className="flex justify-between items-center mt-2">
@@ -349,9 +347,7 @@ const SalesHistory = ({ refreshTrigger }) => {
                 <thead className="bg-gray-50">
                   <tr>
                     <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Producto</th>
                     <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Cliente</th>
-                    <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Cantidad</th>
                     <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Método de Pago</th>
                     <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
                     <th className="px-6 py-3 text-left font-medium text-gray-500 uppercase tracking-wider">Total</th>
@@ -362,7 +358,6 @@ const SalesHistory = ({ refreshTrigger }) => {
                   {currentSales.map((sale) => (
                     <tr key={sale.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">#{sale.id}</td>
-                      <td className="px-6 py-4 whitespace-nowrap font-medium text-gray-900">{sale.product}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-900">
                         <div>
                           <p className="font-medium">{sale.customer || 'Cliente General'}</p>
@@ -371,7 +366,6 @@ const SalesHistory = ({ refreshTrigger }) => {
                           {sale.phone && <p className="text-gray-500 text-xs">{sale.phone}</p>}
                         </div>
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-gray-500">{sale.quantity}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-500">{sale.payment_method}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-500">{formatDate(sale.createdAt)}</td>
                       <td className="px-6 py-4 whitespace-nowrap font-medium text-green-600">{formatCurrency(sale.total || sale.price * sale.quantity)}</td>

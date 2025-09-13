@@ -12,6 +12,7 @@ import Ventas from './features/ventas/pages/Ventas'
 import RecomendacionesFloatingButton from './features/dashboard/components/RecomendacionesFloatingButton'
 import './features/dashboard/components/RecomendacionesFloatingButton.css'
 import ProveedoresPage from './features/proveedores/pages/proveedores';
+import PedidosPage from './features/pedidos/pages/PedidosPage';
 
 
 function AppRoutes() {
@@ -102,6 +103,15 @@ function AppRoutes() {
             </ProtectedRoute>
           } 
         />
+          {/* Ruta para pedidos - requiere autenticación */}
+          <Route 
+            path="/pedidos" 
+            element={
+              <ProtectedRoute>
+                <PedidosPage />
+              </ProtectedRoute>
+            } 
+          />
         
         {/* Ruta para manejar rutas no encontradas */}
         <Route path="*" element={<Navigate to="/login" replace />} />

@@ -506,7 +506,7 @@ const SalesReports = () => {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-orange-500 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
           <p className="text-gray-600">Generando reportes...</p>
         </div>
       </div>
@@ -531,7 +531,7 @@ const SalesReports = () => {
               onClick={() => setReportPeriod('daily')}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 reportPeriod === 'daily'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
@@ -542,7 +542,7 @@ const SalesReports = () => {
               onClick={() => setReportPeriod('monthly')}
               className={`px-4 py-2 rounded-lg font-medium transition-colors ${
                 reportPeriod === 'monthly'
-                  ? 'bg-orange-500 text-white'
+                  ? 'bg-blue-500 text-white'
                   : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
               }`}
             >
@@ -557,21 +557,21 @@ const SalesReports = () => {
           <div className="flex flex-wrap gap-2">
             <button
               onClick={() => reportPeriod === 'daily' ? exportDailyReport('csv') : exportCSV()}
-              className="flex items-center px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+              className="flex items-center px-4 py-2 bg-brand-orange text-white rounded-lg hover:bg-orange-600 transition-colors"
             >
               <FaFileCsv className="mr-2" />
               Exportar CSV
             </button>
             <button
               onClick={() => reportPeriod === 'daily' ? exportDailyReport('pdf') : exportPDF()}
-              className="flex items-center px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              className="flex items-center px-4 py-2 bg-brand-orange text-white rounded-lg hover:bg-orange-600 transition-colors"
             >
               <FaFilePdf className="mr-2" />
               Exportar PDF
             </button>
             <button
               onClick={() => reportPeriod === 'daily' ? exportDailyReport('json') : exportReport()}
-              className="flex items-center px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+              className="flex items-center px-4 py-2 bg-brand-orange text-white rounded-lg hover:bg-orange-600 transition-colors"
             >
               <FaFileDownload className="mr-2" />
               Exportar JSON
@@ -613,8 +613,8 @@ const SalesReports = () => {
             value={currentReport.totalTransactions.toString()}
             detail={reportPeriod === 'daily' ? 'transacciones hoy' : 'transacciones del mes'}
             icon={<BarChart className="w-8 h-8" />}
-            gradient="from-orange-500 to-orange-600"
-            colorText="text-orange-100"
+            gradient="from-blue-500 to-blue-600"
+            colorText="text-blue-100"
           />
           
           <MetricCard
@@ -634,8 +634,8 @@ const SalesReports = () => {
             }
             detail="Mayor actividad"
             icon={<Calendar className="w-8 h-8" />}
-            gradient="from-orange-500 to-orange-600"
-            colorText="text-orange-100"
+            gradient="from-blue-500 to-blue-600"
+            colorText="text-blue-100"
           />
         </div>
       )}
@@ -646,7 +646,7 @@ const SalesReports = () => {
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center">
-              <FaChartLine className="text-orange-500 mr-3" />
+              <FaChartLine className="text-blue-500 mr-3" />
               <h3 className="text-lg font-semibold text-gray-800">
                 {reportPeriod === 'daily' ? 'Ventas por Hora' : 'Ventas por Día'}
               </h3>
@@ -696,7 +696,7 @@ const SalesReports = () => {
                       <div className="flex items-center">
                         <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
                           <div 
-                            className="bg-orange-500 h-2 rounded-full" 
+                            className="bg-blue-500 h-2 rounded-full" 
                             style={{
                               width: `${(timeData.sales / Math.max(...reportData.trends.map(t => t.sales))) * 100}%`
                             }}

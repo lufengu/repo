@@ -7,6 +7,18 @@ import Menu from "../../dashboard/components/Menu";
 import { useProductos } from '../../../hooks/useProductos';
 
 export default function ProveedoresPage() {
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        const name = user.name || user.nombre || user.firstName || user.username || 'Usuario';
+        setUserName(name);
+      } catch (error) {
+        setUserName('Usuario');
+      }
+    }
+  }, []);
   const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
   // Placeholder para cuando no haya imagen o falle la carga
@@ -89,6 +101,9 @@ export default function ProveedoresPage() {
   const [cantidad, setCantidad] = useState(1);
   const [unidad, setUnidad] = useState("unidades");
   const { user } = useAuth();
+    useEffect(() => {
+      console.log('user en ProveedoresPage:', user);
+    }, [user]);
   // Función para obtener el nombre del usuario dinámicamente
   const getUserName = () =>
     user && (user.name || user.nombre || user.firstName || user.username)
@@ -438,6 +453,20 @@ export default function ProveedoresPage() {
     card.title.toLowerCase().includes(busqueda.toLowerCase())
   );
 
+  const [userName, setUserName] = useState('Usuario');
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      try {
+        const user = JSON.parse(userData);
+        const name = user.name || user.nombre || user.firstName || user.username || 'Usuario';
+        setUserName(name);
+      } catch (error) {
+        setUserName('Usuario');
+      }
+    }
+  }, []);
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-row">
       {/* Menú fijo en escritorio */}
@@ -482,6 +511,14 @@ export default function ProveedoresPage() {
         </div>
       )}
       <div className="flex-1 px-2 py-4 sm:px-4 md:p-8 w-full">
+        <header className="bg-white shadow-sm p-4 flex justify-between items-center border-b">
+  <div className="flex items-center space-x-4">
+    <div className="flex items-center space-x-4">
+      <p className="text-gray-600 font-semibold" style={{ fontSize: '1.755rem' }}>¡Hola, {userName}!</p>
+  <span className="text-gray-600 font-semibold" style={{ fontSize: '1.755rem' }}>Un buen proveedor, un negocio más sólido</span>
+    </div>
+  </div>
+</header>
         <div className="bg-white rounded-xl shadow p-4 sm:p-6 mb-6">
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-3 mb-1">
             <FaRegBuilding className="text-2xl sm:text-3xl text-blue-600" />
