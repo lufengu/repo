@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { FaBars } from "react-icons/fa";
+import { FaBars, FaHistory, FaPlus } from "react-icons/fa";
 import Menu from "../../dashboard/components/Menu";
 import SalesRegisterForm from '../components/SalesRegisterForm';
 import SalesHistory from '../components/SalesHistory';
@@ -15,9 +15,14 @@ const Ventas = () => {
   const [view, setView] = useState('register');
   const [userName, setUserName] = useState('Usuario');
   const [refreshHistory, setRefreshHistory] = useState(0);
+  const [lastSale, setLastSale] = useState(null);
 
   // Estado para mostrar el formulario QR
   const [showQrForm, setShowQrForm] = useState(false);
+
+  // Modal de éxito y reinicio del formulario
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [formKey, setFormKey] = useState(0);
 
   // Accesibilidad eliminada: no hay estado ni panel
 
@@ -39,10 +44,25 @@ const Ventas = () => {
   // accesibilidad: removido
 
   // Función para refrescar el historial después de crear una venta
-  const handleSaleCreated = () => {
+  const handleSaleCreated = (saleData) => {
     setRefreshHistory(prev => prev + 1);
-    // Cambiar automáticamente a la vista del historial para mostrar la nueva venta
+    setLastSale(saleData || null);
+    setShowSuccessModal(true);
+  };
+
+  const handleNewSale = () => {
+    setShowSuccessModal(false);
+    setView('register');
+    setFormKey(k => k + 1); // Reinicia el formulario forzando remontaje
+  };
+
+  const handleGoToHistory = () => {
+    setShowSuccessModal(false);
     setView('history');
+  };
+
+  const handleCloseSuccess = () => {
+    setShowSuccessModal(false);
   };
 
   return (
@@ -156,15 +176,75 @@ const Ventas = () => {
           </div>
           {/* Contenido según la vista seleccionada */}
           <div>
-            {view === 'register' && <SalesRegisterForm onSuccess={handleSaleCreated} />}
+            {view === 'register' && <SalesRegisterForm key={formKey} onSuccess={handleSaleCreated} />}
             {view === 'history' && <SalesHistory refreshTrigger={refreshHistory} />}
             {view === 'report' && <SalesReports />}
           </div>
         </main>
       </div>
   {/* Accesibilidad: botón eliminado */}
+
+      {/* Modal Venta Registrada (diseño con resumen) */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-[2px]">
+          <div className="bg-white w-11/12 max-w-md rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.25)] p-6 text-center">
+            <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-orange-100 text-orange-600">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-7 w-7"><path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12Zm13.36-1.814a.75.75 0 0 0-1.22-.872l-3.236 4.529-1.565-1.565a.75.75 0 1 0-1.06 1.06l2.25 2.25a.75.75 0 0 0 1.16-.096l3.731-5.306Z" clipRule="evenodd"/></svg>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900">Venta registrada</h2>
+            <p className="mt-1 text-gray-600">La venta se guardó correctamente.</p>
+
+            {/* Resumen */}
+            <div className="mt-5 text-left bg-gray-50 rounded-xl border border-gray-200 p-4">
+              <div className="flex items-center justify-between py-1">
+                <span className="text-gray-600">Total:</span>
+                <span className="font-semibold text-gray-900">{formatCurrency(lastSale?.total || 0)}</span>
+              </div>
+              <div className="flex items-center justify-between py-1">
+                <span className="text-gray-600">Productos:</span>
+                <span className="font-medium text-gray-900">{lastSale?.totalItems ?? (lastSale?.items?.reduce((a,b)=>a+(b.quantity||0),0) || 0)}</span>
+              </div>
+              <div className="flex items-center justify-between py-1">
+                <span className="text-gray-600">Cliente:</span>
+                <span className="font-medium text-gray-900">{lastSale?.customer || 'Cliente General'}</span>
+              </div>
+            </div>
+
+            {/* Acciones */}
+            <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                onClick={handleGoToHistory}
+                className="px-4 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 shadow inline-flex items-center justify-center gap-2"
+              >
+                <FaHistory /> Ver historial
+              </button>
+              <button
+                onClick={handleNewSale}
+                className="px-4 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 shadow inline-flex items-center justify-center gap-2"
+              >
+                <FaPlus /> Nueva venta
+              </button>
+            </div>
+
+            <button
+              onClick={handleCloseSuccess}
+              className="mt-4 text-gray-600 hover:text-gray-800 font-medium"
+            >
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
+function formatCurrency(value) {
+  return new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0,
+  }).format(value || 0);
+}
 
 export default Ventas;

@@ -79,10 +79,20 @@ const SaleReceipt = ({ sale, onClose, onPrint }) => {
           }
         `}
       </style>
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div
+        className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+        onDoubleClick={(e) => {
+          if (e.target === e.currentTarget) {
+            onClose && onClose();
+          }
+        }}
+        role="dialog"
+        aria-modal="true"
+      >
         <div
           id="ticket-receipt"
           className="bg-white rounded-lg p-8 max-w-md w-full mx-4 max-h-[90vh] overflow-y-auto"
+          onDoubleClick={(e) => e.stopPropagation()}
         >
           {/* Header del recibo */}
           <div className="text-center mb-6">

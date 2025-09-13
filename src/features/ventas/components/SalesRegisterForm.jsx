@@ -435,8 +435,8 @@ export default function SalesRegisterForm({ onSuccess }) {
         id: savedSale.id || Date.now(), // Usar ID del backend o temporal
       };
 
-      setCompletedSale(saleData);
-      setShowReceipt(true);
+    setCompletedSale(saleData);
+    setShowReceipt(true);
 
   // Limpiar formulario
   setRows([{ product: '', quantity: 1, price: '', error: {}, stockWarning: '' }]);
@@ -445,10 +445,8 @@ export default function SalesRegisterForm({ onSuccess }) {
   setCustomer({ name: '', cedula: '', direccion: '', email: '' });
   setProductSearch(['']);
 
-      // Callback si existe
-      if (onSuccess) {
-        onSuccess(saleData);
-      }
+      // Notificar al padre para mostrar el modal de éxito
+      if (onSuccess) onSuccess(saleData);
 
     } catch (error) {
       console.error('Error al guardar venta:', error);
@@ -918,6 +916,7 @@ export default function SalesRegisterForm({ onSuccess }) {
           onPrint={handlePrintReceipt}
         />
       )}
+      {/* Modal de éxito se maneja en el componente padre (Ventas.jsx) */}
     </div>
   );
 }
