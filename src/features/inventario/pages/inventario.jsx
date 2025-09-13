@@ -82,7 +82,7 @@ const Inventario = () => {
       console.log('Producto agregado exitosamente:', nuevoProducto);
     } catch (error) {
       console.error('Error al agregar producto:', error);
-      throw error; // Re-lanzar para que el modal maneje el error
+      throw error; 
     }
   };
 

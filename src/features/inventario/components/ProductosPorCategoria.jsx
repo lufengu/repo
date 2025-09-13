@@ -18,11 +18,24 @@ const ProductosPorCategoria = ({ productos = [] }) => {
     porcentaje: totalProductos > 0 ? ((cantidad / totalProductos) * 100).toFixed(1) : 0
   }));
 
-  // Colores para cada segmento del pastel
-  const COLORS = [
-    '#3B82F6', '#10B981', '#F59E0B', '#EF4444', 
-    '#8B5CF6', '#06B6D4', '#84CC16', '#F97316'
+  // Colores para cada segmento del pastel (12 únicos)
+  const BASE_COLORS = [
+    '#3B82F6', '#10B981', '#F59E0B', '#EF4444',
+    '#8B5CF6', '#06B6D4', '#84CC16', '#F97316',
+    '#E11D48', '#A3E635', '#F43F5E', '#0EA5E9'
   ];
+  // Si hay menos de 12, se generan colores extra aleatorios
+  function getRandomColor() {
+    // Genera un color pastel aleatorio
+    const hue = Math.floor(Math.random() * 360);
+    return `hsl(${hue}, 70%, 80%)`;
+  }
+  let COLORS = BASE_COLORS.slice(0, 12);
+  if (COLORS.length < 12) {
+    while (COLORS.length < 12) {
+      COLORS.push(getRandomColor());
+    }
+  }
 
   const CustomTooltip = ({ active, payload }) => {
     if (active && payload && payload.length) {

@@ -41,8 +41,6 @@ const Ventas = () => {
     }
   }, []);
 
-  // accesibilidad: removido
-
   // Función para refrescar el historial después de crear una venta
   const handleSaleCreated = (saleData) => {
     setRefreshHistory(prev => prev + 1);
@@ -53,7 +51,7 @@ const Ventas = () => {
   const handleNewSale = () => {
     setShowSuccessModal(false);
     setView('register');
-    setFormKey(k => k + 1); // Reinicia el formulario forzando remontaje
+    setFormKey(k => k + 1); 
   };
 
   const handleGoToHistory = () => {
@@ -174,7 +172,6 @@ const Ventas = () => {
               <QrPaymentForm userName={userName} onClose={() => setShowQrForm(false)} />
             )}
           </div>
-          {/* Contenido según la vista seleccionada */}
           <div>
             {view === 'register' && <SalesRegisterForm key={formKey} onSuccess={handleSaleCreated} />}
             {view === 'history' && <SalesHistory refreshTrigger={refreshHistory} />}
@@ -182,9 +179,8 @@ const Ventas = () => {
           </div>
         </main>
       </div>
-  {/* Accesibilidad: botón eliminado */}
 
-      {/* Modal Venta Registrada (diseño con resumen) */}
+      {/* Modal Venta Registrada*/}
       {showSuccessModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-[2px]">
           <div className="bg-white w-11/12 max-w-md rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.25)] p-6 text-center">

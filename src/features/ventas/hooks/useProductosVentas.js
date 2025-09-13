@@ -14,7 +14,7 @@ export const useProductosVentas = () => {
       const data = await getInventory();
       const productosFormateados = data
         .map(item => mapBackendToFrontend(item))
-        .filter(producto => producto.stock > 0) // Solo productos con stock
+        .filter(producto => producto.stock > 0) 
         .map(producto => ({
           id: producto.id,
           name: producto.nombre,
@@ -22,7 +22,6 @@ export const useProductosVentas = () => {
           stock: producto.stock,
           category: producto.categoria,
           unidadMedida: producto.unidadMedida || 'und',
-          // Para compatibilidad con el componente existente
           suggestedPrice: producto.precio
         }));
       

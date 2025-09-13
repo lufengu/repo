@@ -6,7 +6,6 @@ const CardProductosBajos = ({ productos = [], onClick = () => {} }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   // Obtener productos con stock bajo según el umbral configurado en cada producto
-  // Ordenar de menor a mayor stock para resaltar los más críticos
   const productosFiltrados = productos
     .filter(p => typeof p.umbralAlerta === 'number' ? p.stock <= p.umbralAlerta : p.stock < 100)
     .sort((a, b) => a.stock - b.stock);
@@ -46,7 +45,7 @@ const CardProductosBajos = ({ productos = [], onClick = () => {} }) => {
           </div>
         </div>
 
-        {/* Lista vertical de productos (vista previa) */}
+        {/* Lista de productos (vista previa) */}
         {productosFiltrados.length > 0 ? (
           <div className="flex flex-col gap-2">
             {productosFiltrados.slice(0, 2).map((producto, idx) => (
@@ -67,7 +66,7 @@ const CardProductosBajos = ({ productos = [], onClick = () => {} }) => {
         )}
       </div>
 
-      {/* Modal que muestra la lista completa de productos con stock bajo */}
+      {/*lista completa de productos con stock bajo */}
       <ModalProductosBajos isOpen={isOpen} onClose={() => setIsOpen(false)} productos={productosFiltrados} />
     </>
   );

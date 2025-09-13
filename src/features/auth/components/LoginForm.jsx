@@ -32,7 +32,7 @@ export const LoginForm = () => {
     }));
   };
 
-  // Cuando envías el formulario de usuario
+  // Envio el formulario de usuario
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -44,14 +44,14 @@ export const LoginForm = () => {
         throw new Error('Por favor completa todos los campos');
       }
 
-      // Llamamos al servicio para validar el usuario en el servidor
+      // Llamada al servicio para validar el usuario en el servidor
       const response = await loginUser(formData.email, formData.password);
       
-      // Ahora la respuesta tiene estructura: {success, message, user, tokens}
+      // respuesta tiene estructura: {success, message, user, tokens}
       const userData = response.user;
       const accessToken = response.tokens.accessToken;
       
-      // Usar el contexto para manejar el login
+      // usar el contexto para manejar el login
       login(userData, accessToken);
       
       // Redirigir según el rol
@@ -73,7 +73,7 @@ export const LoginForm = () => {
         className="w-full max-w-md bg-white rounded-3xl shadow-2xl px-8 py-8 space-y-6 border border-gray-100 animate-fade-in"
         style={{ minWidth: 320, boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18)' }}
       >
-        {/* Logo y subtítulo dentro del formulario */}
+        {/* Logo  */}
         <div className="flex flex-col items-center mb-6">
           <img
             src={logoCompleto}

@@ -29,7 +29,7 @@ const CreateUserForm = () => {
       [name]: value
     }));
     
-    // Limpiar error específico cuando el usuario empiece a escribir
+      // Limpiar error al modificar el campo
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -108,9 +108,6 @@ const CreateUserForm = () => {
           confirmPassword: '',
           rol: 'usuario'
         });
-        
-        // Opcional: redirigir de vuelta a la lista de usuarios
-        // window.history.back();
         
       } else {
         alert(`Error: ${response.message}`);

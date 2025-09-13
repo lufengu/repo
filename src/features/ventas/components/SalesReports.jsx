@@ -25,7 +25,7 @@ const SalesReports = () => {
 
   useEffect(() => {
     generateReports();
-  }, [reportPeriod]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [reportPeriod]); 
 
   const generateReports = async () => {
     setLoading(true);
@@ -59,7 +59,6 @@ const SalesReports = () => {
       // Agrupar ventas por hora/día
       let trends = [];
       if (reportPeriod === 'daily') {
-        // Ya no agrupamos por hora, solo dejamos vacío
         trends = [];
       } else {
         // Agrupar por día del mes
@@ -133,7 +132,7 @@ const SalesReports = () => {
           monthlyReport: null,
           salesByProduct,
           salesByPaymentMethod,
-          trends: [], // No hay tendencias por hora
+          trends: [], // No hay tendencias por hora poner en fase 2
           maxSalesByMonth: []
         });
       } else {
@@ -283,29 +282,24 @@ const SalesReports = () => {
 
       const doc = new jsPDF();
       doc.setFontSize(16);
-      // Centrar el título "REPORTE DETALLADO DE VENTAS"
       const pageWidth = doc.internal.pageSize.getWidth();
       const title = 'REPORTE DETALLADO DE VENTAS';
       const textWidth = doc.getTextWidth(title);
       const x = (pageWidth - textWidth) / 2;
       doc.text(title, x, 18);
-
-      // Agregar fecha y hora de generación
       const fechaHora = new Date().toLocaleString('es-CO');
       doc.setFontSize(10);
       doc.text(`Generado el: ${fechaHora}`, 14, 25);
 
       let y = 35;
       detailedSales.forEach((sale) => {
-        // Calcular altura estimada del bloque (ajustado por más líneas de cliente)
         let blockHeight = 90 + (sale.detalles.length * 12);
         if (y + blockHeight > doc.internal.pageSize.getHeight() - 20) {
           doc.addPage();
           y = 18;
         }
-        // Dibujar recuadro
-        doc.setFillColor(255, 243, 230); // fondo suave
-        doc.setDrawColor(255, 115, 0);   // borde naranja
+        doc.setFillColor(255, 243, 230); 
+        doc.setDrawColor(255, 115, 0);   
         doc.roundedRect(10, y - 4, doc.internal.pageSize.getWidth() - 20, blockHeight, 4, 4, 'FD');
 
         let innerY = y + 4;
@@ -430,9 +424,8 @@ const SalesReports = () => {
             doc.addPage();
             y = 18;
           }
-          // Dibujar recuadro
-          doc.setFillColor(255, 243, 230); // fondo suave
-          doc.setDrawColor(255, 115, 0);   // borde naranja
+          doc.setFillColor(255, 243, 230); 
+          doc.setDrawColor(255, 115, 0);   
           doc.roundedRect(10, y - 4, doc.internal.pageSize.getWidth() - 20, blockHeight, 4, 4, 'FD');
 
           let innerY = y + 4;

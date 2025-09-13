@@ -12,7 +12,6 @@ const CardUltimosPedidos = () => {
       setLoading(true);
       try {
         const pedidos = await pedidosApi.getPedidos();
-        // Filtrar solo los que no están retrasados
         const proximos = pedidos.filter(p => p.estado !== 'Retrasado')
           .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
         setUltimosPedidos(proximos);
@@ -40,7 +39,7 @@ const CardUltimosPedidos = () => {
           <div className="text-gray-400">No hay pedidos próximos a entregar.</div>
         ) : (
           <>
-            {ultimosPedidos.slice(0, 3).map((p, idx) => {
+            {ultimosPedidos.filter(p => p.estado !== 'Recibido').slice(0, 3).map((p, idx) => {
               // Formato fecha relativa
               const hoy = new Date();
               const fechaPedido = new Date(p.fecha);
@@ -57,7 +56,6 @@ const CardUltimosPedidos = () => {
               if (p.producto && p.producto.toLowerCase().includes('botella')) cantidadStr += ' botellas';
               else if (p.producto && p.producto.toLowerCase().includes('paquete')) cantidadStr += ' paquetes';
               else if (p.producto && p.producto.toLowerCase().includes('pieza')) cantidadStr += ' piezas';
-              // Truncar nombre si es largo
               let nombreProd = p.producto.length > 18 ? p.producto.slice(0, 18) + '...' : p.producto;
               return (
                 <div key={p.id} className="flex items-center justify-between py-1">

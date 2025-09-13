@@ -1,4 +1,3 @@
-// Servicio para consumir la API de proveedores
 import api from '../../auth/services/api';
 
 const API_URL = '/providers';

@@ -15,7 +15,7 @@ const CardAlertas = () => {
     async function fetchAlertas() {
       setLoading(true);
       try {
-        // Productos por vencer (menos de 7 días)
+        // Productos por vencer 
         const inventario = await getInventory();
         const hoy = new Date();
         const porVencer = inventario.filter(item => {
@@ -33,15 +33,12 @@ const CardAlertas = () => {
 
         // Ventas de hoy
         const ventas = await salesAPI.getSales();
-        // Normalizar fechas a 'YYYY-MM-DD' para comparar correctamente
         const formatDate = d => {
           if (!d) return '';
           const dateObj = new Date(d);
-          // Si el string es 'YYYY-MM-DD', usarlo directamente
           if (typeof d === 'string' && d.length === 10 && d.match(/^\d{4}-\d{2}-\d{2}$/)) {
             return d;
           }
-          // Si es Date, formatear a 'YYYY-MM-DD'
           return dateObj.toISOString().slice(0, 10);
         };
         const hoyStr = formatDate(hoy);
@@ -61,7 +58,7 @@ const CardAlertas = () => {
     fetchAlertas();
   }, []);
 
-  // Hay pedidos retrasados
+  // Pedidos retrasados
   const retrasosPedidos = pedidosRetrasados.length > 0;
 
   return (
@@ -81,13 +78,13 @@ const CardAlertas = () => {
           <div className="bg-white rounded-lg p-3 text-gray-500 shadow">Cargando alertas...</div>
         ) : (
           <>
-            {/* Retrasos de pedidos: estilo caja igual que ventas */}
+            {/* Retrasos de pedidos */}
             <div className="bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2">
               <span><AlertCircleIcon className="w-4 h-4 text-red-500" /></span>
               <span className="font-semibold">Retrasos de pedidos:</span>
               <span className="text-gray-700">{pedidosRetrasados.length === 0 ? 'No hay pedidos retrasados.' : `${pedidosRetrasados.length} pedido${pedidosRetrasados.length !== 1 ? 's' : ''} retrasado${pedidosRetrasados.length !== 1 ? 's' : ''}`}</span>
             </div>
-            {/* Productos por vencer: estilo caja igual que ventas */}
+            {/* Productos por vencer */}
             <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 flex items-center gap-2">
               <span><AlertCircleIcon className="w-4 h-4 text-orange-500" /></span>
               <span className="font-semibold">Productos por vencer:</span>

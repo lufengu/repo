@@ -52,7 +52,6 @@ const SalesHistory = ({ refreshTrigger }) => {
 
     if (dateFilter) {
       filtered = filtered.filter(sale => {
-        // Ajustar la fecha a Colombia antes de comparar
         const saleDate = toColombiaDate(sale.createdAt).toISOString().split('T')[0];
         return saleDate === dateFilter;
       });
@@ -86,9 +85,6 @@ const SalesHistory = ({ refreshTrigger }) => {
       .map(([name, count]) => ({ name, count }));
 
     topProductsRef.current = topProducts;
-
-    // Si quieres ver el resultado en consola (puedes quitar esta línea si no quieres nada visible)
-    // console.log('Top 5 productos más comprados:', topProducts);
 
   }, [filteredSales]);
 
@@ -153,7 +149,7 @@ const SalesHistory = ({ refreshTrigger }) => {
     setCurrentPage(1);
   };
 
-  // Generar números de páginas para mostrar
+  // Generar números de páginas 
   const getPageNumbers = () => {
     const pageNumbers = [];
     const maxPagesToShow = 5;
@@ -303,7 +299,7 @@ const SalesHistory = ({ refreshTrigger }) => {
           </div>
         ) : (
           <>
-            {/* Vista tipo card en móvil, tabla en desktop */}
+            {/* Vista tipo card en celular */}
             <div className="block lg:hidden space-y-4">
               {currentSales.map((sale) => (
                 <div key={sale.id} className="rounded-xl border border-gray-200 shadow-sm p-4 bg-white flex flex-col gap-2">

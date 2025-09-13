@@ -101,7 +101,6 @@ const SaleReceipt = ({ sale, onClose, onPrint }) => {
             <p className="text-xs text-gray-500">NIT: 123.456.789-0</p>
             <p className="text-xs text-gray-500">Dirección: Calle Principal #123</p>
             <p className="text-xs text-gray-500">Tel: +57 (1) 234-5678</p>
-            {/* ...existing header content... */}
           </div>
 
           {/* Información de la venta */}

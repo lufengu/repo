@@ -6,7 +6,6 @@ function buildDataUrl(base64, mime = 'image/png') {
 export function normalizeQrImageJson(json, { preferSignedUrl = true } = {}) {
   if (!json || typeof json !== 'object') return { src: null, meta: {} };
 
-  // Preferir URL firmada si viene
   const signed = json.signedUrl || json.signed_url || json.url || json.href;
   if (preferSignedUrl && signed) {
     return { src: signed, meta: { type: 'signed-url' } };

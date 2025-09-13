@@ -27,7 +27,6 @@ const ModalEditarProducto = ({ isOpen, onClose, onEditarProducto, producto, cate
     { value: 'bot', label: 'Botella', ejemplo: 'Ej: 24 botellas de agua' }
   ];
 
-  // ejemplo de la unidad seleccionada, se usa para mostrar ayuda en el formulario
   const unidadEjemplo = unidadesMedida.find(u => u.value === formData.unidadMedida)?.ejemplo || '';
 
   const [errors, setErrors] = useState({});
@@ -35,7 +34,7 @@ const ModalEditarProducto = ({ isOpen, onClose, onEditarProducto, producto, cate
 
   const categoriasDisponibles = categorias.filter(cat => cat !== 'Todas');
 
-  // Cargar datos del producto cuando se abre el modal
+  // Cargar datos del producto 
   useEffect(() => {
     if (isOpen && producto) {
       setFormData({
@@ -60,7 +59,7 @@ const ModalEditarProducto = ({ isOpen, onClose, onEditarProducto, producto, cate
       [name]: value
     }));
 
-    // Limpiar error del campo cuando el usuario empiece a escribir
+    // Limpiar error del campo 
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -293,7 +292,7 @@ const ModalEditarProducto = ({ isOpen, onClose, onEditarProducto, producto, cate
               )}
             </div>
 
-            {/* Información adicional (solo lectura en edición básica) */}
+            {/* Información adicional */}
             <div className="bg-gray-50 p-4 rounded-md">
               <p className="text-sm text-gray-600 mb-2">
                 <FaInfoCircle className="inline mr-1" />

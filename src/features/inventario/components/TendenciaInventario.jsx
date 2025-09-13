@@ -1,7 +1,7 @@
 import React from 'react';
 import { TrendingUpIcon } from "lucide-react";
 
-const UMBRAL = 10; // Cambia a 1 para pruebas
+const UMBRAL = 10; 
 
 const TendenciaInventario = ({ productos = [] }) => {
   // Filtra productos de baja rotación o ventas

@@ -14,9 +14,8 @@ const QrPaymentForm = ({ userName, onClose }) => {
   const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
-  // Eliminado editMode, ya no es necesario
   const [savedQrId, setSavedQrId] = useState(null);
-  const [savedQr, setSavedQr] = useState(null); // Para mostrar el QR guardado
+  const [savedQr, setSavedQr] = useState(null); 
 
   useEffect(() => {
     if (qrImage) {
@@ -73,7 +72,6 @@ const QrPaymentForm = ({ userName, onClose }) => {
     setQrImage(null);
     setPreview(null);
     setSuccess(false);
-    // El QR guardado se actualizará por el useEffect
   };
 
   const handleSubmit = async (e) => {
@@ -90,7 +88,6 @@ const QrPaymentForm = ({ userName, onClose }) => {
       });
       const dataUrl = await toBase64(qrImage);
       const base64 = dataUrl.split(',')[1];
-      // 1. Subir imagen a objects
       const payload = {
         name: qrImage.name,
         data: base64,
@@ -98,21 +95,17 @@ const QrPaymentForm = ({ userName, onClose }) => {
       const res = await api.post('/objects/create', payload);
       const objectId = res.data?.id || res.data?.objectId || res.data?.object_id;
       if (!objectId) throw new Error('No se obtuvo objectId del backend');
-        // 2. Crear o editar QR con el objectId
-        // Siempre usar el objectId recién creado
         const qrPayload = {
           name: `${selectedMethod} - ${qrImage.name}`,
           objectId: Number(objectId),
         };
         if (savedQrId) {
-          // Eliminar el QR anterior antes de crear el nuevo
           await api.delete(`/qr/delete/${savedQrId}`);
         }
         await api.post('/qr/create', qrPayload);
       setSuccess(true);
       setQrImage(null);
       setPreview(null);
-  // editMode eliminado
       setTimeout(() => {
         setSuccess(false);
         onClose();

@@ -2,8 +2,6 @@ import api from '../../auth/services/api';
 
 // Función para mapear datos del backend al frontend
 const mapBackendToFrontend = (backendSale) => {
-  // Calcular total de items desde el campo amount si está disponible, 
-  // sino calcularlo desde el campo products
   let totalItems = 0;
   if (backendSale.amount && backendSale.amount > 0) {
     totalItems = parseInt(backendSale.amount);
@@ -22,11 +20,11 @@ const mapBackendToFrontend = (backendSale) => {
   customer: backendSale.customer || 'Cliente General',
   cedula: backendSale.cedula || backendSale.customerCedula || backendSale.customerDocument || backendSale.document || backendSale.dni || backendSale.documento || '',
   direccion: backendSale.direccion || backendSale.customerAddress || backendSale.address || backendSale.customerDireccion || backendSale.direccionFiscal || backendSale.direccion_fiscal || '',
-  phone: '', // No disponible en backend actual
+  phone: '', 
   email: backendSale.customerEmail || '',
     items: backendSale.products ? JSON.parse(backendSale.products) : [],
     payment_method: backendSale.paymentMethod,
-    paymentMethod: backendSale.paymentMethod, // Para compatibilidad
+    paymentMethod: backendSale.paymentMethod, 
     total: parseFloat(backendSale.total) || 0,
     totalItems: totalItems,
     createdAt: backendSale.date ? new Date(backendSale.date).toISOString() : new Date().toISOString(),
@@ -36,7 +34,6 @@ const mapBackendToFrontend = (backendSale) => {
 
 // Servicio de ventas - actualizado para backend real
 export const salesAPI = {
-  // Obtener todas las ventas del usuario autenticado
   getSales: async () => {
     try {
       const response = await api.get('/sales/list');
@@ -57,8 +54,6 @@ export const salesAPI = {
     try {
       // Calcular la cantidad total de productos
       const totalQuantity = saleData.items ? saleData.items.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0;
-      
-      // Mapear datos del frontend al formato del backend
       const cedulaValue = saleData.cedula || saleData.customer?.cedula || saleData.customerCedula || '';
       const direccionValue = saleData.direccion || saleData.customer?.direccion || saleData.customerAddress || '';
       const backendData = {
@@ -69,10 +64,10 @@ export const salesAPI = {
         dni: String(cedulaValue),
         direccion: direccionValue,
         address: String(direccionValue),
-        products: JSON.stringify(saleData.items || []), // El backend espera JSON string
+        products: JSON.stringify(saleData.items || []), 
         paymentMethod: saleData.payment_method || saleData.paymentMethod,
         total: parseFloat(saleData.total),
-        amount: totalQuantity // Cantidad total de productos vendidos
+        amount: totalQuantity 
       };
       
       const response = await api.post('/sales/create', backendData);
@@ -106,8 +101,6 @@ export const salesAPI = {
     try {
       // Calcular la cantidad total de productos
       const totalQuantity = saleData.items ? saleData.items.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0;
-      
-      // Mapear datos del frontend al formato del backend
       const backendData = {
         date: saleData.date,
         customer: saleData.customer,
@@ -144,8 +137,6 @@ export const salesAPI = {
       throw new Error(message);
     }
   },
-
-  // Nuevos métodos para estadísticas de cantidad
   
   // Obtener estadísticas totales de cantidad vendida
   getTotalQuantityStats: async () => {
@@ -223,7 +214,6 @@ export const updateProductNameInSales = async (productId, newName) => {
           await salesAPI.updateSale(sale.id, saleData);
         } catch (err) {
           console.error(`Error actualizando venta ${sale.id} al propagar nombre del producto:`, err);
-          // No lanzamos para permitir que las demás ventas sigan procesándose
         }
       }
 

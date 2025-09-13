@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { getProviders } from '../../proveedores/services/providerService';
 import { FaTimes, FaPlus, FaInfoCircle } from 'react-icons/fa';
 
 const ModalAgregarProducto = ({ isOpen, onClose, onAgregarProducto, categorias }) => {
@@ -14,6 +15,15 @@ const ModalAgregarProducto = ({ isOpen, onClose, onAgregarProducto, categorias }
     precioCompra: '',
     umbralAlerta: ''
   });
+  const [proveedores, setProveedores] = useState([]);
+  const [showProveedores, setShowProveedores] = useState(false);
+  useEffect(() => {
+    if (isOpen) {
+      getProviders()
+        .then(data => setProveedores(data))
+        .catch(() => setProveedores([]));
+    }
+  }, [isOpen]);
 
   const unidadesMedida = [
     { value: 'und', label: 'Unidad', ejemplo: 'Ej: 25 unidades de pan' },
@@ -79,8 +89,7 @@ const ModalAgregarProducto = ({ isOpen, onClose, onAgregarProducto, categorias }
       ...prev,
       [name]: value
     }));
-    
-    // Si selecciona "nueva categoria", mostrar input
+    // Mostrar campo para nueva categoría si se selecciona esa opción
     if (name === 'categoria' && value === 'nueva_categoria') {
       setMostrarNuevaCategoria(true);
       setFormData(prev => ({ ...prev, categoria: '' }));
@@ -254,14 +263,21 @@ const ModalAgregarProducto = ({ isOpen, onClose, onAgregarProducto, categorias }
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Proveedor
               </label>
-              <input
-                type="text"
+              <select
                 name="proveedor"
                 value={formData.proveedor}
                 onChange={handleChange}
-                placeholder="Ej: Diana S.A."
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
-              />
+                style={{
+                  maxHeight: proveedores.length > 5 ? '180px' : undefined,
+                  overflowY: proveedores.length > 5 ? 'auto' : undefined
+                }}
+              >
+                <option value="">Selecciona un proveedor</option>
+                {proveedores.map(p => (
+                  <option key={p.id || p._id || p.title} value={p.title}>{p.title}</option>
+                ))}
+              </select>
             </div>
 
             {/* Categoría */}

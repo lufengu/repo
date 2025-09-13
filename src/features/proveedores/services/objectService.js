@@ -3,7 +3,7 @@ import api from '../../auth/services/api';
 const fileToDataURL = (file) =>
   new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(reader.result); // data:<mime>;base64,XXXX
+    reader.onload = () => resolve(reader.result); 
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
@@ -43,18 +43,14 @@ export const uploadObject = async (fileOrDataUrl, meta = {}) => {
 // Devuelve un src listo para <img>: data URL o blob URL
 export const getObjectBlobUrl = async (id) => {
   try {
-    // 1) El backend suele responder JSON con { data(base64), contentType, url? }
     const res = await api.get(`/objects/get/${id}`);
     const { data, contentType, url } = res.data || {};
     if (data && typeof data === 'string') {
       return `data:${contentType || 'application/octet-stream'};base64,${data}`;
     }
-    if (url) return url; // p.ej. URL firmada de S3
-    // si no viene lo esperado, se intenta blob
+    if (url) return url; 
   } catch (_) {
-    // si no es JSON, probamos como blob abajo
   }
-  // 2) Fallback a blob binario
   const resBlob = await api.get(`/objects/get/${id}`, { responseType: 'blob' });
   const ct = resBlob.headers?.['content-type'] || 'application/octet-stream';
   const blob = new Blob([resBlob.data], { type: ct });

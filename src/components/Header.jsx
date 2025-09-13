@@ -14,7 +14,7 @@ export const Header = ({ title = 'Dashboard' }) => {
     
     setIsLoggingOut(true);
     
-    // Logout optimista - limpiar UI inmediatamente
+    // Logout- limpiar UI inmediatamente
     logout();
     navigate('/login');
     

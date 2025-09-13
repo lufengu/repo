@@ -21,15 +21,14 @@ const Menu = ({
   const handleLogout = async () => {
     setIsLoggingOut(true);
     
-    // Logout optimista - limpiar UI inmediatamente
+    // Logout - limpiar UI inmediatamente
     logout();
     navigate('/login');
     
-    // Intentar logout en el servidor en segundo plano
+    //  logout en el servidor en segundo plano
     try {
       await logoutUser();
     } catch (error) {
-      // Si falla el logout del servidor, no importa porque ya limpiamos el frontend
       console.warn('Error en logout del servidor:', error);
     } finally {
       setIsLoggingOut(false);

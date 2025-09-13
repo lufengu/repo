@@ -26,7 +26,7 @@ export default function ProveedoresPage() {
     "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='640' height='320'><rect width='100%' height='100%' fill='%23e5e7eb'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='Arial, Helvetica, sans-serif' font-size='48' fill='%239ca3af'>Sin imagen</text></svg>";
 
   const { productos, cargarProductos } = useProductos();
-  // Nota: filtrado cuando se necesita (ej. en select)
+
 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeSection, setActiveSection] = useState("proveedores");
@@ -37,9 +37,9 @@ export default function ProveedoresPage() {
     whatsapp: "",
     correo: "",
     direccion: "",
-    deliveryDay: "", // Nuevo campo requerido
+    deliveryDay: "", 
     imagen: null,
-    imagenFile: null, // <- guardar el File original para subir
+    imagenFile: null, 
   });
   const [cards, setCards] = useState([]);
   const [_loading, setLoading] = useState(true);
@@ -59,7 +59,6 @@ export default function ProveedoresPage() {
             objectId: oid ? String(oid) : null,
             img: null,
             title: prov.title,
-            // Agregamos los campos en crudo para facilitar edición
             ownerName: prov.ownerName,
             whatsappNumber: prov.whatsappNumber,
             email: prov.email,
@@ -110,7 +109,7 @@ export default function ProveedoresPage() {
       ? (user.name || user.nombre || user.firstName || user.username)
       : "Usuario";
   const [mensaje, setMensaje] = useState("");
-  const [busqueda, setBusqueda] = useState(""); // Estado para el buscador
+  const [busqueda, setBusqueda] = useState("");
 
   // Util: convertir archivo a Base64 (Data URL)
   const fileToBase64 = (file) =>
@@ -130,7 +129,7 @@ export default function ProveedoresPage() {
         alert("El archivo debe ser una imagen.");
         return;
       }
-      const maxSize = 2 * 1024 * 1024; // 2MB
+      const maxSize = 2 * 1024 * 1024; 
       if (file.size > maxSize) {
         alert("La imagen supera los 2MB permitidos.");
         return;
@@ -157,7 +156,7 @@ export default function ProveedoresPage() {
       if (form.imagenFile) {
         const up = await uploadObject(form.imagenFile);
         console.log('uploadObject ->', up);
-        objectId = up?.id ?? null; // string
+        objectId = up?.id ?? null; 
       }
 
       const payload = {
@@ -166,8 +165,8 @@ export default function ProveedoresPage() {
         whatsappNumber: (form.whatsapp || '').replace(/\D/g, ''),
         email: form.correo,
         address: form.direccion,
-        deliveryDay: form.deliveryDay || "", // Aseguramos que siempre se envía
-        objectId: objectId ?? null, // backend requiere string | null
+        deliveryDay: form.deliveryDay || "", 
+        objectId: objectId ?? null, 
       };
       console.log('createProvider payload:', payload);
 
@@ -189,7 +188,7 @@ export default function ProveedoresPage() {
           objectId,
           img: imgSrc,
           title: creado.title,
-          // Guardamos campos crudos para edición futura
+          // Guardamos campos para edición futura
           ownerName: creado.ownerName,
           whatsappNumber: creado.whatsappNumber,
           email: creado.email,
@@ -221,7 +220,7 @@ export default function ProveedoresPage() {
   // Abrir modal de ordenar
   const handleOpenOrdenar = (card) => {
     setProveedorSeleccionado(card);
-    // Refrescar productos desde inventario antes de abrir el modal para asegurar datos actuales
+    // Refrescar productos desde inventario antes de abrir el modal 
     cargarProductos().then((lista) => {
       const first = lista && lista.length > 0 ? lista[0] : null;
       const nombre = first?.nombre || first?.name || "";
@@ -277,12 +276,10 @@ export default function ProveedoresPage() {
     window.open(url, "_blank");
   };
 
-  // Nueva función para eliminar proveedor
   // Eliminar proveedor usando la API
   const handleEliminarProveedor = async (idx) => {
     const proveedor = cards[idx];
     if (!proveedor.id) {
-      // Si no tiene id, es un proveedor local (no debería pasar)
       setCards(cards.filter((_, i) => i !== idx));
       return;
     }
@@ -322,7 +319,7 @@ export default function ProveedoresPage() {
       whatsapp: card.whatsappNumber || "",
       correo: card.email || "",
       direccion: card.address || "",
-      deliveryDay: card.deliveryDay || "", // Cargar deliveryDay si existe
+      deliveryDay: card.deliveryDay || "", 
       imagen: card.img || null,
       imagenFile: null,
       objectId: card.objectId || null,

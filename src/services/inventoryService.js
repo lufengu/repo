@@ -53,7 +53,6 @@ export const createInventoryItem = async (itemData) => {
 // Función para actualizar un producto
 export const updateInventoryItem = async (itemId, itemData) => {
   try {
-    // Mapear los campos del frontend al backend
     const backendData = {};
     if (itemData.nombre !== undefined) backendData.name = itemData.nombre;
     if (itemData.precio !== undefined) backendData.price = parseFloat(itemData.precio);
@@ -95,12 +94,10 @@ export const mapBackendToFrontend = (backendItem) => {
     categoria: backendItem.category || 'Sin categoría',
     precio: parseFloat(backendItem.price) || 0,
     stock: parseInt(backendItem.quantity) || 0,
-    // Nuevos campos desde el backend
     proveedor: backendItem.supplier_name || backendItem.supplierName || 'No especificado',
     presentacion: backendItem.presentation || 'N/A',
     fechaVencimiento: backendItem.expiration_date || backendItem.expirationDate || null,
     margenGanancia: parseFloat(backendItem.profit_margin || backendItem.profitMargin) || 30.0,
-    // Campos calculados para compatibilidad
     unidadMedida: 'und',
     precioCompra: backendItem.profit_margin ? 
       Math.round((parseFloat(backendItem.price) / (1 + (parseFloat(backendItem.profit_margin) / 100))) * 100) / 100
@@ -125,7 +122,7 @@ export const updateStockAfterSale = async (ventaItems) => {
     const inventory = await getInventory();
 
     const updatePromises = ventaItems.map(async (item) => {
-      // item.product puede ser el id o el nombre; además recibimos productName en el payload
+      // item.product puede ser el id o el nombre
       const producto = inventory.find(p => (
         // Comparar id estrictamente o por igualdad débil para cubrir strings/números
         p.id === item.product || p.id == item.product ||

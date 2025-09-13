@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import api from '../../auth/services/api';
 import { getQrUrlForMethod } from '../services/qrFrontendService';
 import { FaPlus, FaTrash, FaSave, FaShoppingCart, FaExclamationTriangle } from 'react-icons/fa';
 import { MetricCard } from './index';
@@ -14,10 +15,9 @@ const paymentMethods = [
   { value: 'transferencia', label: 'Transferencia' },
   { value: 'nequi', label: 'Nequi' },
   { value: 'daviplata', label: 'Daviplata' },
-  { value: 'bancolombia', label: 'Bancolombia' }, // Para coincidir con QrPaymentForm
+  { value: 'bancolombia', label: 'Bancolombia' },
 ];
 
-/** Combobox elegante con buscador integrado y scroll discreto */
 function ProductComboBox({
   value,
   onChange,
@@ -28,11 +28,11 @@ function ProductComboBox({
   placeholder = 'Buscar y seleccionar un producto…',
   query,
   onQueryChange,
-  maxVisible = 4, // Cambia el valor por defecto a 5
+  maxVisible = 4, 
 }) {
   const [open, setOpen] = useState(false);
   const [highlight, setHighlight] = useState(0);
-  const [page, setPage] = useState(1); // Estado para la página
+  const [page, setPage] = useState(1); 
   const ref = useRef(null);
 
   const filtered = (query || '')
@@ -47,7 +47,7 @@ function ProductComboBox({
   useEffect(() => {
     function onClickOutside(e) {
       // Busca el formulario principal por id o ref
-      const formElement = document.querySelector('form'); // O usa una prop ref si tienes varias instancias
+      const formElement = document.querySelector('form'); 
       if (
         ref.current &&
         !ref.current.contains(e.target) &&
@@ -62,7 +62,7 @@ function ProductComboBox({
 
   useEffect(() => {
     setHighlight(0);
-    setPage(1); // Reinicia a la primera página al cambiar la búsqueda
+    setPage(1); 
   }, [query, open]);
 
   const selectItem = (item) => {
@@ -100,7 +100,6 @@ function ProductComboBox({
 
   return (
     <div ref={ref} className="relative">
-      {/* Global tiny CSS para esconder scrollbars del panel */}
       <style>{`
         .scrollbar-none::-webkit-scrollbar { display: none; }
         .scrollbar-none { -ms-overflow-style: none; scrollbar-width: none; }
@@ -139,13 +138,11 @@ function ProductComboBox({
         </button>
       </div>
       {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
-
-      {/* Panel de opciones flotante (estilo command palette) */}
       {open && (
         <div
           className="absolute z-30 mt-2 left-0 w-[340px] sm:w-[400px] max-w-[95vw] rounded-2xl border border-gray-200 bg-white shadow-2xl"
           style={{ overflow: 'hidden' }}
-          onWheel={e => e.stopPropagation()} // Evita que el scroll cierre el panel
+          onWheel={e => e.stopPropagation()} 
         >
           <div className="sticky top-0 bg-white/90 backdrop-blur px-3 py-2 border-b">
             <p className="text-xs text-gray-500">
@@ -222,7 +219,7 @@ function ProductComboBox({
 }
 
 export default function SalesRegisterForm({ onSuccess }) {
-  // Obtener usuario actual (se usa el localStorage en otros lugares si es necesario)
+  // Obtener usuario actual 
   // Hook para productos del inventario
   const {
     productos: productOptions,
@@ -324,11 +321,35 @@ export default function SalesRegisterForm({ onSuccess }) {
     setFormError('');
   };
 
-  const handleCustomerChange = (field, value) => {
-    setCustomer(prev => ({
-      ...prev,
-      [field]: value
-    }));
+  // Autocompletar datos del cliente al ingresar cédula
+  const [customerNotFound, setCustomerNotFound] = useState(false);
+  const handleCustomerChange = async (field, value) => {
+    if (field === 'cedula') {
+      setCustomer(prev => ({ ...prev, cedula: value }));
+      setCustomerNotFound(false);
+      // Solo buscar si la cédula tiene al menos 6 dígitos
+      if (value && value.length >= 6) {
+        try {
+          const res = await api.get(`/sales/get-by-dni/${value}`);
+          if (res.data) {
+            setCustomer(prev => ({
+              ...prev,
+              name: res.data.customer || '',
+              direccion: res.data.direccion || '',
+              email: res.data.customerEmail || ''
+            }));
+            setCustomerNotFound(false);
+          }
+        } catch (err) {
+          if (err.response && err.response.status === 404) {
+            setCustomer(prev => ({ ...prev, name: '', direccion: '', email: '' }));
+            setCustomerNotFound(true);
+          }
+        }
+      }
+    } else {
+      setCustomer(prev => ({ ...prev, [field]: value }));
+    }
   };
 
   const validate = () => {
@@ -395,16 +416,15 @@ export default function SalesRegisterForm({ onSuccess }) {
           productName: r.product,
           quantity: r.quantity,
           price: parseFloat(r.price),
-          name: r.product // Para compatibilidad con el recibo
+          name: r.product 
         };
       }),
       payment_method: paymentMethod,
-      paymentMethod: paymentMethod, // Para compatibilidad
+      paymentMethod: paymentMethod, 
       total,
       totalItems,
 
       customer: customer.name || 'Cliente General',
-  // phone removed per request; backend may ignore this field
       email: customer.email || '',
       cedula: customer.cedula || '',
       direccion: customer.direccion || '',
@@ -426,13 +446,13 @@ export default function SalesRegisterForm({ onSuccess }) {
       } catch (stockError) {
         console.error('Error al actualizar stock:', stockError);
         setFormError('Venta guardada, pero error al actualizar inventario: ' + stockError.message);
-        return; // No limpiar el formulario si hay error de stock
+        return; 
       }
 
       // Crear datos de venta completada para el recibo
       const saleData = {
         ...payload,
-        id: savedSale.id || Date.now(), // Usar ID del backend o temporal
+        id: savedSale.id || Date.now(), 
       };
 
     setCompletedSale(saleData);
@@ -441,11 +461,9 @@ export default function SalesRegisterForm({ onSuccess }) {
   // Limpiar formulario
   setRows([{ product: '', quantity: 1, price: '', error: {}, stockWarning: '' }]);
   setPaymentMethod('');
-  // Limpiar cliente incluyendo cédula y dirección
   setCustomer({ name: '', cedula: '', direccion: '', email: '' });
   setProductSearch(['']);
 
-      // Notificar al padre para mostrar el modal de éxito
       if (onSuccess) onSuccess(saleData);
 
     } catch (error) {
@@ -465,7 +483,7 @@ export default function SalesRegisterForm({ onSuccess }) {
     setCompletedSale(null);
   };
 
-  const formRef = useRef(null); // Nueva referencia para el formulario
+  const formRef = useRef(null); 
 
   return (
     <div className="space-y-6 overflow-visible w-full">
@@ -555,7 +573,6 @@ export default function SalesRegisterForm({ onSuccess }) {
                   <tbody className="divide-y divide-gray-100">
                     {rows.map((r, i) => (
                       <tr key={i} className="hover:bg-gray-50">
-                        {/* Columna Producto: combobox estilizado */}
                         <td className="px-2 sm:px-4 py-3">
                           <ProductComboBox
                             value={r.product}
@@ -569,7 +586,7 @@ export default function SalesRegisterForm({ onSuccess }) {
                               next[i] = text;
                               setProductSearch(next);
 
-                              // Si el usuario borra todo, limpiamos la selección y el precio
+                              // Autocompletar producto y precio si hay coincidencia exacta
                               if (text.trim() === '') {
                                 handleChange(i, 'product', '');
                                 handleChange(i, 'price', '');
@@ -802,19 +819,6 @@ export default function SalesRegisterForm({ onSuccess }) {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1 ventas-form-label">
-                  Nombre (Opcional)
-                </label>
-                <input
-                  type="text"
-                  value={customer.name}
-                  onChange={(e) => handleCustomerChange('name', e.target.value)}
-                  disabled={isSubmitting}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 ventas-form-text"
-                  placeholder="Nombre del cliente"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1 ventas-form-label">
                   Cédula (Opcional)
                 </label>
                 <input
@@ -824,6 +828,22 @@ export default function SalesRegisterForm({ onSuccess }) {
                   disabled={isSubmitting}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent disabled:opacity-50 ventas-form-text"
                   placeholder="Cédula del cliente"
+                />
+                {customerNotFound && (
+                  <p className="mt-1 text-xs text-yellow-700">No se encontró cliente con esa cédula.</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1 ventas-form-label">
+                  Nombre (Opcional)
+                </label>
+                <input
+                  type="text"
+                  value={customer.name}
+                  onChange={(e) => handleCustomerChange('name', e.target.value)}
+                  disabled={isSubmitting}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent disabled:opacity-50 ventas-form-text"
+                  placeholder="Nombre del cliente"
                 />
               </div>
               <div>
@@ -916,7 +936,6 @@ export default function SalesRegisterForm({ onSuccess }) {
           onPrint={handlePrintReceipt}
         />
       )}
-      {/* Modal de éxito se maneja en el componente padre (Ventas.jsx) */}
     </div>
   );
 }

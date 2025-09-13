@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 import pedidosApi from '../services/pedidosApi';
 import Menu from '../../dashboard/components/Menu';
 import NuevoPedidoModal from '../components/NuevoPedidoModal';
@@ -62,6 +63,15 @@ function PedidosPage() {
     p.proveedor?.toLowerCase().includes(search.toLowerCase()))
   );
 
+  // Función para formatear fecha a DD/MM/YYYY
+  const formatFecha = (isoDate) => {
+    if (!isoDate) return '';
+    const d = new Date(isoDate);
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}/${month}/${year}`;
+  };
   return (
     <div className="min-h-screen bg-gray-100 flex flex-row">
       {/* Menú fijo en escritorio */}
@@ -161,27 +171,34 @@ function PedidosPage() {
                         <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">{p.producto}</td>
                         <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">{p.proveedor}</td>
                         <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">{p.cantidad}</td>
-                        <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">{p.fecha}</td>
+                        <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">{formatFecha(p.fecha)}</td>
                         <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">
-                          {p.estado}
-                          {(p.estado === 'Pendiente' || p.estado === 'Retrasado') && (
-                            <button
-                              className="ml-2 px-2 sm:px-3 py-1 bg-brand-blue text-white rounded hover:bg-blue-700 transition text-xs sm:text-sm"
-                              onClick={() => handleRecibido(p.id)}
-                            >Recibido</button>
-                          )}
+                            {p.estado}
+                            {/* Si el estado es 'Recibido', no mostrar nada */}
+                            {(p.estado === 'Pendiente' || p.estado === 'Retrasado') && (
+                              <button
+                                className="ml-2 px-2 sm:px-3 py-1 bg-brand-blue text-white rounded hover:bg-blue-700 transition text-xs sm:text-sm"
+                                onClick={() => handleRecibido(p.id)}
+                              >Recibido</button>
+                            )}
                         </td>
                         <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">
-                          <button
-                            className="bg-transparent border-none text-brand-orange text-xl sm:text-2xl mr-2 cursor-pointer hover:scale-110 transition"
-                            title="Editar"
-                            onClick={() => handleEdit(p)}
-                          >&#9998;</button>
-                          <button
-                            className="bg-transparent border-none text-red-500 text-xl sm:text-2xl cursor-pointer hover:scale-110 transition"
-                            title="Eliminar"
-                            onClick={() => handleDelete(p.id)}
-                          >&#128465;</button>
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => handleEdit(p)}
+                              className="text-orange-600 hover:text-orange-900 p-1 rounded-md hover:bg-orange-50"
+                              title="Editar pedido"
+                            >
+                              <FaEdit className="text-sm" />
+                            </button>
+                            <button
+                              onClick={() => handleDelete(p.id)}
+                              className="text-red-600 hover:text-red-900 p-1 rounded-md hover:bg-red-50"
+                              title="Eliminar pedido"
+                            >
+                              <FaTrash className="text-sm" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))
