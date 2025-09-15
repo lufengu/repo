@@ -358,7 +358,7 @@ function RecomendacionesFloatingButton() {
           cursor: 'grab'
         }}
       >
-        <img src={portadaImg} alt="Ver recomendaciones" style={{ width: 70, height: 75, pointerEvents: 'none' }} />
+        <img src={portadaImg} alt="Ver recomendaciones" style={{ width: 78, height: 65, pointerEvents: 'none' }} />
       </button>
 
       {open && (

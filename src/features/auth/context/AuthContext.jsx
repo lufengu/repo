@@ -5,6 +5,7 @@ import { getStoredUser, isAuthenticated, getCurrentUser } from '../services/auth
 const AuthContext = createContext();
 
 // Hook personalizado para usar el contexto
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -33,7 +34,6 @@ export const AuthProvider = ({ children }) => {
     // Limpiar estado inmediatamente para respuesta rápida
     setUser(null);
     setIsLoggedIn(false);
-    alert('Sesión cerrada correctamente');
     
     // Limpiar localStorage
     localStorage.removeItem('accessToken');

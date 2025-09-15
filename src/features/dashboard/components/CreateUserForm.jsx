@@ -121,11 +121,18 @@ const CreateUserForm = () => {
     }
   };
 
+  const [confirmCancelOpen, setConfirmCancelOpen] = useState(false);
+
   const handleCancel = () => {
-    if (window.confirm('¿Estás seguro de que quieres cancelar? Se perderán los datos ingresados.')) {
-      window.history.back();
-    }
+    setConfirmCancelOpen(true);
   };
+
+  const confirmCancel = () => {
+    setConfirmCancelOpen(false);
+    window.history.back();
+  };
+
+  const closeConfirmCancel = () => setConfirmCancelOpen(false);
 
   return (
     <div className="bg-white rounded-lg shadow-lg p-6 md:p-8">
@@ -311,6 +318,29 @@ const CreateUserForm = () => {
           </button>
         </div>
       </form>
+      {/* Modal propio para confirmar cancelación (render dentro del componente) */}
+      {confirmCancelOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full">
+            <h3 className="text-lg font-semibold mb-2">¿Confirmar cancelación?</h3>
+            <p className="mb-4">Se perderán los datos ingresados. ¿Deseas continuar?</p>
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={closeConfirmCancel}
+                className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
+              >
+                Volver
+              </button>
+              <button
+                onClick={confirmCancel}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Sí, cancelar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

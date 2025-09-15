@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import ReactDOM from 'react-dom';
 import { getProviders, createProvider, deleteProvider, updateProvider } from '../services/providerService';
 import { uploadObject, getObjectBlobUrl } from '../services/objectService';
 import { useAuth } from "../../auth/context/AuthContext";
@@ -7,19 +8,6 @@ import Menu from "../../dashboard/components/Menu";
 import { useProductos } from '../../../hooks/useProductos';
 
 export default function ProveedoresPage() {
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      try {
-        const user = JSON.parse(userData);
-        const name = user.name || user.nombre || user.firstName || user.username || 'Usuario';
-        setUserName(name);
-      } catch (error) {
-        setUserName('Usuario');
-      }
-    }
-  }, []);
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
   // Placeholder para cuando no haya imagen o falle la carga
   const PLACEHOLDER_IMG =
@@ -277,21 +265,70 @@ export default function ProveedoresPage() {
   };
 
   // Eliminar proveedor usando la API
-  const handleEliminarProveedor = async (idx) => {
+  const [deletePendingIndex, setDeletePendingIndex] = useState(null);
+
+  const handleEliminarProveedor = (idx) => {
     const proveedor = cards[idx];
-    if (!proveedor.id) {
-      setCards(cards.filter((_, i) => i !== idx));
+    if (!proveedor || !proveedor.id) {
+      // si no tiene id en backend, eliminar localmente
+      setCards((prev) => prev.filter((_, i) => i !== idx));
       return;
     }
-    if (window.confirm("¿Seguro que deseas eliminar este proveedor?")) {
-      try {
-        await deleteProvider(proveedor.id);
-        setCards(cards.filter((_, i) => i !== idx));
-      } catch (error) {
-        console.error('Error eliminar proveedor:', error);
-        alert('Error al eliminar proveedor');
-      }
+    // abrir confirmación interna
+    setDeletePendingIndex(idx);
+  };
+
+  const cancelEliminarProveedor = () => setDeletePendingIndex(null);
+
+  const confirmEliminarProveedor = async () => {
+    const idx = deletePendingIndex;
+    if (idx == null) return;
+    const proveedor = cards[idx];
+    if (!proveedor || !proveedor.id) {
+      setCards((prev) => prev.filter((_, i) => i !== idx));
+      setDeletePendingIndex(null);
+      return;
     }
+
+    try {
+      await deleteProvider(proveedor.id);
+      setCards((prev) => prev.filter((_, i) => i !== idx));
+    } catch (error) {
+      console.error('Error eliminar proveedor:', error);
+      alert('Error al eliminar proveedor');
+    } finally {
+      setDeletePendingIndex(null);
+    }
+  };
+
+  // Componente modal que usa portal para no quedar bajo otros stacking contexts
+  const ConfirmModal = ({ open, title, message, onCancel, onConfirm }) => {
+    if (!open) return null;
+    return ReactDOM.createPortal(
+      (
+        <div style={{position: 'fixed', top:0, left:0, right:0, bottom:0, zIndex: 2147483647, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(0,0,0,0.45)', pointerEvents: 'auto'}}>
+          <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-sm">
+            <h3 className="text-lg font-semibold mb-3">{title}</h3>
+            <p className="text-sm text-gray-700 mb-4">{message}</p>
+            <div className="flex justify-end gap-2">
+              <button
+                className="px-3 py-2 rounded bg-gray-200 hover:bg-gray-300 text-gray-700"
+                onClick={onCancel}
+              >
+                Cancelar
+              </button>
+              <button
+                className="px-3 py-2 rounded bg-red-600 hover:bg-red-700 text-white font-semibold"
+                onClick={onConfirm}
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
+        </div>
+      ),
+      document.body
+    );
   };
 
   // --- ESTADO Y HANDLERS PARA EDITAR ---
@@ -458,7 +495,7 @@ export default function ProveedoresPage() {
         const user = JSON.parse(userData);
         const name = user.name || user.nombre || user.firstName || user.username || 'Usuario';
         setUserName(name);
-      } catch (error) {
+      } catch {
         setUserName('Usuario');
       }
     }
@@ -659,6 +696,14 @@ export default function ProveedoresPage() {
             </div>
           </div>
         )}
+
+        <ConfirmModal
+          open={deletePendingIndex !== null}
+          title="Confirmar eliminación"
+          message="¿Seguro que deseas eliminar este proveedor?"
+          onCancel={cancelEliminarProveedor}
+          onConfirm={confirmEliminarProveedor}
+        />
 
         {/* Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 lg:gap-8 mt-8 sm:mt-16">

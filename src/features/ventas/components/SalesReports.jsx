@@ -5,6 +5,7 @@ import { BarChart, LineChart, TrendingUp, Calendar, DollarSign, FileText } from 
 import { salesAPI } from '../services/salesService';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import logoCompleto from '../../../assets/logoCompleto.png';
 
 const SalesReports = () => {
   const [reportPeriod, setReportPeriod] = useState('daily');
@@ -228,6 +229,28 @@ const SalesReports = () => {
     });
   };
 
+  // Helper: cargar imagen y devolver dataURL + dimensiones
+  const loadImageDataUrl = (src) =>
+    new Promise((resolve, reject) => {
+      try {
+        const img = new Image();
+        img.crossOrigin = 'Anonymous';
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          canvas.width = img.naturalWidth;
+          canvas.height = img.naturalHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0);
+          const dataUrl = canvas.toDataURL('image/png');
+          resolve({ dataUrl, width: img.naturalWidth, height: img.naturalHeight });
+        };
+        img.onerror = (e) => reject(e);
+        img.src = src;
+      } catch (e) {
+        reject(e);
+      }
+    });
+
   const exportReport = async () => {
     try {
       const sales = await salesAPI.getSales();
@@ -281,25 +304,51 @@ const SalesReports = () => {
       const detailedSales = buildDetailedSales(sales);
 
       const doc = new jsPDF();
-      doc.setFontSize(16);
       const pageWidth = doc.internal.pageSize.getWidth();
       const title = 'REPORTE DETALLADO DE VENTAS';
-      const textWidth = doc.getTextWidth(title);
-      const x = (pageWidth - textWidth) / 2;
-      doc.text(title, x, 18);
-      const fechaHora = new Date().toLocaleString('es-CO');
-      doc.setFontSize(10);
-      doc.text(`Generado el: ${fechaHora}`, 14, 25);
 
+      // posición inicial para el contenido después del encabezado
       let y = 35;
+
+      // intentar cargar y dibujar logo centrado encima del título
+      try {
+        const imgInfo = await loadImageDataUrl(logoCompleto);
+  const maxImgWidth = Math.min(pageWidth * 0.4, 140);
+  const scale = Math.min(1, maxImgWidth / imgInfo.width);
+  // reducir tamaño adicionalmente un 30%
+  const reductionFactor = 0.7;
+  const imgW = imgInfo.width * scale * reductionFactor;
+  const imgH = imgInfo.height * scale * reductionFactor;
+        const imgX = (pageWidth - imgW) / 2;
+        doc.addImage(imgInfo.dataUrl, 'PNG', imgX, 8, imgW, imgH);
+        const titleY = 8 + imgH + 6;
+        doc.setFontSize(16);
+        const textWidth = doc.getTextWidth(title);
+        const x = (pageWidth - textWidth) / 2;
+        doc.text(title, x, titleY);
+        const fechaHora = new Date().toLocaleString('es-CO');
+        doc.setFontSize(10);
+        doc.text(`Generado el: ${fechaHora}`, 14, titleY + 7);
+        y = titleY + 14;
+  } catch {
+        doc.setFontSize(16);
+        const textWidth = doc.getTextWidth(title);
+        const x = (pageWidth - textWidth) / 2;
+        doc.text(title, x, 18);
+        const fechaHora = new Date().toLocaleString('es-CO');
+        doc.setFontSize(10);
+        doc.text(`Generado el: ${fechaHora}`, 14, 25);
+        y = 35;
+      }
+
       detailedSales.forEach((sale) => {
         let blockHeight = 90 + (sale.detalles.length * 12);
         if (y + blockHeight > doc.internal.pageSize.getHeight() - 20) {
           doc.addPage();
           y = 18;
         }
-        doc.setFillColor(255, 243, 230); 
-        doc.setDrawColor(255, 115, 0);   
+        doc.setFillColor(255, 243, 230);
+        doc.setDrawColor(255, 115, 0);
         doc.roundedRect(10, y - 4, doc.internal.pageSize.getWidth() - 20, blockHeight, 4, 4, 'FD');
 
         let innerY = y + 4;
@@ -309,7 +358,6 @@ const SalesReports = () => {
         doc.text(`Cédula: ${sale.cedula}`, 14, innerY + 12);
         doc.text(`Dirección: ${sale.direccion}`, 14, innerY + 18);
         doc.text(`Correo: ${sale.correo}`, 14, innerY + 24);
-  
 
         autoTable(doc, {
           startY: innerY + 36,
@@ -352,14 +400,14 @@ const SalesReports = () => {
           }
         });
 
-  let tableEndY = doc.lastAutoTable.finalY;
-  doc.setFontSize(11);
-  doc.text(`Subtotal sin IVA: $${sale.subtotal_sin_iva.toLocaleString('es-CO')}`, 14, tableEndY + 6);
-  doc.text(`IVA (19%): $${sale.iva.toLocaleString('es-CO')}`, 14, tableEndY + 12);
-  doc.text(`Total con IVA: $${sale.total_con_iva.toLocaleString('es-CO')}`, 14, tableEndY + 18);
-  doc.text(`Método de Pago: ${sale.metodo_pago}`, 14, tableEndY + 24);
+        let tableEndY = doc.lastAutoTable.finalY;
+        doc.setFontSize(11);
+        doc.text(`Subtotal sin IVA: $${sale.subtotal_sin_iva.toLocaleString('es-CO')}`, 14, tableEndY + 6);
+        doc.text(`IVA (19%): $${sale.iva.toLocaleString('es-CO')}`, 14, tableEndY + 12);
+        doc.text(`Total con IVA: $${sale.total_con_iva.toLocaleString('es-CO')}`, 14, tableEndY + 18);
+        doc.text(`Método de Pago: ${sale.metodo_pago}`, 14, tableEndY + 24);
 
-  y = tableEndY + 40;
+        y = tableEndY + 40;
       });
 
       doc.save(`reporte-detallado-ventas-${new Date().toISOString().split('T')[0]}.pdf`);
@@ -407,17 +455,39 @@ const SalesReports = () => {
         a.click();
         URL.revokeObjectURL(url);
       } else if (type === 'pdf') {
-  const doc = new jsPDF();
-  doc.setFontSize(16);
-  doc.text('Reporte Diario de Ventas', 14, 18);
-
-        // Agregar fecha y hora de generación
-        const fechaHora = new Date().toLocaleString('es-CO');
-        doc.setFontSize(10);
-        doc.text(`Generado el: ${fechaHora}`, 14, 25);
-
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const title = 'REPORTE DIARIO DE VENTAS';
         let y = 35;
-    detailedSales.forEach((sale) => {
+        try {
+          const imgInfo = await loadImageDataUrl(logoCompleto);
+          const maxImgWidth = Math.min(pageWidth * 0.4, 140);
+          const scale = Math.min(1, maxImgWidth / imgInfo.width);
+          // reducir tamaño adicionalmente un 30%
+          const reductionFactor = 0.7;
+          const imgW = imgInfo.width * scale * reductionFactor;
+          const imgH = imgInfo.height * scale * reductionFactor;
+          const imgX = (pageWidth - imgW) / 2;
+          doc.addImage(imgInfo.dataUrl, 'PNG', imgX, 8, imgW, imgH);
+          const titleY = 8 + imgH + 6;
+          doc.setFontSize(16);
+          const textWidth = doc.getTextWidth(title);
+          const x = (pageWidth - textWidth) / 2;
+          doc.text(title, x, titleY);
+          const fechaHora = new Date().toLocaleString('es-CO');
+          doc.setFontSize(10);
+          doc.text(`Generado el: ${fechaHora}`, 14, titleY + 7);
+          y = titleY + 14;
+        } catch {
+          doc.setFontSize(16);
+          doc.text('Reporte Diario de Ventas', 14, 18);
+          const fechaHora = new Date().toLocaleString('es-CO');
+          doc.setFontSize(10);
+          doc.text(`Generado el: ${fechaHora}`, 14, 25);
+          y = 35;
+        }
+
+        detailedSales.forEach((sale) => {
             // Calcular altura estimada del bloque (ajustado por más líneas de cliente)
             let blockHeight = 90 + (sale.detalles.length * 12);
             if (y + blockHeight > doc.internal.pageSize.getHeight() - 20) {

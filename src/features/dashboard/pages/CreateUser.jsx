@@ -2,6 +2,34 @@ import { useState } from 'react';
 import { FaUser, FaEnvelope, FaLock, FaUserTag, FaEye, FaEyeSlash, FaSave, FaTimes } from 'react-icons/fa';
 import { createUser } from '../services/adminService';
 
+// Modal de confirmación local (sin dependencias externas)
+function ConfirmDialog({ open, title = 'Confirmar acción', message, confirmText = 'Confirmar', cancelText = 'Cancelar', busy = false, onConfirm, onCancel }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-[60]">
+      <div className="absolute inset-0 bg-black/40" onClick={busy ? undefined : onCancel} />
+      <div className="absolute inset-0 flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden">
+          <div className="px-5 py-4 border-b">
+            <h3 className="text-lg font-semibold text-gray-800">{title}</h3>
+          </div>
+          <div className="px-5 py-4 text-gray-600">
+            {typeof message === 'string' ? <p>{message}</p> : message}
+          </div>
+          <div className="px-5 py-4 bg-gray-50 flex justify-end gap-2">
+            <button type="button" className="px-4 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 disabled:opacity-60" onClick={onCancel} disabled={busy}>
+              {cancelText}
+            </button>
+            <button type="button" className="px-4 py-2 rounded-lg bg-orange-600 text-white hover:bg-orange-700 disabled:opacity-60" onClick={onConfirm} disabled={busy}>
+              {busy ? 'Procesando...' : confirmText}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const CreateUserForm = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -15,6 +43,28 @@ const CreateUserForm = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // Toasts locales (no bloqueantes)
+  const [toasts, setToasts] = useState([]);
+  const addToast = (type, message, timeout = 4000) => {
+    const id = Date.now() + Math.random();
+    setToasts(prev => [...prev, { id, type, message }]);
+    setTimeout(() => {
+      setToasts(prev => prev.filter(t => t.id !== id));
+    }, timeout);
+  };
+  const removeToast = id => setToasts(prev => prev.filter(t => t.id !== id));
+
+  // Confirm dialog local
+  const [confirmState, setConfirmState] = useState({ open: false, title: '', message: '', confirmText: 'Confirmar', cancelText: 'Cancelar', onConfirm: null });
+  const [confirmBusy, setConfirmBusy] = useState(false);
+  const openConfirm = ({ title, message, confirmText = 'Confirmar', cancelText = 'Cancelar', onConfirm }) => {
+    setConfirmState({ open: true, title: title || 'Confirmar acción', message, confirmText, cancelText, onConfirm });
+  };
+  const closeConfirm = () => {
+    if (confirmBusy) return;
+    setConfirmState(prev => ({ ...prev, open: false }));
+  };
 
   const roles = [
     { value: 'usuario', label: 'Usuario' },
@@ -98,7 +148,7 @@ const CreateUserForm = () => {
       });
       
       if (response.success) {
-        alert('Usuario creado exitosamente');
+        addToast('success', 'Usuario creado exitosamente');
         
         // Limpiar formulario
         setFormData({
@@ -113,21 +163,32 @@ const CreateUserForm = () => {
         // window.history.back();
         
       } else {
-        alert(`Error: ${response.message}`);
+        addToast('error', `Error: ${response.message || 'No se pudo crear el usuario'}`);
       }
       
     } catch (error) {
       console.error('Error al crear usuario:', error);
-      alert('Error inesperado al crear el usuario. Por favor intenta nuevamente.');
+      addToast('error', 'Error inesperado al crear el usuario. Por favor intenta nuevamente.');
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCancel = () => {
-    if (window.confirm('¿Estás seguro de que quieres cancelar? Se perderán los datos ingresados.')) {
-      window.history.back();
-    }
+    openConfirm({
+      title: 'Cancelar creación',
+      message: '¿Estás seguro de que quieres cancelar? Se perderán los datos ingresados.',
+      confirmText: 'Sí, cancelar',
+      onConfirm: async () => {
+        try {
+          setConfirmBusy(true);
+          window.history.back();
+        } finally {
+          setConfirmBusy(false);
+          closeConfirm();
+        }
+      }
+    });
   };
 
   return (
@@ -314,6 +375,36 @@ const CreateUserForm = () => {
           </button>
         </div>
       </form>
+      {/* Toasts local */}
+      <div className="fixed top-4 right-4 z-50 flex flex-col gap-3">
+        {toasts.map(t => (
+          <div
+            key={t.id}
+            role="status"
+            onClick={() => removeToast(t.id)}
+            className={`max-w-sm w-full px-4 py-2 rounded shadow-lg text-sm flex items-start gap-3 cursor-pointer ${
+              t.type === 'success' ? 'bg-green-50 border border-green-200 text-green-800' :
+              t.type === 'error' ? 'bg-red-50 border border-red-200 text-red-800' :
+              'bg-gray-50 border border-gray-200 text-gray-800'
+            }`}
+          >
+            <div className="flex-1">{t.message}</div>
+            <button className="text-xs opacity-70">Cerrar</button>
+          </div>
+        ))}
+      </div>
+
+      {/* Confirm Dialog */}
+      <ConfirmDialog
+        open={confirmState.open}
+        title={confirmState.title}
+        message={confirmState.message}
+        confirmText={confirmState.confirmText}
+        cancelText={confirmState.cancelText}
+        busy={confirmBusy}
+        onConfirm={confirmState.onConfirm}
+        onCancel={closeConfirm}
+      />
     </div>
   );
 };
