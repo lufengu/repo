@@ -28,7 +28,19 @@ const CardAlertas = () => {
 
         // Pedidos retrasados
         const pedidos = await pedidosApi.getPedidos();
-        const retrasados = pedidos.filter(p => p.estado === 'Retrasado');
+        // Mapear los datos del backend a español
+        const pedidosMapeados = Array.isArray(pedidos)
+          ? pedidos.map(p => ({
+              id: p.id,
+              producto: p.product || '',
+              proveedor: p.supplier || '',
+              cantidad: p.quantity || '',
+              fecha: p.date || '',
+              estado: p.status || '',
+              user_id: p.user_id || '',
+            }))
+          : [];
+        const retrasados = pedidosMapeados.filter(p => p.estado === 'Retrasado');
         setPedidosRetrasados(retrasados);
 
         // Ventas de hoy

@@ -12,7 +12,19 @@ const CardUltimosPedidos = () => {
       setLoading(true);
       try {
         const pedidos = await pedidosApi.getPedidos();
-        const proximos = pedidos.filter(p => p.estado !== 'Retrasado')
+        // Mapear los datos del backend a español
+        const pedidosMapeados = Array.isArray(pedidos)
+          ? pedidos.map(p => ({
+              id: p.id,
+              producto: p.product || '',
+              proveedor: p.supplier || '',
+              cantidad: p.quantity || '',
+              fecha: p.date || '',
+              estado: p.status || '',
+              user_id: p.user_id || '',
+            }))
+          : [];
+        const proximos = pedidosMapeados.filter(p => p.estado !== 'Retrasado')
           .sort((a, b) => new Date(a.fecha) - new Date(b.fecha));
         setUltimosPedidos(proximos);
       } catch {
@@ -53,12 +65,14 @@ const CardUltimosPedidos = () => {
               else fechaRel = fechaPedido.toLocaleDateString();
               // Formato cantidad y unidad
               let cantidadStr = `${p.cantidad}`;
-              if (p.producto && p.producto.toLowerCase().includes('botella')) cantidadStr += ' botellas';
-              else if (p.producto && p.producto.toLowerCase().includes('paquete')) cantidadStr += ' paquetes';
-              else if (p.producto && p.producto.toLowerCase().includes('pieza')) cantidadStr += ' piezas';
-              let nombreProd = p.producto.length > 18 ? p.producto.slice(0, 18) + '...' : p.producto;
+              if (p.producto && typeof p.producto === 'string') {
+                if (p.producto.toLowerCase().includes('botella')) cantidadStr += ' botellas';
+                else if (p.producto.toLowerCase().includes('paquete')) cantidadStr += ' paquetes';
+                else if (p.producto.toLowerCase().includes('pieza')) cantidadStr += ' piezas';
+              }
+              let nombreProd = (p.producto && typeof p.producto === 'string') ? (p.producto.length > 18 ? p.producto.slice(0, 18) + '...' : p.producto) : '';
               return (
-                <div key={p.id} className="flex items-center justify-between py-1">
+                <div key={p.id || p._id || `${nombreProd}-${idx}`} className="flex items-center justify-between py-1">
                   <div className="flex flex-col">
                     <span className="font-semibold text-gray-800">{nombreProd}</span>
                     <span className="text-xs text-gray-500">{fechaRel}</span>

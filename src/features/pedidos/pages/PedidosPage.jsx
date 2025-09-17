@@ -30,7 +30,19 @@ function PedidosPage() {
     setLoading(true);
     pedidosApi.getPedidos()
       .then(data => {
-        setPedidos(Array.isArray(data) ? data : []);
+        // Mapear los datos del backend a español
+        const pedidosMapeados = Array.isArray(data)
+          ? data.map(p => ({
+              id: p.id,
+              producto: p.product || '',
+              proveedor: p.supplier || '',
+              cantidad: p.quantity || '',
+              fecha: p.date || '',
+              estado: p.status || '',
+              user_id: p.user_id || '',
+            }))
+          : [];
+        setPedidos(pedidosMapeados);
       })
       .catch(() => setPedidos([]))
       .finally(() => setLoading(false));
@@ -41,7 +53,7 @@ function PedidosPage() {
     if (!pedido) return;
     const nuevoEstado = 'Recibido';
     try {
-      await pedidosApi.updatePedido(id, { ...pedido, estado: nuevoEstado });
+      await pedidosApi.updatePedido(id, { ...pedido, status: nuevoEstado });
       setPedidos(pedidos.map(p => p.id === id ? { ...p, estado: nuevoEstado } : p));
     } catch (e) {}
   };
@@ -166,19 +178,18 @@ function PedidosPage() {
                       <td colSpan={6} className="text-center py-8 text-gray-400">No hay pedidos para mostrar.</td>
                     </tr>
                   ) : (
-                    filteredPedidos.map(p => (
-                      <tr key={p.id} className="hover:bg-gray-50">
-                        <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">{p.producto}</td>
-                        <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">{p.proveedor}</td>
-                        <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">{p.cantidad}</td>
-                        <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">{formatFecha(p.fecha)}</td>
+                    filteredPedidos.map((p, idx) => (
+                      <tr key={p.id || p._id || `${p.product || p.producto}-${p.supplier || p.proveedor}-${idx}`} className="hover:bg-gray-50">
+                        <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">{p.product || p.producto}</td>
+                        <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">{p.supplier || p.proveedor}</td>
+                        <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">{p.quantity || p.cantidad}</td>
+                        <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">{formatFecha(p.date || p.fecha)}</td>
                         <td className="px-2 sm:px-4 py-2 sm:py-4 whitespace-nowrap">
-                            {p.estado}
-                            {/* Si el estado es 'Recibido', no mostrar nada */}
-                            {(p.estado === 'Pendiente' || p.estado === 'Retrasado') && (
+                            {p.status || p.estado}
+                            {(p.status === 'Pendiente' || p.status === 'Retrasado' || p.estado === 'Pendiente' || p.estado === 'Retrasado') && (
                               <button
                                 className="ml-2 px-2 sm:px-3 py-1 bg-brand-blue text-white rounded hover:bg-blue-700 transition text-xs sm:text-sm"
-                                onClick={() => handleRecibido(p.id)}
+                                onClick={() => handleRecibido(p.id || p._id)}
                               >Recibido</button>
                             )}
                         </td>
@@ -192,7 +203,7 @@ function PedidosPage() {
                               <FaEdit className="text-sm" />
                             </button>
                             <button
-                              onClick={() => handleDelete(p.id)}
+                              onClick={() => handleDelete(p.id || p._id)}
                               className="text-red-600 hover:text-red-900 p-1 rounded-md hover:bg-red-50"
                               title="Eliminar pedido"
                             >
@@ -216,29 +227,29 @@ function PedidosPage() {
               onCreate={async pedido => {
                 const hoy = new Date();
                 const fechaPedido = new Date(pedido.fecha);
-                let estado = pedido.estado || 'Pendiente';
+                let status = pedido.estado || 'Pendiente';
                 if (fechaPedido < new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate())) {
-                  estado = 'Retrasado';
+                  status = 'Retrasado';
                 }
-                const userData = localStorage.getItem('user');
-                let usuarioId = '';
-                if (userData) {
-                  try {
-                    const user = JSON.parse(userData);
-                    usuarioId = user.id;
-                  } catch {}
-                }
+                // Mapear los campos al formato backend
+                const orderPayload = {
+                  product: pedido.producto,
+                  supplier: pedido.proveedor,
+                  quantity: String(pedido.cantidad),
+                  date: pedido.fecha,
+                  status
+                };
                 if (editPedido) {
                   // Editar pedido existente
                   try {
-                    await pedidosApi.updatePedido(editPedido.id, { ...pedido, estado, usuarioId });
-                    setPedidos(prev => prev.map(p => p.id === editPedido.id ? { ...p, ...pedido, estado, usuarioId } : p));
+                    await pedidosApi.updatePedido(editPedido.id, orderPayload);
+                    setPedidos(prev => prev.map(p => p.id === editPedido.id ? { ...p, ...pedido, estado: status } : p));
                   } catch (e) {}
                 } else {
                   // Crear nuevo pedido
                   try {
-                    const res = await pedidosApi.createPedido({ ...pedido, estado, usuarioId });
-                    setPedidos(prev => [...prev, { ...pedido, estado, usuarioId, id: res.pedidoId }]);
+                    const res = await pedidosApi.createPedido(orderPayload);
+                    setPedidos(prev => [...prev, { ...pedido, estado: status, id: res.pedidoId }]);
                   } catch (e) {}
                 }
                 setEditPedido(null);
