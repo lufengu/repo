@@ -332,11 +332,22 @@ export default function SalesRegisterForm({ onSuccess }) {
         try {
           const res = await api.get(`/sales/get-by-dni/${value}`);
           if (res.data) {
+            const {
+              customer: customerName,
+              customerEmail,
+              direccion,
+              customerAddress,
+              address,
+              customerDireccion,
+              direccionFiscal,
+              direccion_fiscal
+            } = res.data || {};
+            const direccionValue = direccion || customerAddress || address || customerDireccion || direccionFiscal || direccion_fiscal || '';
             setCustomer(prev => ({
               ...prev,
-              name: res.data.customer || '',
-              direccion: res.data.direccion || '',
-              email: res.data.customerEmail || ''
+              name: customerName || '',
+              direccion: direccionValue,
+              email: customerEmail || ''
             }));
             setCustomerNotFound(false);
           }

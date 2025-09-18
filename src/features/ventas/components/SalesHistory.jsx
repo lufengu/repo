@@ -116,6 +116,34 @@ const SalesHistory = ({ refreshTrigger }) => {
     return formatColombiaShortDate(dateString);
   };
 
+  // Helpers para IVA y Subtotal (19%)
+  const computeSubtotal = (sale) => {
+    if (!sale) return 0;
+    if (sale.items && Array.isArray(sale.items)) {
+      return sale.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    }
+    const unitPrice = sale.price || 0;
+    const qty = sale.quantity || 1;
+    // Si el backend guarda "total" pero no "price" (caso raro), aproximar
+    if (!sale.price && sale.total && sale.total > 0) {
+      // Intento inverso: total = subtotal + iva = subtotal * 1.19
+      return Math.round(sale.total / 1.19);
+    }
+    return unitPrice * qty;
+  };
+
+  const computeIva = (sale) => {
+    const subtotal = computeSubtotal(sale);
+    return Math.round(subtotal * 0.19);
+  };
+
+  const computeTotal = (sale) => {
+    if (!sale) return 0;
+    if (sale.total) return sale.total; // Preferir dato del backend si existe
+    const subtotal = computeSubtotal(sale);
+    return subtotal + computeIva(sale);
+  };
+
   // Calcular métricas
   const totalSales = filteredSales.reduce((sum, sale) => sum + (sale.total || sale.price * sale.quantity), 0);
   const totalTransactions = filteredSales.length;
@@ -509,13 +537,28 @@ const SalesHistory = ({ refreshTrigger }) => {
                 <p className="font-medium capitalize" style={{ color: '#000' }}>{selectedSale.payment_method}</p>
               </div>
 
-              {/* Total */}
-              <div className="flex justify-between items-center pt-4 border-t border-gray-200">
-                <span className="text-lg font-semibold text-black">Total:</span>
-                <span className="text-2xl font-bold text-green-600" style={{ color: '#000' }}>
-                  {formatCurrency(selectedSale.total || selectedSale.price * selectedSale.quantity)}
-                </span>
-              </div>
+              {/* Desglose de Subtotal / IVA / Total */}
+              {(() => {
+                const subtotal = computeSubtotal(selectedSale);
+                const iva = computeIva(selectedSale);
+                const total = computeTotal(selectedSale);
+                return (
+                  <div className="pt-4 border-t border-gray-200 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">Subtotal</span>
+                      <span className="font-medium" style={{ color: '#000' }}>{formatCurrency(subtotal)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-600">IVA (19%)</span>
+                      <span className="font-medium text-yellow-700" style={{ color: '#000' }}>{formatCurrency(iva)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-semibold text-black">Total</span>
+                      <span className="text-2xl font-bold text-green-600" style={{ color: '#000' }}>{formatCurrency(total)}</span>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Botones */}
               <div className="flex flex-col space-y-2 sm:flex-row sm:space-y-0 sm:space-x-4">

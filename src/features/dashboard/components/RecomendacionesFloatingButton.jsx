@@ -332,49 +332,65 @@ function RecomendacionesFloatingButton() {
     <>
       <button
         className="recomendaciones-floating-btn"
+        aria-label="Ver recomendaciones"
         onDoubleClick={handleDoubleClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleDoubleClick(e);
+          }
+        }}
         onMouseDown={onPointerDown}
         onTouchStart={onPointerDown}
         onTouchEnd={(e) => {
-          // Detect double-tap for touch devices
           if (draggingRef.current) return;
           const now = Date.now();
-          const TIME = 300; // ms
-          if (now - lastTapRef.current <= TIME) {
-            handleDoubleClick(e);
-            lastTapRef.current = 0;
-          } else {
-            lastTapRef.current = now;
-          }
+          const TIME = 300;
+            if (now - lastTapRef.current <= TIME) {
+              handleDoubleClick(e);
+              lastTapRef.current = 0;
+            } else {
+              lastTapRef.current = now;
+            }
         }}
         title="Ver recomendaciones (doble clic)"
         style={{
-          position: 'fixed',
-          left: undefined,
           top: pos.top,
-          right: pos.right,
-          bottom: undefined,
-          zIndex: 1000,
-          cursor: 'grab'
+          right: pos.right
         }}
       >
-        <img src={portadaImg} alt="Ver recomendaciones" style={{ width: 78, height: 65, pointerEvents: 'none' }} />
+        <img
+          src={portadaImg}
+          alt=""
+          draggable="false"
+          className="recomendaciones-floating-btn__img"
+        />
+        {/* Badge de notificaciones */}
+        {sugerencias.conteoAlertas.total > 0 && (
+          <span
+            className="rec-badge"
+            aria-label={`${sugerencias.conteoAlertas.total} alertas`}
+          >
+            {sugerencias.conteoAlertas.total > 99 ? '99+' : sugerencias.conteoAlertas.total}
+          </span>
+        )}
       </button>
 
       {open && (
         <div className="recomendaciones-modal-overlay" onClick={() => setOpen(false)}>
-          <div className="recomendaciones-modal" onClick={e => e.stopPropagation()} style={{ color: '#000', width: '50%', position: 'relative', display: 'flex', flexDirection: 'column', maxHeight: '90vh' }}>
-            {/* Header fijo */}
-            <div style={{ position: 'sticky', top: 0, background: '#fff', zIndex: 10, padding: '24px 0 8px 0', borderBottom: '1px solid #eee', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <h2 style={{ textAlign: 'center', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '2px' }}>
-                RECOMENDACIONES
-              </h2>
+          <div
+            className="recomendaciones-modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="rec-modal-title"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="recomendaciones-header">
+              <h2 id="rec-modal-title">RECOMENDACIONES</h2>
             </div>
 
-            {/* Contenido scrollable */}
-            <div style={{ display: 'flex', gap: '32px', justifyContent: 'space-between', overflowY: 'auto', flex: 1, padding: '24px 0' }}>
-              {/* Columna izquierda */}
-              <div className="recomendaciones-section" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            <div className="recomendaciones-content">
+              <div className="recomendaciones-section">
                 <MetricCard title="Historial de ventas" icon={<FaLightbulb />}>
                   <div>{ventas.length} registros</div>
                 </MetricCard>
@@ -392,9 +408,7 @@ function RecomendacionesFloatingButton() {
                 {(loadingInventario || loadingVentas) && <MetricCard title="Cargando datos..." />}
                 {(errorInventario || errorVentas) && <MetricCard title="Error al cargar datos" />}
               </div>
-
-              {/* Columna derecha */}
-              <div className="recomendaciones-section" style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              <div className="recomendaciones-section">
                 <MetricCard title="Productos a reforzar en inventario" icon={<FaLightbulb />}>
                   <ul>
                     {sugerencias.productosReforzar.length === 0 && <li>No hay productos con stock bajo.</li>}
@@ -456,8 +470,13 @@ function RecomendacionesFloatingButton() {
                 </MetricCard>
               </div>
             </div>
-            {/* Botón cerrar fijo abajo a la izquierda */}
-            <button className="cerrar-modal-btn cerrar-btn-naranja" style={{ position: 'sticky', left: 0, bottom: 0, margin: '24px 0 0 24px', alignSelf: 'flex-start', zIndex: 20 }} onClick={() => setOpen(false)}>Cerrar</button>
+
+            <div className="recomendaciones-footer">
+              <button
+                className="cerrar-modal-btn cerrar-btn-naranja"
+                onClick={() => setOpen(false)}
+              >Cerrar</button>
+            </div>
           </div>
         </div>
       )}
