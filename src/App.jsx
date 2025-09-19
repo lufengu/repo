@@ -39,96 +39,96 @@ function AppRoutes() {
       <Routes>
         {/* Ruta por defecto - redirige al login */}
         <Route path="/" element={<Navigate to="/login" replace />} />
-        
+
         {/* Ruta pública - solo accesible si no está autenticado */}
-        <Route 
-          path="/login" 
+        <Route
+          path="/login"
           element={
             <PublicRoute>
               <Login />
             </PublicRoute>
-          } 
+          }
         />
-        
+
         {/* Rutas protegidas - requieren autenticación */}
-        <Route 
-          path="/dashboard" 
+        <Route
+          path="/dashboard"
           element={
             <ProtectedRoute>
               <Dashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        
+
         {/* Ruta de admin - requiere autenticación y rol de admin */}
-        <Route 
-          path="/admin/dashboard" 
+        <Route
+          path="/admin/dashboard"
           element={
             <ProtectedRoute requiredRole="administrador">
               <AdminDashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        
+
         {/* Ruta alternativa de admin */}
-        <Route 
-          path="/admin" 
+        <Route
+          path="/admin"
           element={
             <ProtectedRoute requiredRole="administrador">
               <AdminDashboard />
             </ProtectedRoute>
-          } 
+          }
         />
-        
+
         {/* Ruta para crear usuario - requiere autenticación y rol de admin */}
-        <Route 
-          path="/admin/create-user" 
+        <Route
+          path="/admin/create-user"
           element={
             <ProtectedRoute requiredRole="administrador">
               <CreateUser />
             </ProtectedRoute>
-          } 
+          }
         />
-        
+
         {/* Ruta para inventario - requiere autenticación */}
-        <Route 
-          path="/inventario" 
+        <Route
+          path="/inventario"
           element={
             <ProtectedRoute>
               <Inventario />
             </ProtectedRoute>
-          } 
+          }
         />
-        
+
         {/* Ruta para ventas - requiere autenticación */}
-        <Route 
-          path="/ventas" 
+        <Route
+          path="/ventas"
           element={
             <ProtectedRoute>
               <Ventas />
             </ProtectedRoute>
-          } 
+          }
         />
-        
+
         {/* Ruta para proveedores - requiere autenticación */}
-        <Route 
-          path="/proveedores" 
+        <Route
+          path="/proveedores"
           element={
             <ProtectedRoute>
               <ProveedoresPage />
             </ProtectedRoute>
-          } 
+          }
         />
-          {/* Ruta para pedidos - requiere autenticación */}
-          <Route 
-            path="/pedidos" 
-            element={
-              <ProtectedRoute>
-                <PedidosPage />
-              </ProtectedRoute>
-            } 
-          />
-        
+        {/* Ruta para pedidos - requiere autenticación */}
+        <Route
+          path="/pedidos"
+          element={
+            <ProtectedRoute>
+              <PedidosPage />
+            </ProtectedRoute>
+          }
+        />
+
         {/* Ruta para manejar rutas no encontradas */}
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
@@ -143,15 +143,6 @@ function App() {
   useEffect(() => {
     if (didRunRef.current) return;
     didRunRef.current = true;
-
-    (async () => {
-      const res = await verifyServiceStatus();
-      if (res.ok) {
-        console.info("Servicio backend OK:", res.status, res.data);
-      } else {
-        console.warn("Backend no disponible:", res.status, res.error, res.data);
-      }
-    })();
   }, []);
 
   return (
