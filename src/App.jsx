@@ -1,11 +1,13 @@
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { AuthProvider } from './features/auth/context/AuthContext'
+import { ProtectedRoute, PublicRoute } from './features/auth/components/ProtectedRoute'
+import { useEffect, useRef } from "react";
+import { verifyServiceStatus } from "./services/healthService";
 
 import Login from './features/auth/pages/Login'
 import Dashboard from './features/dashboard/pages/Dashboard'
 import AdminDashboard from './features/dashboard/pages/AdminDashboard'
 import CreateUser from './features/dashboard/pages/CreateUser'
-import { AuthProvider } from './features/auth/context/AuthContext'
-import { ProtectedRoute, PublicRoute } from './features/auth/components/ProtectedRoute'
 import './App.css'
 import Inventario from './features/inventario/pages/inventario'
 import Ventas from './features/ventas/pages/Ventas'
@@ -17,6 +19,20 @@ import PedidosPage from './features/pedidos/pages/PedidosPage';
 
 function AppRoutes() {
   const location = useLocation();
+  const didCheckRef = useRef(false);
+
+  useEffect(() => {
+    if (didCheckRef.current) return;
+    didCheckRef.current = true;
+    (async () => {
+      const result = await verifyServiceStatus();
+      if (result.ok) {
+        console.info("Servicio backend OK:", result.data);
+      } else {
+        console.warn("Backend no disponible:", result.status, result.error, result.data);
+      }
+    })();
+  }, []);
 
   return (
     <div className="App">
@@ -122,6 +138,22 @@ function AppRoutes() {
 }
 
 function App() {
+  const didRunRef = useRef(false); // evita doble llamada en StrictMode
+
+  useEffect(() => {
+    if (didRunRef.current) return;
+    didRunRef.current = true;
+
+    (async () => {
+      const res = await verifyServiceStatus();
+      if (res.ok) {
+        console.info("Servicio backend OK:", res.status, res.data);
+      } else {
+        console.warn("Backend no disponible:", res.status, res.error, res.data);
+      }
+    })();
+  }, []);
+
   return (
     <AuthProvider>
       <Router>
