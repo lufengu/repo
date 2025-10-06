@@ -15,5 +15,18 @@ export default defineConfig({
         rewrite: (path) => path.replace(/^\/api/, '/api'),
       }
     }
+  },
+  build: {
+    chunkSizeWarningLimit: 1000, // kB
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('html2canvas')) return 'html2canvas'
+            return 'vendor'
+          }
+        }
+      }
+    }
   }
 })

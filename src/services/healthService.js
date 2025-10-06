@@ -8,7 +8,7 @@ const healthApi = axios.create({ baseURL });
 let inflight = null;
 let completed = false;
 let lastResult = null;
-
+    
 export async function verifyServiceStatus() {
   if (completed && lastResult) return lastResult;
   if (inflight) return inflight;
