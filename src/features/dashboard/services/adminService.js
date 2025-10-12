@@ -1,6 +1,5 @@
 //Aquí va la comunicación con la API del backend.
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3002/api';
+import { API_BASE_URL } from '../../../config/settings';
 
 // Función para crear un nuevo usuario
 export const createUser = async (userData) => {

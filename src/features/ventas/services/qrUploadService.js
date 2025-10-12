@@ -1,6 +1,8 @@
 // Servicio para subir QR a objects API
+import { API_BASE_URL } from '../../../config/settings';
+
 export async function uploadQrToObjects({ name, data }) {
-  const res = await fetch('http://localhost:3002/api/objects/create', {
+  const res = await fetch(`${API_BASE_URL}/objects/create`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

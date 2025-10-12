@@ -260,9 +260,9 @@ function ModalEditarUsuarioForm({ formData, setFormData, cancelarEdicion, guarda
           required
         >
           <option value="">Seleccionar rol</option>
-          <option value="tendero">Tendero</option>
+          <option value="usuario">usuario</option>
           <option value="administrador">Administrador</option>
-          <option value="supervisor">Supervisor</option>
+          <option value="moderador">Moderador</option>
         </select>
       </div>
       <div className="flex justify-end gap-2">
